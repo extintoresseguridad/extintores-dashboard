@@ -44,6 +44,7 @@
   }
   .stats{display:flex;gap:24px;}
   .stat{text-align:right;}
+  .stat-critical{background:rgba(179,38,30,.22)!important;border-color:rgba(224,138,133,.4)!important;}
   .stat b{display:block;font-size:24px;font-family:'Arial Narrow',sans-serif;}
   .stat small{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#b8b2a0;}
 
@@ -128,6 +129,8 @@
   .meta-row:last-child{border-bottom:none;}
   .meta-row .k{color:#8a8371;text-transform:uppercase;letter-spacing:.04em;font-size:10.5px;}
   .meta-row .v{font-weight:600;text-align:right;}
+  .meta-row .v.mono{font-weight:500;letter-spacing:.02em;color:#6b6455;font-size:11.5px;}
+  .meta-row .v.mono.venc-vencido,.meta-row .v.mono.venc-proximo{font-weight:700;color:inherit;}
 
   .card-actions{display:flex;border-top:1px solid var(--line);flex-wrap:wrap;}
   .card-actions button{
@@ -177,8 +180,14 @@
     text-transform:none;letter-spacing:0;cursor:pointer;
   }
   .service-check input{width:auto;margin:0;}
-  .service-checks-priced{grid-template-columns:1fr;}
-  .service-check-priced{justify-content:space-between;padding:2px 0;}
+  .servicio-icon{width:15px;height:15px;flex-shrink:0;color:var(--brass);}
+  .servicio-icon svg{width:100%;height:100%;display:block;}
+  .service-checks-priced{grid-template-columns:1fr 1fr;gap:2px 16px;}
+  .service-group-title{
+    grid-column:1/-1;font-size:10px;text-transform:uppercase;letter-spacing:.07em;
+    color:#8a8371;font-weight:800;margin:10px 0 3px;padding-top:6px;border-top:1px dashed var(--line);
+  }
+  .service-check-priced{justify-content:space-between;padding:3px 0;}
   .service-check-priced span{flex:1;}
   .servicio-precio-input{
     width:90px !important;flex-shrink:0;padding:4px 6px !important;font-size:12px !important;
@@ -240,8 +249,14 @@
   .kpi-card.kpi-red:before{background:var(--red);}
   .kpi-card.kpi-green:before{background:var(--green);}
   .kpi-card.kpi-amber:before{background:var(--amber);}
+  .kpi-card.kpi-critical{
+    box-shadow:0 6px 20px rgba(179,38,30,.16), 0 1px 3px rgba(179,38,30,.12);
+    border-color:rgba(179,38,30,.3);
+  }
+  .kpi-card.kpi-critical .kpi-value{color:var(--red);font-size:32px;}
+  .kpi-card.kpi-critical .kpi-label{color:var(--red-dark);}
   .kpi-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:#8a8371;font-weight:700;margin-bottom:6px;}
-  .kpi-value{font-family:'Arial Narrow',sans-serif;font-size:28px;font-weight:700;color:var(--ink);}
+  .kpi-value{font-family:'Arial Narrow',sans-serif;font-size:28px;font-weight:700;color:var(--ink);transition:color .2s,font-size .2s;}
   .kpi-sub{font-size:11px;color:#8a8371;margin-top:4px;}
 
   .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:18px;}
@@ -343,8 +358,9 @@
   .order-card .order-head .sub{font-size:11px;color:#8a8371;}
   .order-item{border-bottom:1px solid #f0ece0;}
   .order-item:last-child{border-bottom:none;}
-  .order-item-body{padding:12px 16px;}
+  .order-item-body{padding:16px 18px 18px;}
   .order-item .tag-strip{padding:8px 16px 0;}
+  .order-item > summary{padding-top:12px;padding-bottom:12px;}
 
   /* ---- Tarjetas colapsables (compactas hasta que se tocan) ---- */
   .card, .order-card{ padding:0; }
@@ -453,6 +469,9 @@
 
   html{scroll-behavior:smooth;}
   body{margin:0;background:var(--paper);}
+  @keyframes viewFadeIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:translateY(0);} }
+  .view-fade{animation:viewFadeIn .22s ease-out;}
+  @media (prefers-reduced-motion:reduce){ .view-fade{animation:none;} }
   button,input,select,textarea{transition:border-color .15s,box-shadow .15s,background .15s,transform .12s;}
   button:active{transform:translateY(1px);}
 
@@ -667,6 +686,7 @@
     .grid{grid-template-columns:1fr;}
     .form-row{grid-template-columns:1fr;}
     .service-checks{grid-template-columns:1fr;}
+    .service-checks-priced{grid-template-columns:1fr;}
     .modal-body{padding:16px;max-height:72vh;}
     .modal-foot{padding:12px 16px;}
     .modal-foot button{flex:1;}
@@ -732,6 +752,7 @@
   let query = '';
   let editingId = null;
   let view = 'listado'; // 'listado' | 'panel' | 'clientes' | 'caja'
+  let animateViewChange = false; // true justo antes de un render() que debe entrar con fade-in (cambio de pestaña o de cliente)
   let clienteSeleccionado = null; // key del cliente abierto en detalle
   let clienteSeleccionadoTipo = 'mantenimiento'; // 'mantenimiento' | 'compras' — de cuál lista viene el detalle abierto
   let clientesSubvista = 'mantenimiento'; // 'mantenimiento' | 'compras' — sub-pestaña activa en el listado de Clientes
@@ -2408,10 +2429,10 @@
     `;
   }
 
-  function setView(v){ view = v; if(v!=='clientes') clienteSeleccionado = null; render(); }
-  function abrirCliente(key, tipo){ clienteSeleccionado = key; clienteSeleccionadoTipo = tipo || 'mantenimiento'; render(); }
-  function volverClientes(){ clienteSeleccionado = null; render(); }
-  function setClientesSubvista(v){ clientesSubvista = v; clienteQuery = ''; render(); }
+  function setView(v){ view = v; if(v!=='clientes') clienteSeleccionado = null; animateViewChange = true; render(); }
+  function abrirCliente(key, tipo){ clienteSeleccionado = key; clienteSeleccionadoTipo = tipo || 'mantenimiento'; animateViewChange = true; render(); }
+  function volverClientes(){ clienteSeleccionado = null; animateViewChange = true; render(); }
+  function setClientesSubvista(v){ clientesSubvista = v; clienteQuery = ''; animateViewChange = true; render(); }
   function setClienteQuery(v){ clienteQuery = v; render(); }
 
   function clienteKey(rec){
@@ -2746,6 +2767,8 @@
     const estados = conteoPorEstado();
     const maxEstado = Math.max(...estados.map(e=>e.count), 1);
     const vencimientos = proximosVencimientos();
+    const vencidosCount = vencimientos.filter(x=>x.vs==='vencido').length;
+    const proximoCount = vencimientos.filter(x=>x.vs==='proximo').length;
     const pagadoCount = records.filter(r=>saldoOf(r).saldo<=0 && saldoOf(r).precio>0).length;
     const pendienteCount = records.filter(r=>saldoOf(r).saldo>0).length;
 
@@ -2772,12 +2795,12 @@
           </div>
           <div class="kpi-card kpi-amber">
             <div class="kpi-label">Por vencer (30 días)</div>
-            <div class="kpi-value">${vencimientos.filter(x=>x.vs==='proximo').length}</div>
+            <div class="kpi-value">${proximoCount}</div>
             <div class="kpi-sub">Próximas recargas</div>
           </div>
-          <div class="kpi-card kpi-red">
+          <div class="kpi-card kpi-red ${vencidosCount>0?'kpi-critical':''}">
             <div class="kpi-label">Vencidos</div>
-            <div class="kpi-value">${vencimientos.filter(x=>x.vs==='vencido').length}</div>
+            <div class="kpi-value">${vencidosCount}</div>
             <div class="kpi-sub">Requieren atención</div>
           </div>
         </div>
@@ -2969,7 +2992,7 @@
           <div class="stat"><b class="mono">${counts.total}</b><small>Total</small></div>
           <div class="stat"><b class="mono">${counts.activos}</b><small>En taller</small></div>
           <div class="stat"><b class="mono">${counts.listos}</b><small>Listos</small></div>
-          <div class="stat"><b class="mono" style="color:${counts.vencidos>0?'#e08a85':'inherit'}">${counts.vencidos}</b><small>Vencidos</small></div>
+          <div class="stat ${counts.vencidos>0?'stat-critical':''}"><b class="mono" style="color:${counts.vencidos>0?'#e08a85':'inherit'}">${counts.vencidos}</b><small>Vencidos</small></div>
           <div class="stat"><b class="mono">₡${counts.porCobrar}</b><small>Por cobrar</small></div>
         </div>
         <div class="user-box">
@@ -2990,6 +3013,7 @@
         </div>
       </div>
 
+      <div class="${animateViewChange ? 'view-fade' : ''}">
       ${view === 'listado' ? `
       <div class="toolbar">
         <div class="filters">
@@ -3025,7 +3049,10 @@
       </div>
       ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista())))}
       </div>
+      </div>
     `;
+
+    animateViewChange = false;
 
     document.querySelectorAll('[data-view]').forEach(b=>{
       b.addEventListener('click', ()=> setView(b.getAttribute('data-view')));
@@ -3145,6 +3172,38 @@
     }
   }
 
+  const SERVICIO_GRUPOS = [
+    { titulo: 'Servicio principal', items: ['Recarga + Mantenimiento general','Prueba hidrostática'] },
+    { titulo: 'Repuestos', items: ['Cambio de manguera','Cambio de manómetro','Cambio de válvula'] },
+    { titulo: 'Acabado y reemplazo', items: ['Repintado','Reemplazo de unidad'] },
+  ];
+  const ICONOS_SERVICIO = {
+    'Recarga + Mantenimiento general': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 1 0-5.4 5.4l-6 6a1.5 1.5 0 0 0 2 2l6-6a4 4 0 0 0 5.4-5.4l-2.1 2.1-2-2z"/></svg>',
+    'Prueba hidrostática': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2s6 7 6 12a6 6 0 0 1-12 0c0-5 6-12 6-12z"/></svg>',
+    'Cambio de manguera': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/></svg>',
+    'Cambio de manómetro': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15a8 8 0 1 1 16 0"/><path d="M12 15l3-4"/></svg>',
+    'Cambio de válvula': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>',
+    'Repintado': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="12" height="6" rx="1"/><path d="M9 10v4M9 14h4a2 2 0 0 1 2 2v4"/></svg>',
+    'Reemplazo de unidad': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0 1 14-4M20 15a8 8 0 0 1-14 4"/></svg>',
+  };
+
+  function serviciosChecksHTML(idSuf, seleccionados, precios, checkClass){
+    precios = precios || {};
+    return SERVICIO_GRUPOS.map((grupo, gi) => {
+      const itemsHTML = grupo.items.map(s => {
+        const checked = (seleccionados||[]).includes(s);
+        return `
+        <label class="service-check service-check-priced">
+          <input type="checkbox" class="${checkClass}" data-servicio-check="${idSuf}" value="${esc(s)}" ${checked ? 'checked':''}/>
+          <span class="servicio-icon">${ICONOS_SERVICIO[s]||''}</span>
+          <span>${s}</span>
+          <input type="number" class="servicio-precio-input" data-servicio-precio="${idSuf}" data-servicio-nombre="${esc(s)}" min="0" step="0.01" placeholder="₡0" value="${precios[s] || ''}" style="${checked?'':'display:none;'}"/>
+        </label>`;
+      }).join('');
+      return `<div class="service-group-title"${gi===0?' style="margin-top:0;padding-top:0;border-top:none;"':''}>${grupo.titulo}</div>${itemsHTML}`;
+    }).join('');
+  }
+
   function lineaHTML(l, idx){
     const precios = l.servicioPrecios || {};
     const sumaDetalle = (l.servicios||[]).reduce((s,nombre)=> s + (parseFloat(precios[nombre])||0), 0);
@@ -3169,15 +3228,7 @@
         <div class="form-row full">
           <div><label>Servicios realizados (marca cada uno y anota su precio — se suman solos en el total)</label>
             <div class="service-checks service-checks-priced">
-              ${SERVICIOS.map(s => {
-                const checked = (l.servicios||[]).includes(s);
-                return `
-                <label class="service-check service-check-priced">
-                  <input type="checkbox" class="f-servicio-check-${l.lid}" data-servicio-check="${l.lid}" value="${esc(s)}" ${checked ? 'checked':''}/>
-                  <span>${s}</span>
-                  <input type="number" class="servicio-precio-input" data-servicio-precio="${l.lid}" data-servicio-nombre="${esc(s)}" min="0" step="0.01" placeholder="₡0" value="${precios[s] || ''}" style="${checked?'':'display:none;'}"/>
-                </label>`;
-              }).join('')}
+              ${serviciosChecksHTML(l.lid, l.servicios, precios, 'f-servicio-check-'+l.lid)}
             </div>
           </div>
         </div>
@@ -3272,16 +3323,7 @@
           <div class="form-row full">
             <div><label>Servicios realizados (marca cada uno y anota su precio — se suman solos en el total)</label>
               <div class="service-checks service-checks-priced">
-                ${SERVICIOS.map((s) => {
-                  const precios = form.servicioPrecios || {};
-                  const checked = (form.servicios||[]).includes(s);
-                  return `
-                  <label class="service-check service-check-priced">
-                    <input type="checkbox" class="f-servicio-check" data-servicio-check="edit" value="${esc(s)}" ${checked ? 'checked':''}/>
-                    <span>${s}</span>
-                    <input type="number" class="servicio-precio-input" data-servicio-precio="edit" data-servicio-nombre="${esc(s)}" min="0" step="0.01" placeholder="₡0" value="${precios[s] || ''}" style="${checked?'':'display:none;'}"/>
-                  </label>`;
-                }).join('')}
+                ${serviciosChecksHTML('edit', form.servicios, form.servicioPrecios, 'f-servicio-check')}
               </div>
             </div>
           </div>
