@@ -1,60 +1,64 @@
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <div id="app-root"></div>
 <style>
   @font-face{ font-family:'sysfallback'; }
   :root{
-    --ink:#1c1f1e;
-    --paper:#f2ede0;
-    --tag:#e8dcc0;
-    --red:#b3261e;
-    --red-dark:#7a1a15;
-    --brass:#8b8168;
-    --green:#3f6b4a;
-    --amber:#b8862b;
-    --line:#d9d0b8;
+    --ink:#1B1F23;
+    --paper:#F6F7F9;
+    --tag:#FBE9E9;
+    --red:#DC2626;
+    --red-dark:#B91C1C;
+    --brass:#64748B;
+    --green:#16A34A;
+    --amber:#D97706;
+    --line:#E5E7EB;
   }
   *{box-sizing:border-box;}
   #app-root{
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     background:var(--paper);
     color:var(--ink);
     min-height:100vh;
   }
-  .mono{font-family:'Courier New',ui-monospace,monospace;}
-  .head-font{font-family:'Arial Narrow',Oswald,sans-serif;font-weight:700;letter-spacing:.02em;}
+  .mono{font-family:ui-monospace,'SF Mono','Cascadia Mono','Courier New',monospace;}
+  .head-font{font-family:'Inter',-apple-system,sans-serif;font-weight:800;letter-spacing:-.01em;}
 
   .topbar{
-    background:var(--ink);
-    color:var(--paper);
+    background:#fff;
+    color:var(--ink);
     padding:22px 28px;
     display:flex;
     align-items:center;
     justify-content:space-between;
     flex-wrap:wrap;
     gap:14px;
+    border-bottom:1px solid var(--line);
   }
   .brand{display:flex;align-items:center;gap:14px;}
   .brand-mark{width:38px;height:38px;flex-shrink:0;}
-  .brand-logo{width:44px;height:44px;flex-shrink:0;object-fit:contain;border-radius:4px;}
-  .brand h1{font-size:21px;text-transform:uppercase;margin:0;letter-spacing:.06em;}
+  .brand-logo{width:44px;height:44px;flex-shrink:0;object-fit:contain;border-radius:8px;}
+  .brand h1{font-size:21px;text-transform:uppercase;margin:0;letter-spacing:.04em;color:var(--ink);}
   .brand span{
-    display:block;font-size:11px;color:var(--brass);
-    letter-spacing:.12em;text-transform:uppercase;margin-top:2px;
-    font-family:-apple-system,sans-serif;font-weight:500;
+    display:block;font-size:11px;color:var(--red);
+    letter-spacing:.1em;text-transform:uppercase;margin-top:2px;
+    font-weight:600;
   }
   .stats{display:flex;gap:24px;}
   .stat{text-align:right;}
-  .stat-critical{background:rgba(179,38,30,.22)!important;border-color:rgba(224,138,133,.4)!important;}
-  .stat b{display:block;font-size:24px;font-family:'Arial Narrow',sans-serif;}
-  .stat small{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#b8b2a0;}
+  .stat-critical{background:#FBE9E9!important;border-color:#F3B6B6!important;}
+  .stat b{display:block;font-size:24px;font-family:'Inter',sans-serif;font-weight:700;}
+  .stat small{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#6B7280;}
 
   .user-box{display:flex;align-items:center;gap:10px;}
-  .user-email{font-size:12px;color:#b8b2a0;}
+  .user-email{font-size:12px;color:#6B7280;}
   .user-box .btn-ghost{
-    background:transparent;border:1px solid #4a4d4c;color:var(--paper);
-    padding:7px 14px;font-size:12px;border-radius:2px;cursor:pointer;
+    background:transparent;border:1px solid var(--line);color:var(--ink);
+    padding:7px 14px;font-size:12px;border-radius:8px;cursor:pointer;
   }
-  .user-box .btn-ghost:hover{background:#2a2d2c;}
+  .user-box .btn-ghost:hover{background:var(--paper);}
 
   .user-row{
     display:flex;justify-content:space-between;align-items:center;
@@ -80,7 +84,7 @@
     text-transform:uppercase;letter-spacing:.05em;font-weight:600;
     color:var(--ink);opacity:.6;
   }
-  .chip.active{opacity:1;background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .chip.active{opacity:1;background:var(--red);color:#fff;border-color:var(--red);}
   .search{
     padding:8px 12px;border:1px solid var(--line);border-radius:2px;
     background:#fff;font-size:13px;min-width:220px;
@@ -93,7 +97,7 @@
   .btn-primary:hover{background:var(--red-dark);}
 
   .content{padding:20px 28px 60px;}
-  .empty{text-align:center;padding:60px 20px;color:#8a8371;}
+  .empty{text-align:center;padding:60px 20px;color:#6B7280;}
   .empty svg{width:70px;height:70px;opacity:.4;margin-bottom:14px;}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;}
@@ -103,7 +107,7 @@
   }
   .card .tag-strip{
     background:var(--tag);padding:10px 16px;display:flex;justify-content:space-between;
-    align-items:center;border-bottom:2px dashed var(--line);
+    align-items:center;border-bottom:1px solid var(--line);
   }
   .card .badge{
     font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
@@ -112,7 +116,7 @@
   .b-recibido{background:var(--amber);}
   .b-proceso{background:var(--red);}
   .b-listo{background:var(--green);}
-  .b-entregado{background:#8a8371;}
+  .b-entregado{background:#6B7280;}
   .venc-vencido{color:var(--red)!important;font-weight:700;}
   .venc-proximo{color:var(--amber)!important;font-weight:700;}
   .pay-badge{
@@ -123,11 +127,11 @@
   .pay-pend{background:var(--red);}
 
   .card-body{padding:16px;}
-  .card-body h3{margin:0 0 2px;font-size:17px;font-family:'Arial Narrow',sans-serif;}
-  .card-body .sub{font-size:12px;color:#8a8371;margin-bottom:12px;}
-  .meta-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #f0ece0;}
+  .card-body h3{margin:0 0 2px;font-size:17px;font-family:'Inter',-apple-system,sans-serif;font-weight:700;}
+  .card-body .sub{font-size:12px;color:#6B7280;margin-bottom:12px;}
+  .meta-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #EEF0F2;}
   .meta-row:last-child{border-bottom:none;}
-  .meta-row .k{color:#8a8371;text-transform:uppercase;letter-spacing:.04em;font-size:10.5px;}
+  .meta-row .k{color:#6B7280;text-transform:uppercase;letter-spacing:.04em;font-size:10.5px;}
   .meta-row .v{font-weight:600;text-align:right;}
   .meta-row .v.mono{font-weight:500;letter-spacing:.02em;color:#6b6455;font-size:11.5px;}
   .meta-row .v.mono.venc-vencido,.meta-row .v.mono.venc-proximo{font-weight:700;color:inherit;}
@@ -154,17 +158,17 @@
     box-shadow:0 20px 60px rgba(0,0,0,.3);
   }
   .modal-head{
-    background:var(--ink);color:var(--paper);padding:18px 24px;
+    background:var(--red);color:#fff;padding:18px 24px;
     display:flex;justify-content:space-between;align-items:center;
   }
-  .modal-head h2{margin:0;font-size:18px;font-family:'Arial Narrow',sans-serif;text-transform:uppercase;}
-  .modal-head button{background:none;border:none;color:var(--paper);font-size:20px;cursor:pointer;}
+  .modal-head h2{margin:0;font-size:18px;font-family:'Inter',-apple-system,sans-serif;font-weight:700;text-transform:uppercase;}
+  .modal-head button{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;}
   .modal-body{padding:22px 24px;}
   .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
   .form-row.full{grid-template-columns:1fr;}
   label{
     display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
-    color:#8a8371;margin-bottom:4px;font-weight:700;
+    color:#6B7280;margin-bottom:4px;font-weight:700;
   }
   input,select,textarea{
     width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:2px;
@@ -185,7 +189,7 @@
   .service-checks-priced{grid-template-columns:1fr 1fr;gap:2px 16px;}
   .service-group-title{
     grid-column:1/-1;font-size:10px;text-transform:uppercase;letter-spacing:.07em;
-    color:#8a8371;font-weight:800;margin:10px 0 3px;padding-top:6px;border-top:1px dashed var(--line);
+    color:#6B7280;font-weight:800;margin:10px 0 3px;padding-top:6px;border-top:1px solid var(--line);
   }
   .service-check-priced{justify-content:space-between;padding:3px 0;}
   .service-check-priced span{flex:1;}
@@ -205,9 +209,9 @@
     padding:12px 20px;border-radius:3px;font-size:13px;z-index:100;
     box-shadow:0 8px 24px rgba(0,0,0,.3);
   }
-  .loading{padding:60px;text-align:center;color:#8a8371;}
+  .loading{padding:60px;text-align:center;color:#6B7280;}
   .field-err{border-color:var(--red) !important;}
-  .field-hint{display:block;font-size:10px;color:#8a8371;margin-top:3px;font-weight:500;text-transform:none;}
+  .field-hint{display:block;font-size:10px;color:#6B7280;margin-top:3px;font-weight:500;text-transform:none;}
   .error-screen{
     min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
   }
@@ -215,8 +219,8 @@
     max-width:420px;text-align:center;background:#fff;border:1px solid var(--line);
     border-radius:4px;padding:32px 28px;
   }
-  .error-box h2{font-family:'Arial Narrow',sans-serif;font-size:19px;margin:0 0 10px;color:var(--red-dark);}
-  .error-box p{font-size:13px;color:#5a5548;line-height:1.5;margin-bottom:20px;}
+  .error-box h2{font-family:'Inter',-apple-system,sans-serif;font-weight:700;font-size:19px;margin:0 0 10px;color:var(--red-dark);}
+  .error-box p{font-size:13px;color:#6B7280;line-height:1.5;margin-bottom:20px;}
   .storage-warning{
     background:#f4d35e;color:#3a2f00;padding:8px 28px;font-size:12.5px;font-weight:600;
     text-align:center;
@@ -232,7 +236,7 @@
     text-transform:uppercase;letter-spacing:.05em;color:var(--ink);opacity:.55;
   }
   .view-toggle button + button{border-left:1px solid var(--line);}
-  .view-toggle button.active{opacity:1;background:var(--ink);color:var(--paper);}
+  .view-toggle button.active{opacity:1;background:var(--red);color:#fff;}
 
   .dash-toolbar{
     padding:20px 28px 0;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;
@@ -255,9 +259,9 @@
   }
   .kpi-card.kpi-critical .kpi-value{color:var(--red);font-size:32px;}
   .kpi-card.kpi-critical .kpi-label{color:var(--red-dark);}
-  .kpi-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:#8a8371;font-weight:700;margin-bottom:6px;}
-  .kpi-value{font-family:'Arial Narrow',sans-serif;font-size:28px;font-weight:700;color:var(--ink);transition:color .2s,font-size .2s;}
-  .kpi-sub{font-size:11px;color:#8a8371;margin-top:4px;}
+  .kpi-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:#6B7280;font-weight:700;margin-bottom:6px;}
+  .kpi-value{font-family:'Inter',-apple-system,sans-serif;font-weight:700;font-size:28px;font-weight:700;color:var(--ink);transition:color .2s,font-size .2s;}
+  .kpi-sub{font-size:11px;color:#6B7280;margin-top:4px;}
 
   .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:18px;}
   .dash-panel{
@@ -266,10 +270,10 @@
   }
   .dash-panel.full{grid-column:1/-1;}
   .dash-panel h3{
-    margin:0 0 14px;font-size:14px;font-family:'Arial Narrow',sans-serif;text-transform:uppercase;
+    margin:0 0 14px;font-size:14px;font-family:'Inter',-apple-system,sans-serif;font-weight:700;text-transform:uppercase;
     letter-spacing:.04em;color:var(--ink);display:flex;justify-content:space-between;align-items:baseline;
   }
-  .dash-panel h3 span{font-size:10.5px;color:#8a8371;text-transform:none;letter-spacing:0;font-weight:500;font-family:-apple-system,sans-serif;}
+  .dash-panel h3 span{font-size:10.5px;color:#6B7280;text-transform:none;letter-spacing:0;font-weight:500;font-family:-apple-system,sans-serif;}
   .bar-row{display:flex;align-items:center;gap:10px;padding:5px 0;}
   .bar-label{width:150px;flex-shrink:0;font-size:12px;color:var(--ink);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .bar-track{flex:1;background:var(--paper);border-radius:2px;height:18px;overflow:hidden;position:relative;}
@@ -279,22 +283,22 @@
   .bar-fill.c-amber{background:var(--amber);}
   .bar-fill.c-ink{background:var(--ink);}
   .bar-value{width:56px;flex-shrink:0;font-size:12px;font-weight:700;font-family:'Courier New',monospace;}
-  .dash-empty{text-align:center;padding:30px 10px;color:#8a8371;font-size:13px;}
+  .dash-empty{text-align:center;padding:30px 10px;color:#6B7280;font-size:13px;}
 
   .month-chart{display:flex;align-items:flex-end;gap:8px;height:170px;padding:6px 4px 0;}
   .month-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;}
   .month-bar{width:100%;max-width:38px;background:var(--red);border-radius:2px 2px 0 0;min-height:2px;transition:height .3s;}
-  .month-bar-label{font-size:10px;color:#8a8371;text-transform:uppercase;text-align:center;line-height:1.2;}
+  .month-bar-label{font-size:10px;color:#6B7280;text-transform:uppercase;text-align:center;line-height:1.2;}
   .month-bar-value{font-size:10.5px;font-weight:700;font-family:'Courier New',monospace;color:var(--ink);}
 
   .vence-list{max-height:260px;overflow-y:auto;}
   .vence-item{
     display:flex;justify-content:space-between;align-items:center;padding:8px 0;
-    border-bottom:1px solid #f0ece0;font-size:12.5px;gap:10px;
+    border-bottom:1px solid #EEF0F2;font-size:12.5px;gap:10px;
   }
   .vence-item:last-child{border-bottom:none;}
   .vence-item .v-name{font-weight:600;}
-  .vence-item .v-order{color:#8a8371;font-size:11px;}
+  .vence-item .v-order{color:#6B7280;font-size:11px;}
   .vence-item .v-date{font-family:'Courier New',monospace;font-weight:700;white-space:nowrap;}
 
   @media (max-width:640px){
@@ -310,21 +314,21 @@
     box-shadow:0 1px 3px rgba(0,0,0,.06);transition:box-shadow .15s;
   }
   .cliente-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.1);}
-  .cliente-card h3{margin:0 0 4px;font-size:16px;font-family:'Arial Narrow',sans-serif;}
-  .cliente-card .sub{font-size:12px;color:#8a8371;margin-bottom:12px;}
+  .cliente-card h3{margin:0 0 4px;font-size:16px;font-family:'Inter',-apple-system,sans-serif;font-weight:700;}
+  .cliente-card .sub{font-size:12px;color:#6B7280;margin-bottom:12px;}
   .cliente-stats{display:flex;gap:16px;}
-  .cliente-stat b{display:block;font-size:19px;font-family:'Arial Narrow',sans-serif;}
-  .cliente-stat small{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#8a8371;}
+  .cliente-stat b{display:block;font-size:19px;font-family:'Inter',-apple-system,sans-serif;font-weight:700;}
+  .cliente-stat small{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#6B7280;}
 
   .cliente-detail-head{
     display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;
     background:#fff;border:1px solid var(--line);border-radius:3px;padding:20px 22px;margin-bottom:18px;
   }
-  .cliente-detail-head h2{margin:0 0 4px;font-size:20px;font-family:'Arial Narrow',sans-serif;}
-  .cliente-detail-head .sub{font-size:13px;color:#8a8371;}
+  .cliente-detail-head h2{margin:0 0 4px;font-size:20px;font-family:'Inter',-apple-system,sans-serif;font-weight:700;}
+  .cliente-detail-head .sub{font-size:13px;color:#6B7280;}
   .cliente-kpis{display:flex;gap:22px;flex-wrap:wrap;}
-  .cliente-kpi b{display:block;font-size:22px;font-family:'Arial Narrow',sans-serif;}
-  .cliente-kpi small{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#8a8371;}
+  .cliente-kpi b{display:block;font-size:22px;font-family:'Inter',-apple-system,sans-serif;font-weight:700;}
+  .cliente-kpi small{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#6B7280;}
   .back-link{
     background:transparent;border:1px solid var(--line);padding:7px 14px;border-radius:2px;
     font-size:12px;font-weight:600;cursor:pointer;margin-bottom:14px;
@@ -333,10 +337,10 @@
 
   /* ---- Líneas de extintores en el formulario ---- */
   .linea-extintor{
-    border:1px solid var(--line);border-radius:3px;padding:14px 16px;margin-bottom:12px;background:#fbfaf6;position:relative;
+    border:1px solid var(--line);border-radius:3px;padding:14px 16px;margin-bottom:12px;background:#F9FAFB;position:relative;
   }
   .linea-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-  .linea-head b{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#8a8371;}
+  .linea-head b{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#6B7280;}
   .linea-remove{background:none;border:none;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;padding:2px 6px;}
   .linea-remove:disabled{opacity:.3;cursor:not-allowed;}
   .btn-add-linea{
@@ -354,9 +358,9 @@
     padding:10px 16px;background:var(--paper);border-bottom:1px solid var(--line);
     display:flex;justify-content:space-between;align-items:center;
   }
-  .order-card .order-head h3{margin:0;font-size:15px;font-family:'Arial Narrow',sans-serif;}
-  .order-card .order-head .sub{font-size:11px;color:#8a8371;}
-  .order-item{border-bottom:1px solid #f0ece0;}
+  .order-card .order-head h3{margin:0;font-size:15px;font-family:'Inter',-apple-system,sans-serif;font-weight:700;}
+  .order-card .order-head .sub{font-size:11px;color:#6B7280;}
+  .order-item{border-bottom:1px solid #EEF0F2;}
   .order-item:last-child{border-bottom:none;}
   .order-item-body{padding:16px 18px 18px;}
   .order-item .tag-strip{padding:8px 16px 0;}
@@ -374,12 +378,12 @@
   }
   details.card-collapse > summary::-webkit-details-marker{display:none;}
   details.card-collapse > summary::after{
-    content:'▾';font-size:11px;color:#8a8371;flex-shrink:0;transition:transform .15s;
+    content:'▾';font-size:11px;color:#6B7280;flex-shrink:0;transition:transform .15s;
   }
   details.card-collapse[open] > summary::after{transform:rotate(180deg);}
   .summary-main{min-width:0;flex:1;}
-  .summary-main h3{margin:0 0 2px;font-size:14.5px;font-family:'Arial Narrow',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .summary-main .sub-line{font-size:11px;color:#8a8371;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .summary-main h3{margin:0 0 2px;font-size:14.5px;font-family:'Inter',-apple-system,sans-serif;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .summary-main .sub-line{font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .summary-side{flex-shrink:0;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
   .summary-price{font-size:13px;font-weight:700;font-family:'Courier New',monospace;}
   details.card-collapse .card-inner-body{border-top:1px solid var(--line);}
@@ -390,30 +394,30 @@
     background:#fff;border:1px solid var(--line);border-radius:3px;padding:20px 22px;margin-bottom:18px;
     box-shadow:0 1px 3px rgba(0,0,0,.06);
   }
-  .caja-card h3{margin:0 0 14px;font-size:15px;font-family:'Arial Narrow',sans-serif;text-transform:uppercase;letter-spacing:.04em;}
+  .caja-card h3{margin:0 0 14px;font-size:15px;font-family:'Inter',-apple-system,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
   .caja-open-form{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
-  .caja-open-form label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#8a8371;margin-bottom:5px;font-weight:700;}
+  .caja-open-form label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6B7280;margin-bottom:5px;font-weight:700;}
   .caja-open-form input{padding:9px 10px;border:1px solid var(--line);border-radius:2px;font-size:14px;width:160px;}
   .caja-kpis{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:6px;}
-  .caja-kpi b{display:block;font-size:22px;font-family:'Arial Narrow',sans-serif;}
-  .caja-kpi small{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#8a8371;}
+  .caja-kpi b{display:block;font-size:22px;font-family:'Inter',-apple-system,sans-serif;font-weight:700;}
+  .caja-kpi small{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#6B7280;}
   .mov-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;}
   .mov-form > div{flex:1;min-width:120px;}
-  .mov-form label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#8a8371;margin-bottom:5px;font-weight:700;}
+  .mov-form label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6B7280;margin-bottom:5px;font-weight:700;}
   .mov-form input, .mov-form select{padding:9px 10px;border:1px solid var(--line);border-radius:2px;font-size:13px;width:100%;}
   .mov-list{border-top:1px solid var(--line);}
   .mov-row{
     display:flex;justify-content:space-between;align-items:center;padding:9px 0;
-    border-bottom:1px solid #f0ece0;font-size:13px;gap:10px;
+    border-bottom:1px solid #EEF0F2;font-size:13px;gap:10px;
   }
   .mov-row:last-child{border-bottom:none;}
   .mov-row .m-concepto{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .mov-row .m-hora{font-size:10.5px;color:#8a8371;font-family:'Courier New',monospace;}
+  .mov-row .m-hora{font-size:10.5px;color:#6B7280;font-family:'Courier New',monospace;}
   .mov-row .m-monto{font-family:'Courier New',monospace;font-weight:700;white-space:nowrap;}
   .mov-row .m-monto.entrada{color:var(--green);}
   .mov-row .m-monto.salida{color:var(--red);}
   .mov-row .m-del{background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;font-weight:700;flex-shrink:0;}
-  .caja-empty{text-align:center;padding:20px 10px;color:#8a8371;font-size:13px;}
+  .caja-empty{text-align:center;padding:20px 10px;color:#6B7280;font-size:13px;}
   .cierre-diff{
     margin-top:14px;padding:12px 16px;border-radius:3px;border:1.5px solid;
   }
@@ -421,19 +425,19 @@
   .cierre-diff.bad{border-color:var(--red);background:#fbeceb;color:#7a231d;}
   .caja-history-item{
     display:flex;justify-content:space-between;align-items:center;padding:10px 0;
-    border-bottom:1px solid #f0ece0;font-size:13px;
+    border-bottom:1px solid #EEF0F2;font-size:13px;
   }
   .caja-history-item:last-child{border-bottom:none;}
 
   /* ---- Papelera ---- */
   .papelera-item{
     display:flex;justify-content:space-between;align-items:center;padding:12px 0;
-    border-bottom:1px solid #f0ece0;gap:12px;
+    border-bottom:1px solid #EEF0F2;gap:12px;
   }
   .papelera-item:last-child{border-bottom:none;}
   .papelera-info{min-width:0;flex:1;}
   .papelera-info .p-title{font-weight:700;font-size:13.5px;}
-  .papelera-info .p-sub{font-size:11.5px;color:#8a8371;margin-top:2px;}
+  .papelera-info .p-sub{font-size:11.5px;color:#6B7280;margin-top:2px;}
   .papelera-actions{display:flex;gap:8px;flex-shrink:0;}
   .papelera-actions button{
     padding:6px 12px;border-radius:2px;font-size:11.5px;font-weight:700;cursor:pointer;border:1px solid var(--line);
@@ -441,19 +445,81 @@
   }
   .papelera-actions button.restaurar{color:var(--green);border-color:var(--green);}
   .papelera-actions button.eliminar{color:var(--red);border-color:var(--red);}
-  .caja-hint{font-size:11.5px;color:#8a8371;margin:8px 0 14px;font-style:italic;}
-  .caja-subtitle{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#8a8371;font-weight:700;margin-bottom:8px;}
+  .papelera-pendiente{
+    font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;
+    color:var(--amber);border:1px dashed var(--amber);border-radius:2px;padding:6px 10px;
+    white-space:nowrap;
+  }
+  .caja-hint{font-size:11.5px;color:#6B7280;margin:8px 0 14px;font-style:italic;}
+  .caja-subtitle{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6B7280;font-weight:700;margin-bottom:8px;}
   .metodo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
   .metodo-item{
     background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:8px 12px;
     display:flex;flex-direction:column;gap:2px;
   }
-  .metodo-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:#8a8371;font-weight:700;}
+  .metodo-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:#6B7280;font-weight:700;}
   .metodo-monto{font-family:'Courier New',monospace;font-weight:700;font-size:15px;}
   .m-metodo-tag{
-    font-size:10px;text-transform:uppercase;letter-spacing:.03em;color:#8a8371;
+    font-size:10px;text-transform:uppercase;letter-spacing:.03em;color:#6B7280;
     border:1px solid var(--line);border-radius:2px;padding:1px 6px;flex-shrink:0;
   }
+
+  /* ---- CRM: Embudo de ventas (pipeline) ---- */
+  .pipeline-toolbar{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;
+  }
+  .pipeline-board{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start;
+  }
+  .pipeline-col{background:#F9FAFB;border:1px solid var(--line);border-radius:3px;overflow:hidden;}
+  .pipeline-col-head{
+    padding:10px 12px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;
+    display:flex;justify-content:space-between;align-items:center;color:#fff;
+  }
+  .pipeline-col-count{font-size:10.5px;font-weight:600;text-transform:none;letter-spacing:0;opacity:.9;}
+  .etapa-badge{
+    font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+    padding:3px 9px;border-radius:12px;color:#fff;flex-shrink:0;
+  }
+  .etiqueta-badge{
+    font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    padding:2px 8px;border-radius:10px;color:#fff;margin-right:4px;display:inline-block;margin-bottom:3px;
+  }
+  .etiqueta-vip{background:var(--amber);}
+  .etiqueta-corporativo{background:var(--brass);}
+  .etiqueta-residencial{background:var(--green);}
+  .etiqueta-moroso{background:var(--red);}
+  .etapa-contactado{background:var(--brass);}
+  .etapa-cotizado{background:var(--amber);}
+  .etapa-ganado{background:var(--green);}
+  .etapa-perdido{background:#6B7280;}
+  .pipeline-col-body{padding:10px;display:flex;flex-direction:column;gap:8px;min-height:60px;}
+  .pipeline-empty{font-size:11.5px;color:#6B7280;text-align:center;padding:14px 4px;}
+  .oportunidad-card{
+    background:#fff;border:1px solid var(--line);border-radius:3px;padding:10px 12px;cursor:grab;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);transition:box-shadow .15s,transform .15s;
+  }
+  .oportunidad-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.1);transform:translateY(-1px);}
+  .oportunidad-card:active{cursor:grabbing;}
+  .oc-cliente{font-weight:700;font-size:13px;margin-bottom:3px;}
+  .oc-desc{font-size:11.5px;color:#6b6455;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .oc-foot{display:flex;justify-content:space-between;align-items:center;}
+  .oc-monto{font-size:12px;font-weight:700;font-family:'Courier New',monospace;color:var(--ink);}
+  .oc-fecha{font-size:10px;color:#6B7280;}
+  @media (max-width:900px){ .pipeline-board{grid-template-columns:1fr 1fr;} }
+  @media (max-width:560px){ .pipeline-board{grid-template-columns:1fr;} }
+
+  /* ---- CRM: Recordatorios ---- */
+  .recordatorio-row{
+    display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #EEF0F2;
+  }
+  .recordatorio-row:last-child{border-bottom:none;}
+  .recordatorio-row input[type=checkbox]{width:16px;height:16px;flex-shrink:0;}
+  .rec-body{flex:1;min-width:0;}
+  .rec-texto{font-size:13px;font-weight:600;}
+  .rec-sub{font-size:11px;color:#6B7280;margin-top:2px;}
+  .rec-del{background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;font-weight:700;flex-shrink:0;}
+  .rec-completado .rec-texto{text-decoration:line-through;color:#6B7280;}
 
 /* =========================================================
      V2 — Capa visual moderna
@@ -479,19 +545,19 @@
   .topbar{
     position:sticky;top:0;z-index:30;
     padding:15px 28px;
-    box-shadow:0 3px 16px rgba(0,0,0,.12);
+    box-shadow:0 1px 0 rgba(0,0,0,.03);
   }
   .brand{gap:12px;}
-  .brand-logo{width:46px;height:46px;border-radius:8px;border:1px solid rgba(242,237,224,.16);}
+  .brand-logo{width:46px;height:46px;border-radius:10px;border:1px solid var(--line);}
   .brand h1{font-size:20px;line-height:1.05;}
   .brand span{font-size:10px;}
 
   .stats{gap:8px;align-items:stretch;}
   .stat{
     min-width:74px;text-align:center;padding:7px 10px;
-    border:1px solid #3b3e3d;border-radius:8px;background:#242726;
+    border:1px solid var(--line);border-radius:10px;background:var(--paper);
   }
-  .stat b{font-size:20px;line-height:1.05;}
+  .stat b{font-size:20px;line-height:1.05;color:var(--ink);}
   .stat small{font-size:9px;}
 
   .user-box{gap:7px;}
@@ -499,20 +565,20 @@
     max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
   .user-box .btn-ghost{
-    border-radius:7px;padding:8px 11px;
+    border-radius:8px;padding:8px 11px;
   }
-  .user-box .btn-ghost:hover{background:#303332;}
+  .user-box .btn-ghost:hover{background:var(--paper);}
 
   .dash-toolbar{
     position:sticky;top:76px;z-index:20;
     padding:13px 28px;
-    background:rgba(242,237,224,.94);
+    background:rgba(246,247,249,.94);
     backdrop-filter:blur(10px);
-    border-bottom:1px solid rgba(217,208,184,.75);
+    border-bottom:1px solid var(--line);
   }
   .view-toggle{border-radius:8px;background:#fff;box-shadow:var(--shadow-sm);}
   .view-toggle button{padding:9px 15px;}
-  .view-toggle button.active{background:var(--ink);}
+  .view-toggle button.active{background:var(--red);}
 
   .toolbar,.clientes-toolbar{padding-left:28px;padding-right:28px;}
   .toolbar{gap:10px;}
@@ -550,12 +616,12 @@
     box-shadow:var(--shadow-sm);
   }
   details.card-collapse{
-    border-color:#ded6c2;
+    border-color:#E5E7EB;
     transition:box-shadow .18s,transform .18s,border-color .18s;
   }
   details.card-collapse:hover{
     box-shadow:var(--shadow-md);
-    border-color:#cfc4a8;
+    border-color:#D1D5DB;
   }
   details.card-collapse[open]{box-shadow:var(--shadow-md);}
 
@@ -570,7 +636,7 @@
   .card-inner-body{background:#fff;}
   .card-body{padding:15px 17px;}
   .meta-row{padding:7px 0;}
-  .card-actions{background:#fcfbf7;}
+  .card-actions{background:#F9FAFB;}
   .card-actions button{
     min-height:39px;padding:8px 5px;
   }
@@ -578,12 +644,12 @@
 
   .dash-content{max-width:1450px;margin:0 auto;}
   .kpi-grid{gap:13px;}
-  .kpi-card{padding:17px 18px;border-color:#ded6c2;}
+  .kpi-card{padding:17px 18px;border-color:#E5E7EB;}
   .kpi-value{font-size:30px;}
   .kpi-card:before{width:5px;}
 
   .dash-grid{gap:15px;}
-  .dash-panel{border-color:#ded6c2;}
+  .dash-panel{border-color:#E5E7EB;}
   .dash-panel h3{font-size:15px;}
   .bar-track{border-radius:999px;height:16px;}
   .bar-fill{border-radius:999px;}
@@ -591,10 +657,10 @@
   .month-bar{border-radius:6px 6px 2px 2px;}
 
   .cliente-card{
-    border-color:#ded6c2;
+    border-color:#E5E7EB;
     transition:transform .16s,box-shadow .16s,border-color .16s;
   }
-  .cliente-card:hover{transform:translateY(-2px);border-color:#cfc4a8;}
+  .cliente-card:hover{transform:translateY(-2px);border-color:#D1D5DB;}
   .cliente-stat b{font-size:20px;}
 
   .modal{
@@ -605,20 +671,20 @@
   }
   .modal-head{padding:17px 22px;}
   .modal-body{padding:20px 22px;max-height:70vh;overflow:auto;}
-  .modal-foot{padding:14px 22px;background:#fbfaf6;}
+  .modal-foot{padding:14px 22px;background:#F9FAFB;}
   .modal-head button{
     width:34px;height:34px;border-radius:7px;
   }
   .modal-head button:hover{background:#303332;}
   .linea-extintor{
     border-radius:9px;
-    border-color:#ded6c2;
+    border-color:#E5E7EB;
     box-shadow:inset 3px 0 0 var(--brass);
   }
   .btn-add-linea{border-radius:8px;}
 
   .caja-content{max-width:1050px;}
-  .caja-card{border-color:#ded6c2;}
+  .caja-card{border-color:#E5E7EB;}
   .mov-row{padding:11px 0;}
   .m-metodo-tag{border-radius:999px;background:#fff;}
   .cierre-diff{border-radius:9px;}
@@ -646,7 +712,7 @@
   }
   .quick-actions .quick-title{
     margin-right:auto;font-size:10px;font-weight:800;
-    text-transform:uppercase;letter-spacing:.08em;color:#8a8371;
+    text-transform:uppercase;letter-spacing:.08em;color:#6B7280;
   }
   .quick-actions button{min-height:34px;}
 
@@ -655,9 +721,9 @@
     background:#fff;
     transition:background .15s;
   }
-  .order-item > summary:hover{background:#fbfaf6;}
+  .order-item > summary:hover{background:#F9FAFB;}
   .order-item-body{background:#fff;}
-  .order-card .card-actions{background:#fcfbf7;}
+  .order-card .card-actions{background:#F9FAFB;}
 
   @media (max-width:900px){
     .topbar{position:relative;padding:14px 18px;}
@@ -732,6 +798,8 @@
   const AUTH_SIGNIN_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`;
   const AUTH_REFRESH_URL = `https://securetoken.googleapis.com/v1/token?key=${FIREBASE_API_KEY}`;
   const OWNER_EMAIL = 'extintoresseguridad.cr@gmail.com';
+  const EMPRESA_TELEFONO = '2101-4399 / 8839-9134';
+  const EMPRESA_CORREO = 'extintoresseguridad.cr@gmail.com';
   const AUTH_SESSION_KEY = 'extintores:session';
   const ESTADOS = [
     {id:'recibido', label:'Recibido', cls:'b-recibido'},
@@ -744,19 +812,29 @@
 
   let records = [];
   let cajas = []; // Cada caja: { id, fecha, apertura, cierre, movimientos:[{id,tipo,monto,concepto,hora}], cerrada }
-  let papelera = []; // { id, tipo:'extintor'|'movimiento_caja'|'venta', fechaEliminado, data, cajaId (solo para movimientos) }
+  let cajaVistaFecha = null; // fecha (YYYY-MM-DD) que se está viendo/editando en la pestaña Caja; null hasta inicializar con todayISO()
+  let papelera = []; // { id, tipo:'extintor'|'movimiento_caja'|'venta'|'oportunidad'|'recordatorio', fechaEliminado, data, cajaId (solo para movimientos) }
   let ventas = []; // { id, cliente, telefono, marca, producto, cantidad, precio, abono, pagado, fechaCompra, fechaProximoMantenimiento, observaciones }
+  let oportunidades = []; // { id, cliente, telefono, descripcion, montoEstimado, etapa:'contactado'|'cotizado'|'ganado'|'perdido', fechaCreacion, bitacora:[{id,fecha,tipo,nota}] }
+  let recordatorios = []; // { id, texto, fecha, cliente, telefono, oportunidadId, completado }
+  let clientesPerfil = []; // { id, cliente, telefono, empresa, cedula, notas, etiquetas, fechaCreacion } — datos personales del cliente, independientes de sus órdenes/ventas
+  let contratos = []; // { id, cliente, telefono, cantidadExtintores, fechaInicio, fechaRenovacion, valorAnual, estado:'activo'|'cancelado', notas }
+  let inventario = []; // { id, nombre, categoria:'extintor'|'repuesto', tipo, capacidad, cantidad, cantidadMinima, precioUnitario, notas, movimientos:[{id,tipo,cantidad,fecha,nota}] }
   let loadError = null;
   let filter = 'todos';
   let venceFilter = 'todos';
   let query = '';
   let editingId = null;
-  let view = 'listado'; // 'listado' | 'panel' | 'clientes' | 'caja'
+  let view = 'listado'; // 'listado' | 'panel' | 'clientes' | 'caja' | 'crm'
+  let crmSubvista = 'pipeline'; // 'pipeline' | 'recordatorios' | 'contratos'
+  let pipelineQuery = '';
+  let oportunidadSeleccionada = null;
   let animateViewChange = false; // true justo antes de un render() que debe entrar con fade-in (cambio de pestaña o de cliente)
   let clienteSeleccionado = null; // key del cliente abierto en detalle
   let clienteSeleccionadoTipo = 'mantenimiento'; // 'mantenimiento' | 'compras' — de cuál lista viene el detalle abierto
   let clientesSubvista = 'mantenimiento'; // 'mantenimiento' | 'compras' — sub-pestaña activa en el listado de Clientes
   let clienteQuery = '';
+  let etiquetaFiltro = 'todas'; // 'todas' | una de ETIQUETAS_CLIENTE
   const TARJETAS_ABIERTAS_KEY = 'extintores:tarjetas_abiertas';
   const TARJETAS_CERRADAS_KEY = 'extintores:tarjetas_cerradas';
   function cargarSetLocal(key){
@@ -790,7 +868,7 @@
     th, td{ border:1px solid #999;padding:4px 6px;text-align:left;vertical-align:top; }
     th{background:#e8e4d6;}
     .print-btn{
-      display:block;margin:0 auto 20px;padding:10px 22px;background:#b3261e;color:#fff;
+      display:block;margin:0 auto 20px;padding:10px 22px;background:#DC2626;color:#fff;
       border:none;border-radius:3px;font-size:13px;font-weight:bold;cursor:pointer;
     }
     @media print{ .print-btn{ display:none; } }
@@ -823,6 +901,35 @@
 
   const CONSOLIDADO_CSS = `
     @page{ size:landscape; margin:12mm; }
+  `;
+
+  const COTIZACION_CSS = `
+    @page{ size:letter; margin:16mm; }
+    * { box-sizing:border-box; }
+    body{ font-family:Arial,Helvetica,sans-serif; color:#1B1F23; margin:0; padding:0; font-size:12.5px; line-height:1.5; }
+    .cot-head{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #DC2626; padding-bottom:14px; margin-bottom:20px; }
+    .cot-logo{ max-width:150px; height:auto; }
+    .cot-empresa{ text-align:right; font-size:11px; color:#444; }
+    .cot-empresa b{ display:block; font-size:15px; color:#1B1F23; margin-bottom:2px; }
+    .cot-titulo{ text-align:center; margin:0 0 22px; }
+    .cot-titulo h1{ font-size:20px; letter-spacing:.06em; text-transform:uppercase; margin:0 0 4px; color:#DC2626; }
+    .cot-titulo div{ font-size:11px; color:#666; }
+    .cot-meta{ display:flex; justify-content:space-between; margin-bottom:20px; font-size:11.5px; }
+    .cot-meta div b{ display:block; font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:#6B7280; margin-bottom:2px; }
+    .cot-desc-box{ background:#f7f4ec; border:1px solid #E5E7EB; border-radius:4px; padding:16px 18px; margin-bottom:20px; }
+    .cot-desc-box h3{ margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:#6B7280; }
+    .cot-items-table{ width:100%; border-collapse:collapse; margin-bottom:20px; }
+    .cot-items-table th{ background:#1B1F23; color:#fff; font-size:10px; text-transform:uppercase; letter-spacing:.04em; padding:8px 10px; text-align:left; }
+    .cot-items-table td{ padding:8px 10px; border-bottom:1px solid #E5E7EB; font-size:12px; }
+    .cot-items-table td:last-child, .cot-items-table th:last-child{ text-align:right; width:120px; }
+    .cot-total-box{ border:2px solid #1B1F23; border-radius:4px; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+    .cot-total-box .lbl{ font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+    .cot-total-box .val{ font-size:22px; font-weight:bold; }
+    .cot-validez{ font-size:10.5px; color:#666; font-style:italic; margin-bottom:36px; }
+    .cot-firmas{ display:flex; justify-content:space-between; gap:40px; }
+    .cot-firma{ flex:1; text-align:center; }
+    .cot-firma .linea{ border-top:1px solid #1B1F23; margin-bottom:6px; padding-top:6px; }
+    .cot-foot{ margin-top:30px; text-align:center; font-size:10px; color:#6B7280; border-top:1px solid #E5E7EB; padding-top:10px; }
   `;
 
   function tagOpen(name){ return '<' + name + '>'; }
@@ -919,6 +1026,62 @@
     downloadPrintable(body, `consolidado_extintores_${todayISO()}.html`, 'Consolidado de extintores', CONSOLIDADO_CSS);
   }
 
+  function printCotizacion(oportunidadId){
+    const o = oportunidades.find(x => x.id === oportunidadId);
+    if(!o) return;
+    const numero = 'COT-' + o.id.replace(/[^0-9]/g,'').slice(-6);
+    const fechaEmision = new Date().toLocaleDateString('es-CR', {year:'numeric', month:'long', day:'numeric'});
+    const fechaVencimiento = addDays(todayISO(), 15);
+    const itemsValidos = (o.items||[]).filter(it => it.descripcion || it.precio);
+    const montoItems = itemsValidos.reduce((s,it)=> s + (parseFloat(it.precio)||0), 0);
+    const monto = itemsValidos.length ? montoItems : (parseFloat(o.montoEstimado) || 0);
+    const body = `
+      <div class="cot-head">
+        <img src="${LOGO_DATA_URL}" alt="Extintores Seguridad" class="cot-logo"/>
+        <div class="cot-empresa">
+          <b>Extintores Seguridad</b>
+          Tel: ${EMPRESA_TELEFONO}<br/>
+          ${EMPRESA_CORREO}
+        </div>
+      </div>
+      <div class="cot-titulo">
+        <h1>Cotización</h1>
+        <div>N.° ${numero} · Emitida el ${fechaEmision}</div>
+      </div>
+      <div class="cot-meta">
+        <div><b>Cliente</b>${esc(o.cliente)}</div>
+        ${o.telefono ? `<div><b>Teléfono</b>${esc(o.telefono)}</div>` : ''}
+        <div><b>Válida hasta</b>${fechaVencimiento}</div>
+      </div>
+      ${itemsValidos.length ? `
+      <table class="cot-items-table">
+        <thead><tr><th>Descripción</th><th>Precio</th></tr></thead>
+        <tbody>
+          ${itemsValidos.map(it=>`<tr><td>${esc(it.descripcion||'—')}</td><td>₡${(parseFloat(it.precio)||0).toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      ${o.descripcion ? `<div class="cot-desc-box"><h3>Notas</h3><p style="margin:0;">${esc(o.descripcion)}</p></div>` : ''}
+      ` : `
+      <div class="cot-desc-box">
+        <h3>Descripción del servicio</h3>
+        <p style="margin:0;">${o.descripcion ? esc(o.descripcion) : 'Servicio de mantenimiento de extintores.'}</p>
+      </div>
+      `}
+      <div class="cot-total-box">
+        <span class="lbl">Monto total</span>
+        <span class="val">₡${monto.toLocaleString('es-CR',{maximumFractionDigits:0})}</span>
+      </div>
+      <div class="cot-validez">Esta cotización tiene una validez de 15 días a partir de su fecha de emisión. Precios sujetos a cambio después de esa fecha.</div>
+      <div class="cot-firmas">
+        <div class="cot-firma"><div class="linea">Por Extintores Seguridad</div></div>
+        <div class="cot-firma"><div class="linea">Aceptado por el cliente</div></div>
+      </div>
+      <div class="cot-foot">Extintores Seguridad · ${EMPRESA_TELEFONO} · ${EMPRESA_CORREO}</div>
+    `;
+    const safeName = (o.cliente||'cotizacion').toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,30);
+    downloadPrintable(body, `cotizacion_${safeName}.html`, 'Cotización — ' + o.cliente, COTIZACION_CSS);
+  }
+
   function printReceipt(id){
     const rec = records.find(r => r.id === id);
     if(!rec) return;
@@ -990,6 +1153,12 @@
     const d = new Date(dateStr + 'T00:00:00');
     if(isNaN(d)) return '';
     d.setMonth(d.getMonth() + months);
+    return d.toISOString().slice(0,10);
+  }
+  function addDays(dateStr, days){
+    const d = new Date(dateStr + 'T00:00:00');
+    if(isNaN(d)) return dateStr;
+    d.setDate(d.getDate() + days);
     return d.toISOString().slice(0,10);
   }
   function esc(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -1166,72 +1335,18 @@
     });
   }
 
-  function esTecnico(){ return userRole === 'tecnico'; }
+  function esAdmin(){ return userRole === 'admin'; }
 
-  async function conAutorizacionAdmin(accion){
-    // Si no es técnico, ejecuta directo. Si es técnico, pide contraseña de un admin antes de continuar.
-    if(!esTecnico()){ await accion(); return; }
-    abrirModalAutorizacion(accion);
+  async function soloAdmin(accion){
+    // Cualquiera puede mover algo a la papelera, pero el borrado DEFINITIVO (o vaciar la papelera)
+    // solo lo puede ejecutar el usuario administrador. Los demás roles quedan bloqueados aquí.
+    if(!esAdmin()){
+      showToast('Solo el administrador puede borrar definitivamente. Queda en la papelera esperando su aprobación.');
+      return;
+    }
+    await accion();
   }
 
-  function abrirModalAutorizacion(accion){
-    let overlay = document.querySelector('.auth-admin-overlay');
-    if(overlay) overlay.remove();
-    overlay = document.createElement('div');
-    overlay.className = 'overlay auth-admin-overlay';
-    overlay.innerHTML = `
-      <div class="modal" style="max-width:380px;">
-        <div class="modal-head">
-          <h2>Autorización requerida</h2>
-          <button id="auth-admin-close">×</button>
-        </div>
-        <div class="modal-body">
-          <p style="font-size:12.5px;color:#8a8371;margin-top:0;">Esta acción necesita el correo y la contraseña de un administrador.</p>
-          <div class="form-row full"><div><label>Correo del administrador</label><input type="email" id="auth-admin-email" placeholder="correo@ejemplo.com"/></div></div>
-          <div class="form-row full"><div><label>Contraseña</label><input type="password" id="auth-admin-pass" placeholder="Contraseña"/></div></div>
-          <div id="auth-admin-error" style="color:var(--red);font-size:12px;display:none;margin-top:4px;"></div>
-        </div>
-        <div class="modal-foot">
-          <button class="btn-ghost" id="auth-admin-cancel">Cancelar</button>
-          <button class="btn-primary" id="auth-admin-confirm">Autorizar</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-    const cerrar = ()=> overlay.remove();
-    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) cerrar(); });
-    document.getElementById('auth-admin-close').addEventListener('click', cerrar);
-    document.getElementById('auth-admin-cancel').addEventListener('click', cerrar);
-    document.getElementById('auth-admin-confirm').addEventListener('click', async ()=>{
-      const email = document.getElementById('auth-admin-email').value.trim();
-      const pass = document.getElementById('auth-admin-pass').value;
-      const errEl = document.getElementById('auth-admin-error');
-      errEl.style.display = 'none';
-      if(!email || !pass){
-        errEl.textContent = 'Escribe el correo y la contraseña.';
-        errEl.style.display = 'block';
-        return;
-      }
-      const btn = document.getElementById('auth-admin-confirm');
-      btn.disabled = true; btn.textContent = 'Verificando...';
-      try{
-        const res = await fetch(AUTH_SIGNIN_URL, {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ email, password: pass, returnSecureToken: true })
-        });
-        const data = await res.json();
-        if(!res.ok) throw new Error('Correo o contraseña incorrectos.');
-        const doc = await fetchUserDoc(data.localId);
-        if(!doc || doc.role !== 'admin') throw new Error('Esa cuenta no tiene permisos de administrador.');
-        cerrar();
-        await accion();
-      }catch(e){
-        errEl.textContent = e.message || 'No se pudo verificar. Intenta de nuevo.';
-        errEl.style.display = 'block';
-        btn.disabled = false; btn.textContent = 'Autorizar';
-      }
-    });
-  }
 
   async function fetchAllUsers(){
     const url = `${FIRESTORE_BASE}/users?key=${FIREBASE_API_KEY}`;
@@ -1343,7 +1458,7 @@
       <div class="error-screen">
         <div class="error-box" style="max-width:380px;text-align:left;">
           <h2 style="text-align:center;">${authView==='login' ? 'Iniciar sesión' : 'Crear cuenta'}</h2>
-          <p style="text-align:center;color:#8a8371;margin-top:-6px;">Control de Mantenimiento de Extintores</p>
+          <p style="text-align:center;color:#6B7280;margin-top:-6px;">Control de Mantenimiento de Extintores</p>
           ${authError ? `<p style="color:var(--red);font-weight:600;font-size:12.5px;">${esc(authError)}</p>` : ''}
           <div class="form-row full"><div><label>Correo</label><input type="email" id="auth-email" placeholder="tu@correo.com"/></div></div>
           <div class="form-row full"><div><label>Contraseña</label><input type="password" id="auth-password" placeholder="••••••••"/></div></div>
@@ -1419,7 +1534,7 @@
           <button id="papelera-close">×</button>
         </div>
         <div class="modal-body">
-          <p style="font-size:12px;color:#8a8371;margin:0 0 14px;">Lo que elimines queda aquí 30 días antes de borrarse definitivamente.</p>
+          <p style="font-size:12px;color:#6B7280;margin:0 0 14px;">${esAdmin() ? 'Lo que se elimine queda aquí, esperando tu aprobación para el borrado definitivo (o se puede restaurar).' : 'Lo que elimines queda aquí, a la espera de que el administrador apruebe el borrado definitivo. Mientras tanto, lo puedes restaurar.'}</p>
           ${items.length === 0 ? '<div class="dash-empty">La papelera está vacía.</div>' : items.map(item=>{
             const fecha = new Date(item.fechaEliminado).toLocaleDateString('es-CR', {day:'2-digit', month:'2-digit', year:'numeric'});
             let titulo = '', sub = '';
@@ -1429,6 +1544,21 @@
             } else if(item.tipo === 'venta'){
               titulo = item.data.cliente || 'Cliente sin nombre';
               sub = `Venta · ${item.data.marca || ''} ${item.data.producto || ''} · eliminado ${fecha}`;
+            } else if(item.tipo === 'oportunidad'){
+              titulo = item.data.cliente || 'Cliente sin nombre';
+              sub = `Oportunidad · ${etapaOf(item.data.etapa).label} · eliminado ${fecha}`;
+            } else if(item.tipo === 'recordatorio'){
+              titulo = item.data.texto || 'Recordatorio';
+              sub = `Recordatorio${item.data.cliente ? ' · '+item.data.cliente : ''} · eliminado ${fecha}`;
+            } else if(item.tipo === 'perfil_cliente'){
+              titulo = item.data.cliente || 'Cliente sin nombre';
+              sub = `Datos personales · eliminado ${fecha}`;
+            } else if(item.tipo === 'contrato'){
+              titulo = item.data.cliente || 'Cliente sin nombre';
+              sub = `Contrato de mantenimiento · eliminado ${fecha}`;
+            } else if(item.tipo === 'producto_inventario'){
+              titulo = item.data.nombre || 'Producto sin nombre';
+              sub = `Inventario · eliminado ${fecha}`;
             } else {
               titulo = item.data.concepto || 'Movimiento de caja';
               sub = `${item.data.tipo === 'entrada' ? 'Entrada' : 'Salida'} · ₡${(item.data.monto||0).toLocaleString('es-CR',{maximumFractionDigits:0})} · eliminado ${fecha}`;
@@ -1441,14 +1571,16 @@
               </div>
               <div class="papelera-actions">
                 <button class="restaurar" data-restaurar="${item.id}">Restaurar</button>
-                <button class="eliminar" data-eliminar-def="${item.id}">Eliminar</button>
+                ${esAdmin()
+                  ? `<button class="eliminar" data-eliminar-def="${item.id}">Eliminar</button>`
+                  : `<span class="papelera-pendiente">Pendiente de aprobación</span>`}
               </div>
             </div>`;
           }).join('')}
         </div>
         <div class="modal-foot">
           <button class="btn-ghost" id="papelera-cancel">Cerrar</button>
-          ${items.length > 0 ? `<button class="btn-primary" style="background:var(--red);" id="papelera-vaciar">Vaciar papelera</button>` : ''}
+          ${items.length > 0 && esAdmin() ? `<button class="btn-primary" style="background:var(--red);" id="papelera-vaciar">Vaciar papelera</button>` : ''}
         </div>
       </div>
     `;
@@ -1457,14 +1589,14 @@
     document.getElementById('papelera-close').addEventListener('click', ()=> overlay.remove());
     document.getElementById('papelera-cancel').addEventListener('click', ()=> overlay.remove());
     const btnVaciar = document.getElementById('papelera-vaciar');
-    if(btnVaciar) btnVaciar.addEventListener('click', async ()=>{ overlay.remove(); await conAutorizacionAdmin(vaciarPapelera); });
+    if(btnVaciar) btnVaciar.addEventListener('click', async ()=>{ overlay.remove(); await soloAdmin(vaciarPapelera); });
     document.querySelectorAll('[data-restaurar]').forEach(b=>{
       b.addEventListener('click', async ()=>{ overlay.remove(); await restaurarDePapelera(b.getAttribute('data-restaurar')); });
     });
     document.querySelectorAll('[data-eliminar-def]').forEach(b=>{
       b.addEventListener('click', async ()=>{
         const id = b.getAttribute('data-eliminar-def');
-        await conAutorizacionAdmin(async ()=>{ await eliminarDefinitivo(id); openPapeleraModal(); });
+        await soloAdmin(async ()=>{ await eliminarDefinitivo(id); openPapeleraModal(); });
       });
     });
   }
@@ -1495,12 +1627,12 @@
           <button id="admin-close">×</button>
         </div>
         <div class="modal-body">
-          <p style="font-size:12.5px;color:#8a8371;margin-top:0;">Aprueba nuevas cuentas o cambia el rol de un usuario.</p>
+          <p style="font-size:12.5px;color:#6B7280;margin-top:0;">Aprueba nuevas cuentas o cambia el rol de un usuario.</p>
           ${usersList.length === 0 ? '<p>Cargando usuarios...</p>' : usersList.map(u => `
             <div class="user-row">
               <div>
                 <div style="font-weight:600;">${esc(u.email)}</div>
-                <div style="font-size:11px;color:#8a8371;text-transform:uppercase;">${esc(u.role)}</div>
+                <div style="font-size:11px;color:#6B7280;text-transform:uppercase;">${esc(u.role)}</div>
               </div>
               <div class="user-row-actions">
                 ${u.role !== 'approved' ? `<button data-role="approved" data-uid="${u.uid}">Aprobar</button>` : ''}
@@ -1571,21 +1703,41 @@
       cajas = [];
       papelera = [];
       ventas = [];
+      oportunidades = [];
+      recordatorios = [];
+      clientesPerfil = [];
+      contratos = [];
+      inventario = [];
     } else if(parsed && typeof parsed === 'object'){
       records = parsed.records || [];
       cajas = parsed.cajas || [];
       papelera = parsed.papelera || [];
       ventas = parsed.ventas || [];
+      oportunidades = parsed.oportunidades || [];
+      recordatorios = parsed.recordatorios || [];
+      clientesPerfil = parsed.clientesPerfil || [];
+      contratos = parsed.contratos || [];
+      inventario = parsed.inventario || [];
     } else {
       records = [];
       cajas = [];
       papelera = [];
       ventas = [];
+      oportunidades = [];
+      recordatorios = [];
+      clientesPerfil = [];
+      contratos = [];
+      inventario = [];
     }
     migrarServicioCombinado();
     limpiarTarjetasObsoletas();
     limpiarPapeleraVieja();
-    render();
+    const nuevasOportunidades = generarOportunidadesRenovacion();
+    if(nuevasOportunidades > 0){
+      await persist(); // persist() ya llama a render() al final
+    } else {
+      render();
+    }
   }
 
   function limpiarPapeleraVieja(){
@@ -1600,7 +1752,7 @@
   function limpiarTarjetasObsoletas(){
     // Evita que las listas de tarjetas abiertas/cerradas crezcan sin límite con registros ya eliminados.
     const idsVigentes = new Set(
-      records.map(r => 'card-' + r.id).concat(records.map(r => 'item-' + r.id)).concat(ventas.map(v => 'venta-' + v.id))
+      records.map(r => 'card-' + r.id).concat(records.map(r => 'item-' + r.id)).concat(ventas.map(v => 'venta-' + v.id)).concat(contratos.map(c => 'contrato-' + c.id)).concat(inventario.map(p => 'producto-' + p.id))
     );
     const ordenesVigentes = new Set(records.filter(r=>r.orden).map(r => 'order-' + ordenKey(r)));
     tarjetasAbiertas = new Set([...tarjetasAbiertas].filter(k => idsVigentes.has(k)));
@@ -1632,7 +1784,7 @@
   }
 
   async function persist(){
-    const json = JSON.stringify({ records, cajas, papelera, ventas });
+    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario });
 
     // Siempre intentamos Firebase primero, sin importar si un guardado anterior en esta
     // sesión falló — un corte de internet puntual no debe "apagar" la nube para siempre.
@@ -1889,6 +2041,338 @@
     render();
   }
 
+  async function removeVenta(id){
+    const v = ventas.find(x => x.id === id);
+    if(!v) return;
+    if(!confirm(`¿Eliminar la venta de ${v.cliente || 'este cliente'}? Podrás recuperarla desde la Papelera durante 30 días.`)) return;
+    ventas = ventas.filter(x => x.id !== id);
+    papelera.push({ id: uid(), tipo: 'venta', fechaEliminado: Date.now(), data: v });
+    await persist();
+    showToast('Venta movida a la papelera.');
+    render();
+  }
+
+  /* ============================= CRM: Oportunidades (embudo), bitácora y recordatorios ============================= */
+
+  const ETAPAS_EMBUDO = [
+    { id:'contactado', label:'Contactado', cls:'etapa-contactado' },
+    { id:'cotizado', label:'Cotizado', cls:'etapa-cotizado' },
+    { id:'ganado', label:'Ganado', cls:'etapa-ganado' },
+    { id:'perdido', label:'Perdido', cls:'etapa-perdido' },
+  ];
+  const DIAS_RIESGO_CLIENTE = 15; // días después de vencida la próxima recarga, sin que el cliente vuelva, para marcarlo "en riesgo"
+
+  function etapaOf(id){ return ETAPAS_EMBUDO.find(e=>e.id===id) || ETAPAS_EMBUDO[0]; }
+
+  function emptyOportunidad(){
+    return { id:null, cliente:'', telefono:'', descripcion:'', montoEstimado:'', etapa:'contactado', fechaCreacion: todayISO(), bitacora:[], items:[] };
+  }
+  function emptyItemCotizacion(){
+    return { id: uid(), descripcion:'', precio:'', productoId:null };
+  }
+  let oportunidadForm = emptyOportunidad();
+  let editingOportunidadId = null;
+
+  function generarOportunidadesRenovacion(){
+    // Crea automáticamente una oportunidad ("Contactado") cuando un extintor está a 30-45 días
+    // de vencer, para que el embudo se alimente solo del negocio recurrente de mantenimiento.
+    // Usa origenRecordId para nunca duplicar la misma oportunidad en cargas futuras.
+    const yaExisten = new Set(oportunidades.filter(o=>o.origenRecordId).map(o=>o.origenRecordId));
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    let creadas = 0;
+    records.forEach(r=>{
+      if(!r.fechaVencimiento || yaExisten.has(r.id)) return;
+      const d = new Date(r.fechaVencimiento + 'T00:00:00');
+      if(isNaN(d)) return;
+      const diffDays = Math.round((d - hoy) / 86400000);
+      if(diffDays < 30 || diffDays > 45) return;
+      oportunidades = [{
+        id: uid(),
+        cliente: r.cliente || '',
+        telefono: r.telefono || '',
+        descripcion: `Renovación — ${r.tipo || 'extintor'}${r.capacidad ? ' '+r.capacidad : ''} (vence ${r.fechaVencimiento})`,
+        montoEstimado: r.precio || '',
+        etapa: 'contactado',
+        fechaCreacion: todayISO(),
+        bitacora: [],
+        origenRecordId: r.id,
+        autoGenerada: true,
+      }, ...oportunidades];
+      yaExisten.add(r.id);
+      creadas++;
+    });
+    return creadas;
+  }
+
+  function openNuevaOportunidad(clientePrellenado, telefonoPrellenado){
+    oportunidadForm = emptyOportunidad();
+    oportunidadForm.items = [emptyItemCotizacion()];
+    if(clientePrellenado) oportunidadForm.cliente = clientePrellenado;
+    if(telefonoPrellenado) oportunidadForm.telefono = telefonoPrellenado;
+    editingOportunidadId = null;
+    renderOportunidadModal(true);
+  }
+
+  function openEditarOportunidad(id){
+    const o = oportunidades.find(x => x.id === id);
+    if(!o) return;
+    oportunidadForm = Object.assign({}, o, {
+      bitacora: [...(o.bitacora||[])],
+      items: (o.items && o.items.length) ? o.items.map(x=>({...x})) : [emptyItemCotizacion()],
+    });
+    editingOportunidadId = id;
+    renderOportunidadModal(true);
+  }
+
+  function closeOportunidadModal(){ renderOportunidadModal(false); }
+
+  function capturarItemsCotizacionDesdeDOM(){
+    // Guarda lo que el usuario ya escribió en las líneas antes de agregar/quitar una y volver a dibujar el modal.
+    oportunidadForm.items = (oportunidadForm.items||[]).map(it=>{
+      const descEl = document.getElementById('oi-desc-'+it.id);
+      if(!descEl) return it; // línea nueva sin DOM todavía
+      const selectEl = document.querySelector(`[data-item-select="${it.id}"]`);
+      return {
+        ...it,
+        descripcion: descEl.value,
+        precio: document.getElementById('oi-precio-'+it.id).value,
+        productoId: selectEl ? (selectEl.value || null) : it.productoId,
+      };
+    });
+  }
+
+  function agregarLineaCotizacion(){
+    capturarItemsCotizacionDesdeDOM();
+    oportunidadForm.items.push(emptyItemCotizacion());
+    renderOportunidadModal(true);
+  }
+  function quitarLineaCotizacion(itemId){
+    if((oportunidadForm.items||[]).length <= 1) return;
+    capturarItemsCotizacionDesdeDOM();
+    oportunidadForm.items = oportunidadForm.items.filter(it => it.id !== itemId);
+    renderOportunidadModal(true);
+  }
+
+  async function saveOportunidad(){
+    const cliente = document.getElementById('of-cliente').value.trim();
+    if(!cliente){
+      showToast('El cliente es obligatorio.');
+      return;
+    }
+    const items = Array.from(document.querySelectorAll('[data-item-line]')).map(div=>{
+      const itemId = div.getAttribute('data-item-line');
+      const selectEl = document.querySelector(`[data-item-select="${itemId}"]`);
+      return {
+        id: itemId,
+        descripcion: document.getElementById('oi-desc-'+itemId).value.trim(),
+        precio: document.getElementById('oi-precio-'+itemId).value.trim(),
+        productoId: selectEl ? (selectEl.value || null) : null,
+      };
+    }).filter(it => it.descripcion || it.precio); // no guardamos líneas totalmente vacías
+    const nueva = {
+      id: editingOportunidadId || uid(),
+      cliente,
+      telefono: document.getElementById('of-telefono').value.trim(),
+      descripcion: document.getElementById('of-descripcion').value.trim(),
+      montoEstimado: document.getElementById('of-monto').value.trim(),
+      etapa: document.getElementById('of-etapa').value,
+      fechaCreacion: editingOportunidadId ? oportunidadForm.fechaCreacion : todayISO(),
+      bitacora: oportunidadForm.bitacora || [],
+      items,
+      // Preservamos el vínculo con el extintor de origen si esta oportunidad fue auto-generada,
+      // para que no se vuelva a duplicar en la próxima carga.
+      ...(oportunidadForm.origenRecordId ? { origenRecordId: oportunidadForm.origenRecordId, autoGenerada: true } : {}),
+    };
+    if(editingOportunidadId){
+      oportunidades = oportunidades.map(o => o.id === editingOportunidadId ? nueva : o);
+    } else {
+      oportunidades = [nueva, ...oportunidades];
+    }
+    const saveBtn = document.getElementById('oportunidad-modal-save');
+    if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
+    const ok = await persist();
+    if(!ok){
+      if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = editingOportunidadId ? 'Guardar cambios' : 'Crear oportunidad'; }
+      return;
+    }
+    showToast(editingOportunidadId ? 'Oportunidad actualizada.' : 'Oportunidad creada.');
+    closeOportunidadModal();
+    render();
+  }
+
+  async function removeOportunidad(id){
+    const o = oportunidades.find(x => x.id === id);
+    if(!o) return;
+    if(!confirm(`¿Eliminar la oportunidad de ${o.cliente || 'este cliente'}? Podrás recuperarla desde la Papelera durante 30 días.`)) return;
+    oportunidades = oportunidades.filter(x => x.id !== id);
+    papelera.push({ id: uid(), tipo: 'oportunidad', fechaEliminado: Date.now(), data: o });
+    await persist();
+    showToast('Oportunidad movida a la papelera.');
+    if(oportunidadSeleccionada === id) oportunidadSeleccionada = null;
+    render();
+  }
+
+  async function cambiarEtapaOportunidad(id, nuevaEtapa){
+    const o = oportunidades.find(x => x.id === id);
+    if(!o) return;
+    if(nuevaEtapa === 'perdido'){
+      const motivo = prompt('¿Por qué se perdió esta oportunidad? (opcional, ayuda a detectar patrones)');
+      if(motivo !== null) o.motivoPerdida = motivo.trim();
+    }
+    o.etapa = nuevaEtapa;
+    oportunidades = oportunidades.map(x => x.id === id ? o : x);
+    await persist();
+    showToast('Etapa: ' + etapaOf(nuevaEtapa).label);
+    render();
+  }
+
+  function abrirOportunidad(id){ oportunidadSeleccionada = id; animateViewChange = true; render(); }
+  function volverPipeline(){ oportunidadSeleccionada = null; animateViewChange = true; render(); }
+
+  const TIPOS_CONTACTO = ['Llamada','Visita','WhatsApp','Correo','Otro'];
+
+  async function agregarBitacora(oportunidadId){
+    const o = oportunidades.find(x => x.id === oportunidadId);
+    if(!o) return;
+    const tipo = document.getElementById('bit-tipo').value;
+    const nota = document.getElementById('bit-nota').value.trim();
+    if(!nota){
+      showToast('Escribe una nota sobre el contacto.');
+      return;
+    }
+    o.bitacora = [{ id: uid(), fecha: todayISO(), tipo, nota }, ...(o.bitacora||[])];
+    oportunidades = oportunidades.map(x => x.id === oportunidadId ? o : x);
+    await persist();
+    showToast('Nota agregada a la bitácora.');
+    render();
+  }
+
+  /* ---------- Recordatorios ---------- */
+
+  function emptyRecordatorio(){
+    return { id:null, texto:'', fecha: todayISO(), cliente:'', telefono:'', oportunidadId:null, completado:false };
+  }
+
+  function abrirRecordatorioRapidoModal(cliente, telefono){
+    let overlay = document.querySelector('.rec-rapido-overlay');
+    if(overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.className = 'overlay rec-rapido-overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:380px;">
+        <div class="modal-head">
+          <h2>Nuevo recordatorio</h2>
+          <button id="rr-close">×</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:12.5px;color:#6B7280;margin-top:0;">${cliente ? 'Para ' + esc(cliente) : 'Recordatorio general'}</p>
+          <div class="form-row full"><div><label>Texto</label><input id="rr-texto" placeholder="ej. Llamar para confirmar próxima recarga"/></div></div>
+          <div class="form-row full"><div><label>Fecha</label><input type="date" id="rr-fecha" value="${todayISO()}"/></div></div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn-ghost" id="rr-cancel">Cancelar</button>
+          <button class="btn-primary" id="rr-guardar">Crear recordatorio</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const cerrar = ()=> overlay.remove();
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) cerrar(); });
+    document.getElementById('rr-close').addEventListener('click', cerrar);
+    document.getElementById('rr-cancel').addEventListener('click', cerrar);
+    document.getElementById('rr-guardar').addEventListener('click', async ()=>{
+      const texto = document.getElementById('rr-texto').value.trim();
+      const fecha = document.getElementById('rr-fecha').value;
+      if(!texto || !fecha){ showToast('Escribe el recordatorio y elige una fecha.'); return; }
+      recordatorios = [{ id: uid(), texto, fecha, cliente: cliente||'', telefono: telefono||'', oportunidadId: null, completado: false }, ...recordatorios];
+      await persist();
+      cerrar();
+      showToast('Recordatorio creado.');
+      render();
+    });
+  }
+
+  async function crearRecordatorioRapido(clientePrellenado, telefonoPrellenado, oportunidadId){
+    const texto = document.getElementById('rec-texto').value.trim();
+    const fecha = document.getElementById('rec-fecha').value;
+    if(!texto || !fecha){
+      showToast('Escribe el recordatorio y elige una fecha.');
+      return;
+    }
+    recordatorios = [{
+      id: uid(), texto, fecha,
+      cliente: clientePrellenado || '', telefono: telefonoPrellenado || '',
+      oportunidadId: oportunidadId || null, completado: false,
+    }, ...recordatorios];
+    await persist();
+    showToast('Recordatorio creado.');
+    render();
+  }
+
+  async function toggleRecordatorio(id){
+    const r = recordatorios.find(x => x.id === id);
+    if(!r) return;
+    r.completado = !r.completado;
+    recordatorios = recordatorios.map(x => x.id === id ? r : x);
+    await persist();
+    render();
+  }
+
+  async function removeRecordatorio(id){
+    const r = recordatorios.find(x => x.id === id);
+    if(!r) return;
+    recordatorios = recordatorios.filter(x => x.id !== id);
+    papelera.push({ id: uid(), tipo: 'recordatorio', fechaEliminado: Date.now(), data: r });
+    await persist();
+    showToast('Recordatorio movido a la papelera.');
+    render();
+  }
+
+  function setCrmSubvista(v){ crmSubvista = v; animateViewChange = true; render(); }
+
+  /* ---------- Clientes en riesgo ---------- */
+
+  function clientesEnRiesgo(){
+    // Un cliente está "en riesgo" si su recarga vencida más antigua pasó hace más de
+    // DIAS_RIESGO_CLIENTE días Y no tiene ningún registro nuevo (fechaIngreso) después de esa fecha de vencimiento.
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const clientes = agruparClientesMantenimiento();
+    const enRiesgo = [];
+    clientes.forEach(c=>{
+      const vencidosDelCliente = c.registros.filter(r => r.fechaVencimiento && vencStatus(r.fechaVencimiento) === 'vencido');
+      if(vencidosDelCliente.length === 0) return;
+      // La fecha de vencimiento más antigua (la más urgente) de este cliente.
+      const masAntigua = vencidosDelCliente.reduce((min,r)=> (!min || r.fechaVencimiento < min) ? r.fechaVencimiento : min, null);
+      const fechaVenc = new Date(masAntigua + 'T00:00:00');
+      const diasVencido = Math.round((hoy - fechaVenc) / 86400000);
+      if(diasVencido < DIAS_RIESGO_CLIENTE) return;
+      // ¿Volvió después de que venció? Si tiene algún registro con fechaIngreso posterior a la fecha de vencimiento, ya no está en riesgo.
+      const volvioDespues = c.registros.some(r => r.fechaIngreso && r.fechaIngreso > masAntigua);
+      if(volvioDespues) return;
+      enRiesgo.push({ ...c, fechaVencimientoMasAntigua: masAntigua, diasVencido });
+    });
+    return enRiesgo.sort((a,b)=> b.diasVencido - a.diasVencido);
+  }
+
+  function tasaRenovacionAnual(){
+    // De los clientes cuya recarga venció hace más de DIAS_RIESGO_CLIENTE días (tiempo suficiente
+    // para juzgar), ¿qué % sí volvió a renovar (tiene un registro nuevo después de esa fecha)?
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const clientes = agruparClientesMantenimiento();
+    let juzgables = 0, renovaron = 0;
+    clientes.forEach(c=>{
+      const vencidosDelCliente = c.registros.filter(r => r.fechaVencimiento && vencStatus(r.fechaVencimiento) === 'vencido');
+      if(vencidosDelCliente.length === 0) return;
+      const masAntigua = vencidosDelCliente.reduce((min,r)=> (!min || r.fechaVencimiento < min) ? r.fechaVencimiento : min, null);
+      const fechaVenc = new Date(masAntigua + 'T00:00:00');
+      const diasVencido = Math.round((hoy - fechaVenc) / 86400000);
+      if(diasVencido < DIAS_RIESGO_CLIENTE) return;
+      juzgables++;
+      if(c.registros.some(r => r.fechaIngreso && r.fechaIngreso > masAntigua)) renovaron++;
+    });
+    return { porcentaje: juzgables > 0 ? Math.round((renovaron/juzgables)*100) : null, renovaron, juzgables };
+  }
+
   function renderVentaModal(open){
     let overlay = document.querySelector('.venta-overlay');
     if(!open){
@@ -1949,6 +2433,298 @@
     document.getElementById('venta-modal-save').addEventListener('click', saveVenta);
   }
 
+  function itemCotizacionHTML(it, idx){
+    const items = oportunidadForm.items || [];
+    return `
+      <div class="linea-extintor" data-item-line="${it.id}">
+        <div class="linea-head">
+          <b>Línea ${idx + 1}</b>
+          <button type="button" class="linea-remove" data-remove-item-linea="${it.id}" ${items.length<=1?'disabled':''}>Quitar</button>
+        </div>
+        ${inventario.length ? `
+        <div class="form-row full">
+          <div><label>Elegir del inventario (opcional)</label>
+            <select class="oi-select-inventario" data-item-select="${it.id}">
+              <option value="">— Escribir manualmente —</option>
+              ${inventario.map(p=>`<option value="${p.id}" ${it.productoId===p.id?'selected':''}>${esc(p.nombre)}${p.precioUnitario ? ' · ₡'+parseFloat(p.precioUnitario).toLocaleString('es-CR',{maximumFractionDigits:0}) : ''}${estadoStock(p)!=='ok' ? ' · '+(estadoStock(p)==='agotado'?'AGOTADO':'stock bajo') : ''}</option>`).join('')}
+            </select>
+          </div>
+        </div>` : ''}
+        <div class="form-row">
+          <div><label>Descripción</label><input id="oi-desc-${it.id}" value="${esc(it.descripcion)}" placeholder="ej. Extintor PQS 10 lb"/></div>
+          <div><label>Precio</label><input type="number" id="oi-precio-${it.id}" min="0" step="0.01" value="${esc(it.precio)}" placeholder="0.00" data-item-precio="${it.id}"/></div>
+        </div>
+      </div>`;
+  }
+
+  function renderOportunidadModal(open){
+    let overlay = document.querySelector('.oportunidad-overlay');
+    if(!open){
+      if(overlay) overlay.remove();
+      return;
+    }
+    if(overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.className = 'overlay oportunidad-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-head">
+          <h2>${editingOportunidadId ? 'Editar oportunidad' : 'Nueva oportunidad'}</h2>
+          <button id="oportunidad-modal-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div><label>Cliente *</label><input id="of-cliente" value="${esc(oportunidadForm.cliente)}" placeholder="Nombre o empresa"/></div>
+            <div><label>Teléfono</label><input type="tel" id="of-telefono" value="${esc(oportunidadForm.telefono)}" placeholder="8888-8888"/></div>
+          </div>
+          <div class="form-row full">
+            <div><label>Descripción general</label><textarea id="of-descripcion" placeholder="ej. Cotización de 10 extintores PQS para bodega nueva...">${esc(oportunidadForm.descripcion)}</textarea></div>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--line);margin:14px 0 12px;"/>
+          <div id="items-cotizacion-container">
+            ${(oportunidadForm.items||[]).map((it,i)=>itemCotizacionHTML(it,i)).join('')}
+          </div>
+          <button type="button" class="btn-add-linea" id="btn-add-item-cotizacion">+ Agregar línea de cotización</button>
+          <div class="form-row" style="margin-top:14px;">
+            <div><label>Monto total (suma automática, editable)</label><input type="number" id="of-monto" min="0" step="0.01" value="${esc(oportunidadForm.montoEstimado)}" placeholder="0.00"/></div>
+            <div><label>Etapa</label>
+              <select id="of-etapa">
+                ${ETAPAS_EMBUDO.map(e=>`<option value="${e.id}" ${e.id===oportunidadForm.etapa?'selected':''}>${e.label}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn-ghost" id="oportunidad-modal-cancel">Cancelar</button>
+          <button class="btn-primary" id="oportunidad-modal-save">${editingOportunidadId ? 'Guardar cambios' : 'Crear oportunidad'}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeOportunidadModal(); });
+    document.getElementById('oportunidad-modal-close').addEventListener('click', closeOportunidadModal);
+    document.getElementById('oportunidad-modal-cancel').addEventListener('click', closeOportunidadModal);
+    document.getElementById('oportunidad-modal-save').addEventListener('click', saveOportunidad);
+    document.getElementById('btn-add-item-cotizacion').addEventListener('click', agregarLineaCotizacion);
+    document.querySelectorAll('[data-remove-item-linea]').forEach(b=>{
+      b.addEventListener('click', ()=> quitarLineaCotizacion(b.getAttribute('data-remove-item-linea')));
+    });
+    document.querySelectorAll('[data-item-select]').forEach(sel=>{
+      sel.addEventListener('change', ()=>{
+        const itemId = sel.getAttribute('data-item-select');
+        const producto = inventario.find(p => p.id === sel.value);
+        const descEl = document.getElementById('oi-desc-'+itemId);
+        const precioEl = document.getElementById('oi-precio-'+itemId);
+        if(producto){
+          descEl.value = producto.nombre + (producto.capacidad ? ' ('+producto.capacidad+')' : '');
+          precioEl.value = producto.precioUnitario || '';
+        }
+        // Dispara la recalculación del total (mismo listener que ya escucha 'input' en el precio).
+        precioEl.dispatchEvent(new Event('input'));
+      });
+    });
+    document.querySelectorAll('[data-item-precio]').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        // Recalcula el total en el DOM directamente, sin redibujar el modal (para no perder el foco).
+        let suma = 0;
+        document.querySelectorAll('[data-item-precio]').forEach(precioEl=>{
+          suma += parseFloat(precioEl.value) || 0;
+        });
+        const totalInput = document.getElementById('of-monto');
+        if(totalInput) totalInput.value = suma > 0 ? suma : '';
+      });
+    });
+  }
+
+  function oportunidadCardHTML(o){
+    return `
+      <div class="oportunidad-card" data-oportunidad-key="${o.id}" draggable="true" data-drag-id="${o.id}">
+        <div class="oc-cliente">${esc(o.cliente)} ${o.autoGenerada ? '<span class="etiqueta-badge" style="background:var(--brass);">Auto</span>' : ''}</div>
+        ${o.descripcion ? `<div class="oc-desc">${esc(o.descripcion)}</div>` : ''}
+        ${o.etapa==='perdido' && o.motivoPerdida ? `<div class="oc-desc" style="color:var(--red-dark);">Motivo: ${esc(o.motivoPerdida)}</div>` : ''}
+        <div class="oc-foot">
+          ${o.montoEstimado ? `<span class="oc-monto">₡${parseFloat(o.montoEstimado).toLocaleString('es-CR',{maximumFractionDigits:0})}</span>` : '<span></span>'}
+          <span class="oc-fecha mono">${esc(o.fechaCreacion)}</span>
+        </div>
+      </div>`;
+  }
+
+  function renderPipeline(){
+    const q = pipelineQuery.trim().toLowerCase();
+    const filtradas = q ? oportunidades.filter(o => (o.cliente||'').toLowerCase().includes(q) || (o.descripcion||'').toLowerCase().includes(q)) : oportunidades;
+    return `
+      <div class="pipeline-toolbar">
+        <div style="font-size:12px;color:#6B7280;">${filtradas.length} oportunidad(es) ${q?'encontradas':'activas'}</div>
+        <input class="search" id="pipeline-search-input" placeholder="Buscar por cliente..." value="${esc(pipelineQuery)}" style="min-width:180px;"/>
+        <button class="btn-primary" id="btn-nueva-oportunidad">+ Nueva oportunidad</button>
+      </div>
+      <div class="pipeline-board">
+        ${ETAPAS_EMBUDO.map(et=>{
+          const items = filtradas.filter(o=>o.etapa===et.id);
+          const totalEtapa = items.reduce((s,o)=>s+(parseFloat(o.montoEstimado)||0),0);
+          return `
+          <div class="pipeline-col" data-etapa-col="${et.id}">
+            <div class="pipeline-col-head ${et.cls}">
+              <span>${et.label}</span>
+              <span class="pipeline-col-count">${items.length}${totalEtapa>0?' · ₡'+totalEtapa.toLocaleString('es-CR',{maximumFractionDigits:0}):''}</span>
+            </div>
+            <div class="pipeline-col-body" data-etapa-drop="${et.id}">
+              ${items.length === 0 ? '<div class="pipeline-empty">Sin oportunidades</div>' : items.map(oportunidadCardHTML).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  function renderRecordatorios(){
+    const hoy = todayISO();
+    const pendientes = recordatorios.filter(r=>!r.completado).sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||''));
+    const completados = recordatorios.filter(r=>r.completado).sort((a,b)=> (b.fecha||'').localeCompare(a.fecha||'')).slice(0,20);
+    function recRow(r){
+      const vencido = !r.completado && r.fecha < hoy;
+      const esHoy = !r.completado && r.fecha === hoy;
+      return `
+        <div class="recordatorio-row ${r.completado?'rec-completado':''}">
+          <input type="checkbox" ${r.completado?'checked':''} data-toggle-rec="${r.id}"/>
+          <div class="rec-body">
+            <div class="rec-texto">${esc(r.texto)}</div>
+            <div class="rec-sub">${r.cliente ? esc(r.cliente)+' · ' : ''}<span class="mono ${vencido?'venc-vencido':(esHoy?'venc-proximo':'')}">${esc(r.fecha)}${vencido?' · Atrasado':(esHoy?' · Hoy':'')}</span></div>
+          </div>
+          <button class="rec-del" data-del-rec="${r.id}">Quitar</button>
+        </div>`;
+    }
+    return `
+      <div class="caja-card" style="margin-bottom:16px;">
+        <h3>Nuevo recordatorio</h3>
+        <div class="mov-form">
+          <div style="flex:2;"><label>Texto</label><input id="rec-texto" placeholder="ej. Llamar a Juan para confirmar cotización"/></div>
+          <div><label>Fecha</label><input type="date" id="rec-fecha" value="${todayISO()}"/></div>
+          <button class="btn-primary" id="btn-crear-recordatorio">Agregar</button>
+        </div>
+      </div>
+      <div class="caja-card">
+        <h3>Pendientes (${pendientes.length})</h3>
+        ${pendientes.length === 0 ? '<div class="dash-empty">No tienes recordatorios pendientes.</div>' : pendientes.map(recRow).join('')}
+      </div>
+      ${completados.length ? `
+      <div class="caja-card">
+        <h3>Completados recientes</h3>
+        ${completados.map(recRow).join('')}
+      </div>` : ''}
+    `;
+  }
+
+  let contratosFiltro = 'todos'; // 'todos' | 'activo' | 'cancelado'
+  function setContratosFiltro(f){ contratosFiltro = f; render(); }
+
+  function renderContratos(){
+    const filtrados = contratos.filter(c => contratosFiltro==='todos' || c.estado===contratosFiltro)
+      .sort((a,b)=> (a.fechaRenovacion||'').localeCompare(b.fechaRenovacion||''));
+    const activos = contratos.filter(c=>c.estado==='activo');
+    const valorTotalAnual = activos.reduce((s,c)=> s + (parseFloat(c.valorAnual)||0), 0);
+    const porVencer = activos.filter(c => vencStatus(c.fechaRenovacion) === 'proximo').length;
+    const vencidos = activos.filter(c => vencStatus(c.fechaRenovacion) === 'vencido').length;
+    return `
+      <div class="kpi-grid" style="margin-bottom:18px;">
+        <div class="kpi-card">
+          <div class="kpi-label">Contratos activos</div>
+          <div class="kpi-value">${activos.length}</div>
+          <div class="kpi-sub">₡${valorTotalAnual.toLocaleString('es-CR',{maximumFractionDigits:0})}/año en total</div>
+        </div>
+        <div class="kpi-card kpi-amber ${porVencer>0?'kpi-critical':''}">
+          <div class="kpi-label">Por vencer (30 días)</div>
+          <div class="kpi-value">${porVencer}</div>
+        </div>
+        <div class="kpi-card kpi-red ${vencidos>0?'kpi-critical':''}">
+          <div class="kpi-label">Vencidos</div>
+          <div class="kpi-value">${vencidos}</div>
+        </div>
+      </div>
+      <div class="clientes-toolbar" style="padding:0 0 16px;">
+        <div class="filters">
+          <button class="chip ${contratosFiltro==='todos'?'active':''}" data-contratos-filtro="todos">Todos</button>
+          <button class="chip ${contratosFiltro==='activo'?'active':''}" data-contratos-filtro="activo">Activos</button>
+          <button class="chip ${contratosFiltro==='cancelado'?'active':''}" data-contratos-filtro="cancelado">Cancelados</button>
+        </div>
+        <button class="btn-primary" id="btn-nuevo-contrato">+ Nuevo contrato</button>
+      </div>
+      ${filtrados.length === 0 ? '<div class="dash-empty">No hay contratos que coincidan.</div>' : `<div class="grid">${filtrados.map(contratoCardHTML).join('')}</div>`}
+    `;
+  }
+
+  function renderOportunidadDetalle(id){
+    const o = oportunidades.find(x=>x.id===id);
+    if(!o){ oportunidadSeleccionada = null; return renderPipeline(); }
+    const recVinculados = recordatorios.filter(r=>r.oportunidadId===id && !r.completado).sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+    return `
+      <button class="back-link" id="btn-volver-pipeline">← Volver al embudo</button>
+      <div class="cliente-detail-head">
+        <div>
+          <h2>${esc(o.cliente)}</h2>
+          <div class="sub">${o.telefono ? esc(o.telefono)+' · ' : ''}${etapaOf(o.etapa).label}${o.montoEstimado ? ' · ₡'+parseFloat(o.montoEstimado).toLocaleString('es-CR',{maximumFractionDigits:0}) : ''}</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          ${ETAPAS_EMBUDO.map(et=>`<button class="chip ${o.etapa===et.id?'active':''}" data-cambiar-etapa="${et.id}" data-oportunidad-etapa="${o.id}">${et.label}</button>`).join('')}
+        </div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <button class="btn-ghost" data-generar-cotizacion="${o.id}">📄 Generar cotización en PDF</button>
+      </div>
+      ${o.descripcion ? `<div class="caja-card"><h3>Descripción</h3><p style="margin:0;font-size:13px;">${esc(o.descripcion)}</p></div>` : ''}
+      ${o.etapa==='perdido' && o.motivoPerdida ? `<div class="caja-card"><h3>Motivo de la pérdida</h3><p style="margin:0;font-size:13px;color:var(--red-dark);">${esc(o.motivoPerdida)}</p></div>` : ''}
+      <div class="caja-card">
+        <h3>Recordatorio de seguimiento</h3>
+        ${recVinculados.length ? recVinculados.map(r=>`
+          <div class="recordatorio-row">
+            <input type="checkbox" data-toggle-rec="${r.id}"/>
+            <div class="rec-body"><div class="rec-texto">${esc(r.texto)}</div><div class="rec-sub mono">${esc(r.fecha)}</div></div>
+            <button class="rec-del" data-del-rec="${r.id}">Quitar</button>
+          </div>`).join('') : ''}
+        <div class="mov-form" style="margin-top:${recVinculados.length?'12px':'0'};">
+          <div style="flex:2;"><label>Texto</label><input id="rec-texto" placeholder="ej. Volver a llamar"/></div>
+          <div><label>Fecha</label><input type="date" id="rec-fecha" value="${todayISO()}"/></div>
+          <button class="btn-primary" id="btn-crear-recordatorio-vinculado" data-oportunidad="${o.id}">Agregar</button>
+        </div>
+      </div>
+      <div class="caja-card">
+        <h3>Bitácora de contacto</h3>
+        <div class="mov-form">
+          <div style="max-width:130px;"><label>Tipo</label>
+            <select id="bit-tipo">${TIPOS_CONTACTO.map(t=>`<option>${t}</option>`).join('')}</select>
+          </div>
+          <div style="flex:2;"><label>Nota</label><input id="bit-nota" placeholder="ej. Contestó, pidió que le llame la otra semana"/></div>
+          <button class="btn-primary" id="btn-agregar-bitacora" data-oportunidad="${o.id}">Agregar</button>
+        </div>
+        <div class="mov-list">
+          ${(o.bitacora||[]).length === 0 ? '<div class="caja-empty">Sin contactos registrados todavía.</div>' : (o.bitacora||[]).map(b=>`
+            <div class="mov-row">
+              <span class="m-hora mono">${esc(b.fecha)}</span>
+              <span class="m-metodo-tag">${esc(b.tipo)}</span>
+              <span class="m-concepto">${esc(b.nota)}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-ghost" data-action="editar-oportunidad" data-id="${o.id}">Editar datos</button>
+        <button class="btn-ghost danger" data-action="eliminar-oportunidad" data-id="${o.id}">Eliminar oportunidad</button>
+      </div>
+    `;
+  }
+
+  function renderCRM(){
+    return `
+      <div class="dash-content">
+        <div class="view-toggle" style="margin-bottom:16px;">
+          <button data-crm-subvista="pipeline" class="${crmSubvista==='pipeline'?'active':''}">Embudo de ventas</button>
+          <button data-crm-subvista="recordatorios" class="${crmSubvista==='recordatorios'?'active':''}">Recordatorios${recordatorios.filter(r=>!r.completado).length ? ' ('+recordatorios.filter(r=>!r.completado).length+')' : ''}</button>
+          <button data-crm-subvista="contratos" class="${crmSubvista==='contratos'?'active':''}">Contratos${contratos.filter(c=>c.estado==='activo').length ? ' ('+contratos.filter(c=>c.estado==='activo').length+')' : ''}</button>
+        </div>
+        ${oportunidadSeleccionada ? renderOportunidadDetalle(oportunidadSeleccionada) : (crmSubvista==='pipeline' ? renderPipeline() : (crmSubvista==='recordatorios' ? renderRecordatorios() : renderContratos()))}
+      </div>
+    `;
+  }
+
   async function restaurarDePapelera(papeleraId){
     const item = papelera.find(p => p.id === papeleraId);
     if(!item) return;
@@ -1957,6 +2733,16 @@
       records = [item.data, ...records];
     } else if(item.tipo === 'venta'){
       ventas = [item.data, ...ventas];
+    } else if(item.tipo === 'oportunidad'){
+      oportunidades = [item.data, ...oportunidades];
+    } else if(item.tipo === 'recordatorio'){
+      recordatorios = [item.data, ...recordatorios];
+    } else if(item.tipo === 'perfil_cliente'){
+      clientesPerfil = [item.data, ...clientesPerfil];
+    } else if(item.tipo === 'contrato'){
+      contratos = [item.data, ...contratos];
+    } else if(item.tipo === 'producto_inventario'){
+      inventario = [item.data, ...inventario];
     } else if(item.tipo === 'movimiento_caja'){
       const caja = cajas.find(c => c.id === item.cajaId);
       if(caja){
@@ -2145,9 +2931,19 @@
       </details>`;
   }
 
+  function cajaDeFecha(fecha){
+    return cajas.find(c => c.fecha === fecha) || null;
+  }
   function cajaDeHoy(){
-    const hoy = todayISO();
-    return cajas.find(c => c.fecha === hoy) || null;
+    return cajaDeFecha(todayISO());
+  }
+  function irACajaFecha(fecha){
+    if(!fecha) return;
+    // No dejamos navegar a fechas futuras (no tiene sentido cuadrar un día que no ha pasado).
+    if(fecha > todayISO()) fecha = todayISO();
+    cajaVistaFecha = fecha;
+    animateViewChange = true;
+    render();
   }
 
   async function abrirCaja(){
@@ -2157,7 +2953,8 @@
       showToast('Ingresa un monto de apertura válido.');
       return;
     }
-    const nueva = { id: uid(), fecha: todayISO(), apertura: monto, cierre: null, movimientos: [], cerrada: false };
+    const fecha = cajaVistaFecha || todayISO();
+    const nueva = { id: uid(), fecha, apertura: monto, cierre: null, movimientos: [], cerrada: false };
     cajas = [nueva, ...cajas];
     const ok = await persist();
     if(ok) showToast('Caja abierta con ₡' + monto.toLocaleString('es-CR'));
@@ -2167,7 +2964,7 @@
   const METODOS_PAGO = ['Efectivo','SINPE','Tarjeta','Transferencia','Crédito'];
 
   async function agregarMovimiento(){
-    const caja = cajaDeHoy();
+    const caja = cajaDeFecha(cajaVistaFecha || todayISO());
     if(!caja || caja.cerrada) return;
     const tipo = document.getElementById('mov-tipo').value;
     const metodo = document.getElementById('mov-metodo').value;
@@ -2194,7 +2991,7 @@
   }
 
   async function quitarMovimiento(movId){
-    const caja = cajaDeHoy();
+    const caja = cajaDeFecha(cajaVistaFecha || todayISO());
     if(!caja || caja.cerrada) return;
     const mov = caja.movimientos.find(m => m.id === movId);
     if(!mov) return;
@@ -2229,7 +3026,7 @@
   }
 
   async function cerrarCaja(){
-    const caja = cajaDeHoy();
+    const caja = cajaDeFecha(cajaVistaFecha || todayISO());
     if(!caja || caja.cerrada) return;
     const input = document.getElementById('caja-cierre-input');
     const contado = parseFloat(input.value);
@@ -2246,7 +3043,7 @@
   }
 
   async function reabrirCaja(){
-    const caja = cajaDeHoy();
+    const caja = cajaDeFecha(cajaVistaFecha || todayISO());
     if(!caja) return;
     caja.cerrada = false;
     cajas = cajas.map(c => c.id === caja.id ? caja : c);
@@ -2293,15 +3090,28 @@
   }
 
   function renderCaja(){
-    const caja = cajaDeHoy();
+    if(!cajaVistaFecha) cajaVistaFecha = todayISO();
+    const fecha = cajaVistaFecha;
+    const esHoy = fecha === todayISO();
+    const caja = cajaDeFecha(fecha);
     const resMes = resumenMes();
-    const historial = [...cajas].filter(c=>c.fecha !== todayISO()).sort((a,b)=> b.fecha.localeCompare(a.fecha)).slice(0,14);
+    const historial = [...cajas].filter(c=>c.fecha !== fecha).sort((a,b)=> b.fecha.localeCompare(a.fecha)).slice(0,14);
+
+    const selectorFecha = `
+      <div class="caja-card" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div><label>Ver caja del día</label><input type="date" id="caja-fecha-input" value="${fecha}" max="${todayISO()}"/></div>
+        <button class="btn-ghost" id="btn-caja-dia-anterior" title="Día anterior">◀</button>
+        <button class="btn-ghost" id="btn-caja-dia-siguiente" title="Día siguiente" ${fecha>=todayISO()?'disabled':''}>▶</button>
+        ${!esHoy ? `<button class="btn-ghost" id="btn-caja-ir-hoy">Ir a hoy</button>` : ''}
+      </div>
+    `;
 
     let cuerpoHoy = '';
     if(!caja){
       cuerpoHoy = `
         <div class="caja-card">
-          <h3>Apertura de caja — ${todayISO()}</h3>
+          <h3>Apertura de caja — ${esc(fecha)}${!esHoy ? ' <span class="badge" style="background:var(--amber);">Día anterior</span>' : ''}</h3>
+          ${!esHoy ? `<div class="caja-hint">Este día nunca se abrió. Puedes abrirlo ahora mismo con el monto que tenías, agregar los movimientos que falten y cerrarlo para dejar el cuadre al día.</div>` : ''}
           <div class="caja-open-form">
             <div><label>Monto de apertura</label><input type="number" id="caja-apertura-input" min="0" step="0.01" placeholder="0.00"/></div>
             <button class="btn-primary" id="btn-abrir-caja">Abrir caja</button>
@@ -2322,7 +3132,7 @@
         </div>` : '';
       cuerpoHoy = `
         <div class="caja-card">
-          <h3>Caja de hoy — ${esc(caja.fecha)} ${caja.cerrada ? '<span class="badge" style="background:#eee;color:#555;">Cerrada</span>' : ''}</h3>
+          <h3>${esHoy ? 'Caja de hoy' : 'Caja del'} — ${esc(caja.fecha)} ${caja.cerrada ? '<span class="badge" style="background:#eee;color:#555;">Cerrada</span>' : (!esHoy ? '<span class="badge" style="background:var(--amber);">Día anterior, sin cerrar</span>' : '')}</h3>
           <div class="caja-kpis">
             <div class="caja-kpi"><b>₡${caja.apertura.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Apertura (efectivo)</small></div>
             <div class="caja-kpi"><b style="color:var(--green);">₡${r.efectivoEntradas.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Entradas efectivo</small></div>
@@ -2356,11 +3166,11 @@
           <div class="caja-hint" style="margin:-8px 0 16px;">Si anotas el nombre del cliente, este movimiento quedará vinculado a su historial en la pestaña Clientes.</div>` : ''}
 
           <div class="mov-list">
-            ${caja.movimientos.length === 0 ? '<div class="caja-empty">Sin movimientos registrados hoy.</div>' : caja.movimientos.map(m=>`
+            ${caja.movimientos.length === 0 ? `<div class="caja-empty">Sin movimientos registrados ${esHoy?'hoy':'ese día'}.</div>` : caja.movimientos.map(m=>`
               <div class="mov-row">
                 <span class="m-hora">${esc(m.hora||'')}</span>
                 <span class="m-metodo-tag">${esc(m.metodo||'Efectivo')}</span>
-                <span class="m-concepto">${esc(m.concepto)}${m.cliente ? ` <span style="color:#8a8371;font-weight:400;">· ${esc(m.cliente)}</span>` : ''}</span>
+                <span class="m-concepto">${esc(m.concepto)}${m.cliente ? ` <span style="color:#6B7280;font-weight:400;">· ${esc(m.cliente)}</span>` : ''}</span>
                 <span class="m-monto ${m.tipo}">${m.tipo==='entrada'?'+':'−'}₡${m.monto.toLocaleString('es-CR',{maximumFractionDigits:0})}</span>
                 ${!caja.cerrada ? `<button class="m-del" data-mov-id="${m.id}">Quitar</button>` : ''}
               </div>`).join('')}
@@ -2391,6 +3201,7 @@
 
     return `
       <div class="caja-content">
+        ${selectorFecha}
         ${cuerpoHoy}
         <div class="caja-card">
           <h3>Resumen del mes</h3>
@@ -2414,14 +3225,14 @@
         </div>
         ${historial.length > 0 ? `
         <div class="caja-card">
-          <h3>Historial reciente</h3>
+          <h3>Historial reciente <span>haz clic en un día para revisarlo o cuadrarlo</span></h3>
           ${historial.map(c=>{
             const r = calcularEsperado(c);
             const diff = c.cerrada ? (c.cierre - r.esperado) : null;
-            return `<div class="caja-history-item">
+            return `<div class="caja-history-item" data-ir-fecha="${c.fecha}" style="cursor:pointer;">
               <span class="mono">${esc(c.fecha)}</span>
               <span>Entradas ₡${r.entradas.toLocaleString('es-CR',{maximumFractionDigits:0})} · Salidas ₡${r.salidas.toLocaleString('es-CR',{maximumFractionDigits:0})}</span>
-              <span>${c.cerrada ? (Math.abs(diff)<0.5 ? '<span style="color:var(--green);font-weight:700;">Cuadró</span>' : `<span style="color:var(--red);font-weight:700;">Dif. ₡${Math.abs(diff).toLocaleString('es-CR',{maximumFractionDigits:0})}</span>`) : '<span style="color:#8a8371;">Sin cerrar</span>'}</span>
+              <span>${c.cerrada ? (Math.abs(diff)<0.5 ? '<span style="color:var(--green);font-weight:700;">Cuadró</span>' : `<span style="color:var(--red);font-weight:700;">Dif. ₡${Math.abs(diff).toLocaleString('es-CR',{maximumFractionDigits:0})}</span>`) : '<span style="color:var(--amber);font-weight:700;">Sin cerrar</span>'}</span>
             </div>`;
           }).join('')}
         </div>` : ''}
@@ -2440,6 +3251,631 @@
     const nombre = (rec.cliente||'').trim().toLowerCase();
     const tel = cleanPhone(rec.telefono);
     return nombre + '|' + tel;
+  }
+
+  function perfilDeCliente(key){
+    return clientesPerfil.find(p => clienteKey(p) === key) || null;
+  }
+
+  const ETIQUETAS_CLIENTE = ['VIP','Corporativo','Residencial','Moroso'];
+  function emptyPerfilCliente(){
+    return { id:null, cliente:'', telefono:'', empresa:'', cedula:'', notas:'', etiquetas:[] };
+  }
+  let perfilForm = emptyPerfilCliente();
+  let editingPerfilKey = null; // clienteKey del perfil que se está editando (null = creando uno nuevo)
+
+  function openNuevoPerfilCliente(){
+    perfilForm = emptyPerfilCliente();
+    editingPerfilKey = null;
+    renderPerfilClienteModal(true);
+  }
+
+  function openEditarPerfilCliente(key, nombrePrellenado, telefonoPrellenado){
+    const existente = perfilDeCliente(key);
+    perfilForm = existente ? Object.assign({}, existente) : Object.assign(emptyPerfilCliente(), { cliente: nombrePrellenado||'', telefono: telefonoPrellenado||'' });
+    editingPerfilKey = key;
+    renderPerfilClienteModal(true);
+  }
+
+  function closePerfilClienteModal(){ renderPerfilClienteModal(false); }
+
+  async function savePerfilCliente(){
+    const cliente = document.getElementById('pf-cliente').value.trim();
+    if(!cliente){
+      showToast('El nombre del cliente es obligatorio.');
+      return;
+    }
+    const datos = {
+      id: (perfilForm && perfilForm.id) || uid(),
+      cliente,
+      telefono: document.getElementById('pf-telefono').value.trim(),
+      empresa: document.getElementById('pf-empresa').value.trim(),
+      cedula: document.getElementById('pf-cedula').value.trim(),
+      notas: document.getElementById('pf-notas').value.trim(),
+      etiquetas: Array.from(document.querySelectorAll('.pf-etiqueta:checked')).map(el => el.value),
+    };
+    const keyNuevo = clienteKey(datos);
+    const yaExiste = clientesPerfil.some(p => clienteKey(p) === keyNuevo && clienteKey(p) !== editingPerfilKey);
+    if(yaExiste){
+      showToast('Ya existe un perfil con ese nombre y teléfono.');
+      return;
+    }
+    if(editingPerfilKey){
+      clientesPerfil = clientesPerfil.map(p => clienteKey(p) === editingPerfilKey ? datos : p);
+    } else {
+      clientesPerfil = [datos, ...clientesPerfil];
+    }
+    const saveBtn = document.getElementById('perfil-modal-save');
+    if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
+    const ok = await persist();
+    if(!ok){
+      if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
+      return;
+    }
+    showToast('Datos del cliente guardados.');
+    const nuevaKey = keyNuevo;
+    closePerfilClienteModal();
+    clienteSeleccionado = nuevaKey;
+    clienteSeleccionadoTipo = 'mantenimiento';
+    view = 'clientes';
+    render();
+  }
+
+  function renderPerfilClienteModal(open){
+    let overlay = document.querySelector('.perfil-cliente-overlay');
+    if(!open){
+      if(overlay) overlay.remove();
+      return;
+    }
+    if(overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.className = 'overlay perfil-cliente-overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:480px;">
+        <div class="modal-head">
+          <h2>${editingPerfilKey ? 'Editar datos del cliente' : 'Nuevo cliente'}</h2>
+          <button id="perfil-modal-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div><label>Nombre *</label><input id="pf-cliente" value="${esc(perfilForm.cliente)}" placeholder="Nombre o empresa" ${editingPerfilKey?'readonly':''}/></div>
+            <div><label>Teléfono</label><input type="tel" id="pf-telefono" value="${esc(perfilForm.telefono)}" placeholder="8888-8888" ${editingPerfilKey?'readonly':''}/></div>
+          </div>
+          ${editingPerfilKey ? `<div class="caja-hint" style="margin-top:-8px;">El nombre y teléfono no se pueden cambiar aquí — son los que vinculan su historial de compras y mantenimientos.</div>` : ''}
+          <div class="form-row">
+            <div><label>Empresa</label><input id="pf-empresa" value="${esc(perfilForm.empresa)}" placeholder="Si es cliente corporativo"/></div>
+            <div><label>Cédula / identificación</label><input id="pf-cedula" value="${esc(perfilForm.cedula)}" placeholder="ej. 1-2345-6789"/></div>
+          </div>
+          <div class="form-row full">
+            <div><label>Etiquetas</label>
+              <div class="service-checks" style="grid-template-columns:1fr 1fr;">
+                ${ETIQUETAS_CLIENTE.map(et=>`
+                  <label class="service-check">
+                    <input type="checkbox" class="pf-etiqueta" value="${et}" ${(perfilForm.etiquetas||[]).includes(et)?'checked':''}/>
+                    <span>${et}</span>
+                  </label>`).join('')}
+              </div>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div><label>Notas generales</label><textarea id="pf-notas" placeholder="Cualquier detalle útil sobre este cliente...">${esc(perfilForm.notas)}</textarea></div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn-ghost" id="perfil-modal-cancel">Cancelar</button>
+          <button class="btn-primary" id="perfil-modal-save">Guardar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closePerfilClienteModal(); });
+    document.getElementById('perfil-modal-close').addEventListener('click', closePerfilClienteModal);
+    document.getElementById('perfil-modal-cancel').addEventListener('click', closePerfilClienteModal);
+    document.getElementById('perfil-modal-save').addEventListener('click', savePerfilCliente);
+  }
+
+  async function removePerfilCliente(key){
+    const p = perfilDeCliente(key);
+    if(!p) return;
+    if(!confirm(`¿Eliminar los datos de ${p.cliente}? Esto no borra sus compras ni mantenimientos, solo la ficha de datos personales.`)) return;
+    clientesPerfil = clientesPerfil.filter(x => clienteKey(x) !== key);
+    papelera.push({ id: uid(), tipo: 'perfil_cliente', fechaEliminado: Date.now(), data: p });
+    await persist();
+    showToast('Datos del cliente movidos a la papelera.');
+    volverClientes();
+  }
+
+  /* ---------- Contratos de mantenimiento recurrente ---------- */
+
+  function emptyContrato(){
+    return { id:null, cliente:'', telefono:'', cantidadExtintores:'', fechaInicio: todayISO(), fechaRenovacion:'', valorAnual:'', estado:'activo', notas:'' };
+  }
+  let contratoForm = emptyContrato();
+  let editingContratoId = null;
+
+  function openNuevoContrato(clientePrellenado, telefonoPrellenado){
+    contratoForm = emptyContrato();
+    if(clientePrellenado) contratoForm.cliente = clientePrellenado;
+    if(telefonoPrellenado) contratoForm.telefono = telefonoPrellenado;
+    editingContratoId = null;
+    renderContratoModal(true);
+  }
+
+  function openEditarContrato(id){
+    const c = contratos.find(x => x.id === id);
+    if(!c) return;
+    contratoForm = Object.assign({}, c);
+    editingContratoId = id;
+    renderContratoModal(true);
+  }
+
+  function closeContratoModal(){ renderContratoModal(false); }
+
+  async function saveContrato(){
+    const cliente = document.getElementById('ct-cliente').value.trim();
+    const fechaRenovacion = document.getElementById('ct-fechaRenovacion').value;
+    if(!cliente){
+      showToast('El cliente es obligatorio.');
+      return;
+    }
+    if(!fechaRenovacion){
+      showToast('La fecha de renovación es obligatoria.');
+      return;
+    }
+    const nuevo = {
+      id: editingContratoId || uid(),
+      cliente,
+      telefono: document.getElementById('ct-telefono').value.trim(),
+      cantidadExtintores: document.getElementById('ct-cantidad').value.trim(),
+      fechaInicio: document.getElementById('ct-fechaInicio').value,
+      fechaRenovacion,
+      valorAnual: document.getElementById('ct-valorAnual').value.trim(),
+      estado: document.getElementById('ct-estado').value,
+      notas: document.getElementById('ct-notas').value.trim(),
+    };
+    if(editingContratoId){
+      contratos = contratos.map(c => c.id === editingContratoId ? nuevo : c);
+    } else {
+      contratos = [nuevo, ...contratos];
+    }
+    const saveBtn = document.getElementById('contrato-modal-save');
+    if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
+    const ok = await persist();
+    if(!ok){
+      if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = editingContratoId ? 'Guardar cambios' : 'Registrar contrato'; }
+      return;
+    }
+    showToast(editingContratoId ? 'Contrato actualizado.' : 'Contrato registrado.');
+    closeContratoModal();
+    render();
+  }
+
+  async function removeContrato(id){
+    const c = contratos.find(x => x.id === id);
+    if(!c) return;
+    if(!confirm(`¿Eliminar el contrato de ${c.cliente || 'este cliente'}? Podrás recuperarlo desde la Papelera durante 30 días.`)) return;
+    contratos = contratos.filter(x => x.id !== id);
+    papelera.push({ id: uid(), tipo: 'contrato', fechaEliminado: Date.now(), data: c });
+    await persist();
+    showToast('Contrato movido a la papelera.');
+    render();
+  }
+
+  function renderContratoModal(open){
+    let overlay = document.querySelector('.contrato-overlay');
+    if(!open){
+      if(overlay) overlay.remove();
+      return;
+    }
+    if(overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.className = 'overlay contrato-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-head">
+          <h2>${editingContratoId ? 'Editar contrato' : 'Nuevo contrato de mantenimiento'}</h2>
+          <button id="contrato-modal-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div><label>Cliente *</label><input id="ct-cliente" value="${esc(contratoForm.cliente)}" placeholder="Nombre o empresa"/></div>
+            <div><label>Teléfono</label><input type="tel" id="ct-telefono" value="${esc(contratoForm.telefono)}" placeholder="8888-8888"/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Cantidad de extintores cubiertos</label><input type="number" id="ct-cantidad" min="1" step="1" value="${esc(contratoForm.cantidadExtintores)}" placeholder="ej. 25"/></div>
+            <div><label>Valor anual del contrato</label><input type="number" id="ct-valorAnual" min="0" step="0.01" value="${esc(contratoForm.valorAnual)}" placeholder="0.00"/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Fecha de inicio</label><input type="date" id="ct-fechaInicio" value="${esc(contratoForm.fechaInicio)}"/></div>
+            <div><label>Próxima renovación *</label><input type="date" id="ct-fechaRenovacion" value="${esc(contratoForm.fechaRenovacion)}"/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Estado</label>
+              <select id="ct-estado">
+                <option value="activo" ${contratoForm.estado==='activo'?'selected':''}>Activo</option>
+                <option value="cancelado" ${contratoForm.estado==='cancelado'?'selected':''}>Cancelado</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div><label>Notas</label><textarea id="ct-notas" placeholder="Alcance del contrato, condiciones especiales...">${esc(contratoForm.notas)}</textarea></div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn-ghost" id="contrato-modal-cancel">Cancelar</button>
+          <button class="btn-primary" id="contrato-modal-save">${editingContratoId ? 'Guardar cambios' : 'Registrar contrato'}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeContratoModal(); });
+    document.getElementById('contrato-modal-close').addEventListener('click', closeContratoModal);
+    document.getElementById('contrato-modal-cancel').addEventListener('click', closeContratoModal);
+    document.getElementById('contrato-modal-save').addEventListener('click', saveContrato);
+  }
+
+  function contratoCardHTML(c){
+    const vs = c.estado === 'activo' ? vencStatus(c.fechaRenovacion) : null;
+    const vsCls = vs === 'vencido' ? 'venc-vencido' : (vs === 'proximo' ? 'venc-proximo' : '');
+    const vsLabel = vs === 'vencido' ? 'Vencido' : (vs === 'proximo' ? 'Por vencer' : '');
+    const cardKey = 'contrato-' + c.id;
+    const isOpen = tarjetasAbiertas.has(cardKey);
+    return `
+      <details class="card-collapse" data-card-key="${cardKey}" ${isOpen ? 'open' : ''}>
+        <summary>
+          <div class="summary-main">
+            <h3>${esc(c.cliente)}</h3>
+            <div class="sub-line">${c.cantidadExtintores ? c.cantidadExtintores+' extintores · ' : ''}Renueva ${esc(c.fechaRenovacion)}</div>
+          </div>
+          <div class="summary-side">
+            <span class="badge" style="background:${c.estado==='activo'?'var(--green)':'#6B7280'};">${c.estado==='activo'?'Activo':'Cancelado'}</span>
+            ${c.valorAnual ? `<span class="summary-price">₡${parseFloat(c.valorAnual).toLocaleString('es-CR',{maximumFractionDigits:0})}/año</span>` : ''}
+          </div>
+        </summary>
+        <div class="card-inner-body">
+          <div class="card-body">
+            ${c.telefono ? `<div class="sub">${esc(c.telefono)}</div>` : ''}
+            <div class="meta-row"><span class="k">Inicio</span><span class="v mono">${esc(c.fechaInicio) || '—'}</span></div>
+            <div class="meta-row"><span class="k">Renovación</span><span class="v mono ${vsCls}">${esc(c.fechaRenovacion)}${vsLabel ? ' · '+vsLabel : ''}</span></div>
+            ${c.notas ? `<div class="meta-row"><span class="k">Notas</span><span class="v">${esc(c.notas)}</span></div>` : ''}
+          </div>
+          <div class="card-actions">
+            <button data-action="editar-contrato" data-id="${c.id}">Editar</button>
+            <button class="danger" data-action="eliminar-contrato" data-id="${c.id}">Eliminar</button>
+          </div>
+        </div>
+      </details>`;
+  }
+
+  /* ---------- Inventario ---------- */
+
+  const CATEGORIAS_INVENTARIO = [
+    { id:'extintor', label:'Extintores' },
+    { id:'repuesto', label:'Repuestos' },
+  ];
+
+  function emptyProducto(){
+    return { id:null, nombre:'', categoria:'extintor', tipo:'', capacidad:'', cantidad:'0', cantidadMinima:'2', precioUnitario:'', notas:'', movimientos:[] };
+  }
+  let productoForm = emptyProducto();
+  let editingProductoId = null;
+  let inventarioFiltro = 'todos'; // 'todos' | 'extintor' | 'repuesto' | 'bajo'
+  let inventarioQuery = '';
+
+  function estadoStock(p){
+    const cant = parseFloat(p.cantidad) || 0;
+    const min = parseFloat(p.cantidadMinima) || 0;
+    if(cant <= 0) return 'agotado';
+    if(cant <= min) return 'bajo';
+    return 'ok';
+  }
+
+  function productosStockBajo(){
+    return inventario.filter(p => estadoStock(p) !== 'ok');
+  }
+
+  function setInventarioFiltro(f){ inventarioFiltro = f; render(); }
+  function setInventarioQuery(v){ inventarioQuery = v; render(); }
+
+  function openNuevoProducto(){
+    productoForm = emptyProducto();
+    editingProductoId = null;
+    renderProductoModal(true);
+  }
+
+  function openEditarProducto(id){
+    const p = inventario.find(x => x.id === id);
+    if(!p) return;
+    productoForm = Object.assign({}, p, { movimientos: [...(p.movimientos||[])] });
+    editingProductoId = id;
+    renderProductoModal(true);
+  }
+
+  function closeProductoModal(){ renderProductoModal(false); }
+
+  async function saveProducto(){
+    const nombre = document.getElementById('pr-nombre').value.trim();
+    if(!nombre){
+      showToast('El nombre del producto es obligatorio.');
+      return;
+    }
+    const nuevo = {
+      id: editingProductoId || uid(),
+      nombre,
+      categoria: document.getElementById('pr-categoria').value,
+      tipo: document.getElementById('pr-tipo').value.trim(),
+      capacidad: document.getElementById('pr-capacidad').value.trim(),
+      cantidad: document.getElementById('pr-cantidad').value.trim() || '0',
+      cantidadMinima: document.getElementById('pr-cantidad-minima').value.trim() || '0',
+      precioUnitario: document.getElementById('pr-precio').value.trim(),
+      notas: document.getElementById('pr-notas').value.trim(),
+      movimientos: productoForm.movimientos || [],
+    };
+    if(editingProductoId){
+      inventario = inventario.map(p => p.id === editingProductoId ? nuevo : p);
+    } else {
+      inventario = [nuevo, ...inventario];
+    }
+    const saveBtn = document.getElementById('producto-modal-save');
+    if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
+    const ok = await persist();
+    if(!ok){
+      if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = editingProductoId ? 'Guardar cambios' : 'Registrar producto'; }
+      return;
+    }
+    showToast(editingProductoId ? 'Producto actualizado.' : 'Producto registrado.');
+    closeProductoModal();
+    render();
+  }
+
+  async function removeProducto(id){
+    const p = inventario.find(x => x.id === id);
+    if(!p) return;
+    if(!confirm(`¿Eliminar "${p.nombre}" del inventario? Podrás recuperarlo desde la Papelera durante 30 días.`)) return;
+    inventario = inventario.filter(x => x.id !== id);
+    papelera.push({ id: uid(), tipo: 'producto_inventario', fechaEliminado: Date.now(), data: p });
+    await persist();
+    showToast('Producto movido a la papelera.');
+    render();
+  }
+
+  function renderProductoModal(open){
+    let overlay = document.querySelector('.producto-overlay');
+    if(!open){
+      if(overlay) overlay.remove();
+      return;
+    }
+    if(overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.className = 'overlay producto-overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:480px;">
+        <div class="modal-head">
+          <h2>${editingProductoId ? 'Editar producto' : 'Nuevo producto'}</h2>
+          <button id="producto-modal-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row full">
+            <div><label>Nombre *</label><input id="pr-nombre" value="${esc(productoForm.nombre)}" placeholder="ej. Extintor PQS 10 lb, Manguera 1.5m..."/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Categoría</label>
+              <select id="pr-categoria">
+                ${CATEGORIAS_INVENTARIO.map(c=>`<option value="${c.id}" ${c.id===productoForm.categoria?'selected':''}>${c.label}</option>`).join('')}
+              </select>
+            </div>
+            <div><label>Tipo / capacidad</label><input id="pr-tipo" value="${esc(productoForm.tipo)}" placeholder="ej. PQS, CO2..."/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Capacidad</label><input id="pr-capacidad" value="${esc(productoForm.capacidad)}" placeholder="ej. 10 lb"/></div>
+            <div><label>Precio unitario</label><input type="number" id="pr-precio" min="0" step="0.01" value="${esc(productoForm.precioUnitario)}" placeholder="0.00"/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Cantidad en stock</label><input type="number" id="pr-cantidad" min="0" step="1" value="${esc(productoForm.cantidad)}"/></div>
+            <div><label>Cantidad mínima (alerta)</label><input type="number" id="pr-cantidad-minima" min="0" step="1" value="${esc(productoForm.cantidadMinima)}"/></div>
+          </div>
+          <div class="form-row full">
+            <div><label>Notas</label><textarea id="pr-notas" placeholder="Proveedor, ubicación en bodega...">${esc(productoForm.notas)}</textarea></div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn-ghost" id="producto-modal-cancel">Cancelar</button>
+          <button class="btn-primary" id="producto-modal-save">${editingProductoId ? 'Guardar cambios' : 'Registrar producto'}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeProductoModal(); });
+    document.getElementById('producto-modal-close').addEventListener('click', closeProductoModal);
+    document.getElementById('producto-modal-cancel').addEventListener('click', closeProductoModal);
+    document.getElementById('producto-modal-save').addEventListener('click', saveProducto);
+  }
+
+  function abrirMovimientoInventarioModal(productoId){
+    const p = inventario.find(x => x.id === productoId);
+    if(!p) return;
+    let overlay = document.querySelector('.mov-inv-overlay');
+    if(overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.className = 'overlay mov-inv-overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:380px;">
+        <div class="modal-head">
+          <h2>Movimiento de stock</h2>
+          <button id="mov-inv-close">×</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:12.5px;color:#6B7280;margin-top:0;">${esc(p.nombre)} — stock actual: ${p.cantidad || 0}</p>
+          <div class="form-row">
+            <div><label>Tipo</label>
+              <select id="mi-tipo">
+                <option value="entrada">Entrada (compra/reposición)</option>
+                <option value="salida">Salida (venta/uso)</option>
+              </select>
+            </div>
+            <div><label>Cantidad</label><input type="number" id="mi-cantidad" min="1" step="1" value="1"/></div>
+          </div>
+          <div class="form-row full">
+            <div><label>Nota (opcional)</label><input id="mi-nota" placeholder="ej. Compra a proveedor X"/></div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn-ghost" id="mov-inv-cancel">Cancelar</button>
+          <button class="btn-primary" id="mov-inv-guardar">Registrar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const cerrar = ()=> overlay.remove();
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) cerrar(); });
+    document.getElementById('mov-inv-close').addEventListener('click', cerrar);
+    document.getElementById('mov-inv-cancel').addEventListener('click', cerrar);
+    document.getElementById('mov-inv-guardar').addEventListener('click', async ()=>{
+      const tipo = document.getElementById('mi-tipo').value;
+      const cantidad = parseFloat(document.getElementById('mi-cantidad').value);
+      const nota = document.getElementById('mi-nota').value.trim();
+      if(isNaN(cantidad) || cantidad <= 0){
+        showToast('Ingresa una cantidad válida.');
+        return;
+      }
+      const actual = parseFloat(p.cantidad) || 0;
+      const nuevaCantidad = tipo === 'entrada' ? actual + cantidad : Math.max(0, actual - cantidad);
+      const movimiento = { id: uid(), tipo, cantidad, fecha: todayISO(), nota };
+      const actualizado = { ...p, cantidad: String(nuevaCantidad), movimientos: [movimiento, ...(p.movimientos||[])] };
+      inventario = inventario.map(x => x.id === productoId ? actualizado : x);
+      cerrar();
+      await persist();
+      showToast('Movimiento de stock registrado.');
+      render();
+    });
+  }
+
+  function productoCardHTML(p){
+    const estado = estadoStock(p);
+    const estadoCls = estado === 'agotado' ? 'venc-vencido' : (estado === 'bajo' ? 'venc-proximo' : '');
+    const estadoLabel = estado === 'agotado' ? 'Agotado' : (estado === 'bajo' ? 'Stock bajo' : 'Stock ok');
+    const cardKey = 'producto-' + p.id;
+    const isOpen = tarjetasAbiertas.has(cardKey);
+    return `
+      <details class="card-collapse" data-card-key="${cardKey}" ${isOpen ? 'open' : ''}>
+        <summary>
+          <div class="summary-main">
+            <h3>${esc(p.nombre)}</h3>
+            <div class="sub-line">${p.tipo ? esc(p.tipo)+' · ' : ''}${p.capacidad ? esc(p.capacidad)+' · ' : ''}${CATEGORIAS_INVENTARIO.find(c=>c.id===p.categoria)?.label || ''}</div>
+          </div>
+          <div class="summary-side">
+            <span class="badge" style="background:${estado==='agotado'?'var(--red)':(estado==='bajo'?'var(--amber)':'var(--green)')};">${estadoLabel}</span>
+            <span class="summary-price ${estadoCls}">${p.cantidad || 0} en stock</span>
+          </div>
+        </summary>
+        <div class="card-inner-body">
+          <div class="card-body">
+            <div class="meta-row"><span class="k">Cantidad mínima</span><span class="v">${p.cantidadMinima || 0}</span></div>
+            ${p.precioUnitario ? `<div class="meta-row"><span class="k">Precio unitario</span><span class="v">₡${parseFloat(p.precioUnitario).toLocaleString('es-CR',{maximumFractionDigits:0})}</span></div>` : ''}
+            ${p.notas ? `<div class="meta-row"><span class="k">Notas</span><span class="v">${esc(p.notas)}</span></div>` : ''}
+          </div>
+          <div class="card-actions">
+            <button data-action="movimiento-producto" data-id="${p.id}">± Stock</button>
+            <button data-action="editar-producto" data-id="${p.id}">Editar</button>
+            <button class="danger" data-action="eliminar-producto" data-id="${p.id}">Eliminar</button>
+          </div>
+        </div>
+      </details>`;
+  }
+
+  function renderInventario(){
+    const q = inventarioQuery.trim().toLowerCase();
+    const filtrados = inventario.filter(p=>{
+      if(inventarioFiltro === 'bajo' && estadoStock(p) === 'ok') return false;
+      if(inventarioFiltro !== 'todos' && inventarioFiltro !== 'bajo' && p.categoria !== inventarioFiltro) return false;
+      if(q && !(p.nombre||'').toLowerCase().includes(q)) return false;
+      return true;
+    }).sort((a,b)=> (a.nombre||'').localeCompare(b.nombre||''));
+    const bajoCount = productosStockBajo().length;
+    const valorTotal = inventario.reduce((s,p)=> s + (parseFloat(p.cantidad)||0) * (parseFloat(p.precioUnitario)||0), 0);
+    return `
+      <div class="dash-content">
+        <div class="kpi-grid" style="margin-bottom:18px;">
+          <div class="kpi-card">
+            <div class="kpi-label">Productos en inventario</div>
+            <div class="kpi-value">${inventario.length}</div>
+            <div class="kpi-sub">₡${valorTotal.toLocaleString('es-CR',{maximumFractionDigits:0})} en valor total</div>
+          </div>
+          <div class="kpi-card kpi-red ${bajoCount>0?'kpi-critical':''}">
+            <div class="kpi-label">Stock bajo o agotado</div>
+            <div class="kpi-value">${bajoCount}</div>
+            <div class="kpi-sub">Necesitan reposición</div>
+          </div>
+        </div>
+        <div class="clientes-toolbar" style="padding:0 0 16px;flex-wrap:wrap;gap:10px;">
+          <div class="filters">
+            <button class="chip ${inventarioFiltro==='todos'?'active':''}" data-inventario-filtro="todos">Todos</button>
+            <button class="chip ${inventarioFiltro==='extintor'?'active':''}" data-inventario-filtro="extintor">Extintores</button>
+            <button class="chip ${inventarioFiltro==='repuesto'?'active':''}" data-inventario-filtro="repuesto">Repuestos</button>
+            <button class="chip ${inventarioFiltro==='bajo'?'active':''}" data-inventario-filtro="bajo">Stock bajo</button>
+          </div>
+          <input class="search" id="inventario-search-input" placeholder="Buscar producto..." value="${esc(inventarioQuery)}" style="flex:1;min-width:180px;"/>
+          <button class="btn-primary" id="btn-nuevo-producto">+ Nuevo producto</button>
+        </div>
+        ${filtrados.length === 0 ? '<div class="dash-empty">No hay productos que coincidan.</div>' : `<div class="grid">${filtrados.map(productoCardHTML).join('')}</div>`}
+      </div>
+    `;
+  }
+
+  function crmDelCliente(key){
+    // Reúne las oportunidades, recordatorios y contratos cuyo nombre+teléfono coincide con el cliente
+    // actual, para mostrarlos directo en su ficha (vista 360) en vez de solo verlos desde el tab de CRM.
+    const opsCliente = oportunidades.filter(o => clienteKey(o) === key);
+    const recsCliente = recordatorios.filter(r => clienteKey(r) === key && !r.completado)
+      .sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+    const contratosCliente = contratos.filter(c => clienteKey(c) === key);
+    return { opsCliente, recsCliente, contratosCliente };
+  }
+
+  function crmClienteResumenHTML(key){
+    const { opsCliente, recsCliente, contratosCliente } = crmDelCliente(key);
+    if(opsCliente.length === 0 && recsCliente.length === 0 && contratosCliente.length === 0) return '';
+    const hoy = todayISO();
+    return `
+      <div class="dash-panel" style="margin-bottom:16px;">
+        ${contratosCliente.length ? `
+        <h3 style="margin-bottom:8px;">Contratos de mantenimiento <span>${contratosCliente.length}</span></h3>
+        <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length)?'14px':'0'};">
+          ${contratosCliente.map(c=>{
+            const vs = c.estado==='activo' ? vencStatus(c.fechaRenovacion) : null;
+            return `
+            <div class="vence-item">
+              <div>
+                <div class="v-name">${c.cantidadExtintores ? c.cantidadExtintores+' extintores' : 'Contrato'}${c.valorAnual ? ' · ₡'+parseFloat(c.valorAnual).toLocaleString('es-CR',{maximumFractionDigits:0})+'/año' : ''}</div>
+                <div class="v-order">${c.estado==='activo' ? 'Activo' : 'Cancelado'}</div>
+              </div>
+              <div class="v-date ${vs==='vencido'?'venc-vencido':(vs==='proximo'?'venc-proximo':'')}">${esc(c.fechaRenovacion)}</div>
+            </div>`;
+          }).join('')}
+        </div>` : ''}
+        ${opsCliente.length ? `
+        <h3 style="margin-bottom:8px;">Oportunidades <span>${opsCliente.length}</span></h3>
+        <div class="vence-list" style="margin-bottom:${recsCliente.length?'14px':'0'};">
+          ${opsCliente.map(o=>`
+            <div class="vence-item" data-abrir-oportunidad="${o.id}" style="cursor:pointer;">
+              <div>
+                <div class="v-name">${esc(o.descripcion || 'Sin descripción')}</div>
+                <div class="v-order">${o.montoEstimado ? '₡'+parseFloat(o.montoEstimado).toLocaleString('es-CR',{maximumFractionDigits:0}) : 'Sin monto estimado'}</div>
+              </div>
+              <span class="etapa-badge ${etapaOf(o.etapa).cls}">${etapaOf(o.etapa).label}</span>
+            </div>`).join('')}
+        </div>` : ''}
+        ${recsCliente.length ? `
+        <h3 style="margin-bottom:8px;">Recordatorios pendientes <span>${recsCliente.length}</span></h3>
+        <div class="vence-list">
+          ${recsCliente.map(r=>`
+            <div class="vence-item">
+              <div class="v-name">${esc(r.texto)}</div>
+              <div class="v-date ${r.fecha<hoy?'venc-vencido':(r.fecha===hoy?'venc-proximo':'')}">${esc(r.fecha)}</div>
+            </div>`).join('')}
+        </div>` : ''}
+      </div>
+    `;
   }
 
   function movimientosConCliente(){
@@ -2474,11 +3910,18 @@
       map[key].movimientosInformales.push(m);
       if(!map[key].telefono && m.telefono) map[key].telefono = m.telefono;
     });
+    clientesPerfil.forEach(p=>{
+      const key = clienteKey(p);
+      if(!map[key]){
+        map[key] = { key, nombre: p.cliente || 'Sin nombre', telefono: p.telefono || '', registros: [], movimientosInformales: [] };
+      }
+    });
     return Object.values(map).map(c=>{
       const totalPagadoRegistros = c.registros.reduce((s,r)=> s + (saldoOf(r).precio - saldoOf(r).saldo), 0);
       const totalPendienteRegistros = c.registros.reduce((s,r)=> s + saldoOf(r).saldo, 0);
       const totalInformal = c.movimientosInformales.reduce((s,m)=> s + (m.tipo==='entrada' ? m.monto : 0), 0);
       const ultimaFecha = c.registros.reduce((max,r)=> (r.fechaIngreso||'') > max ? (r.fechaIngreso||'') : max, '');
+      const perfil = perfilDeCliente(c.key);
       return {
         ...c,
         totalExtintores: c.registros.reduce((s,r)=>s+(r.cantidad||1),0),
@@ -2486,6 +3929,7 @@
         totalPagado: totalPagadoRegistros + totalInformal,
         totalPendiente: totalPendienteRegistros,
         ultimaFecha,
+        etiquetas: (perfil && perfil.etiquetas) || [],
       };
     }).sort((a,b)=> a.nombre.localeCompare(b.nombre));
   }
@@ -2504,19 +3948,24 @@
       const totalPagado = c.compras.reduce((s,v)=> s + (saldoOf(v).precio - saldoOf(v).saldo), 0);
       const totalPendiente = c.compras.reduce((s,v)=> s + saldoOf(v).saldo, 0);
       const ultimaFecha = c.compras.reduce((max,v)=> (v.fechaCompra||'') > max ? (v.fechaCompra||'') : max, '');
+      const perfil = perfilDeCliente(c.key);
       return {
         ...c,
         totalCompras: c.compras.length,
         totalEquiposComprados: c.compras.reduce((s,v)=>s+(v.cantidad||1),0),
         totalPagado, totalPendiente, ultimaFecha,
+        etiquetas: (perfil && perfil.etiquetas) || [],
       };
     }).sort((a,b)=> a.nombre.localeCompare(b.nombre));
   }
+
+  function setEtiquetaFiltro(et){ etiquetaFiltro = et; render(); }
 
   function renderClientesLista(){
     const esCompras = clientesSubvista === 'compras';
     const todos = esCompras ? agruparClientesCompras() : agruparClientesMantenimiento();
     const clientes = todos.filter(c=>{
+      if(etiquetaFiltro !== 'todas' && !(c.etiquetas||[]).includes(etiquetaFiltro)) return false;
       if(!clienteQuery) return true;
       const q = clienteQuery.toLowerCase();
       return c.nombre.toLowerCase().includes(q) || (c.telefono||'').includes(q);
@@ -2528,8 +3977,14 @@
           <button data-clientes-subvista="compras" class="${esCompras?'active':''}">Compras de equipo</button>
         </div>
         <input class="search" id="cliente-search-input" placeholder="Buscar cliente por nombre o teléfono..." value="${esc(clienteQuery)}" style="flex:1;min-width:200px;"/>
-        ${esCompras ? `<button class="btn-primary" id="btn-nueva-venta-listado">+ Nueva venta de equipo</button>` : ''}
-        <div style="font-size:12px;color:#8a8371;">${clientes.length} cliente(s)</div>
+        ${esCompras ? `<button class="btn-primary" id="btn-nueva-venta-listado">+ Nueva venta de equipo</button>` : `<button class="btn-primary" id="btn-nuevo-cliente">+ Nuevo cliente</button>`}
+        <div style="font-size:12px;color:#6B7280;">${clientes.length} cliente(s)</div>
+      </div>
+      <div class="clientes-toolbar" style="padding-top:0;">
+        <div class="filters">
+          <button class="chip ${etiquetaFiltro==='todas'?'active':''}" data-etiqueta-filtro="todas">Todas</button>
+          ${ETIQUETAS_CLIENTE.map(et=>`<button class="chip ${etiquetaFiltro===et?'active':''}" data-etiqueta-filtro="${et}">${et}</button>`).join('')}
+        </div>
       </div>
       <div class="clientes-content">
         ${clientes.length === 0 ? `<div class="dash-empty">${esCompras ? 'Todavía no hay clientes de compras de equipo.' : 'No hay clientes que coincidan.'}</div>` : `
@@ -2538,6 +3993,7 @@
             <div class="cliente-card" data-cliente-key="${esc(c.key)}" data-cliente-tipo="${esCompras?'compras':'mantenimiento'}">
               <h3>${esc(c.nombre)}</h3>
               <div class="sub">${c.telefono ? esc(c.telefono) : 'Sin teléfono'}</div>
+              ${c.etiquetas && c.etiquetas.length ? `<div style="margin:4px 0 2px;">${etiquetasHTML(c.etiquetas)}</div>` : ''}
               <div class="cliente-stats">
                 ${esCompras ? `
                 <div class="cliente-stat"><b>${c.totalCompras}</b><small>Compras</small></div>
@@ -2546,7 +4002,7 @@
                 <div class="cliente-stat"><b>${c.totalServicios}</b><small>Servicios</small></div>
                 <div class="cliente-stat"><b>${c.totalExtintores}</b><small>Extintores</small></div>
                 `}
-                <div class="cliente-stat"><b style="color:${c.totalPendiente>0?'#b3261e':'inherit'}">₡${c.totalPendiente.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Por cobrar</small></div>
+                <div class="cliente-stat"><b style="color:${c.totalPendiente>0?'#DC2626':'inherit'}">₡${c.totalPendiente.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Por cobrar</small></div>
               </div>
             </div>`).join('')}
         </div>`}
@@ -2566,7 +4022,7 @@
             <div class="sub-line">Compra · ${esc(v.fechaCompra) || 'sin fecha'}</div>
           </div>
           <div class="summary-side">
-            <span class="badge" style="background:#e4dcc8;color:#5a4b2e;">Venta</span>
+            <span class="badge" style="background:#FBE9E9;color:#B91C1C;">Venta</span>
             ${v.precio ? `<span class="summary-price" style="${s.saldo>0?'color:var(--red);':''}">₡${(s.saldo>0?s.saldo:s.precio).toLocaleString('es-CR',{maximumFractionDigits:0})}${s.saldo>0?' pend.':''}</span>` : ''}
           </div>
         </summary>
@@ -2592,6 +4048,29 @@
       </details>`;
   }
 
+  function etiquetasHTML(etiquetas){
+    return (etiquetas||[]).map(et=>`<span class="etiqueta-badge etiqueta-${et.toLowerCase()}">${esc(et)}</span>`).join('');
+  }
+
+  function perfilClienteHTML(key, nombre, telefono){
+    const p = perfilDeCliente(key);
+    if(!p){
+      return `
+        <div class="dash-panel" style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div style="font-size:12.5px;color:#6B7280;">Todavía no tienes datos personales guardados de este cliente (empresa, cédula, notas).</div>
+          <button class="btn-ghost" data-agregar-perfil="${esc(key)}" data-nombre="${esc(nombre)}" data-telefono="${esc(telefono)}">+ Agregar datos personales</button>
+        </div>`;
+    }
+    return `
+      <div class="dash-panel" style="margin-bottom:16px;">
+        <h3 style="margin-bottom:8px;">Datos personales <span><button class="btn-ghost" style="padding:4px 10px;font-size:11px;" data-editar-perfil="${esc(key)}">Editar</button> <button class="btn-ghost" style="padding:4px 10px;font-size:11px;color:var(--red);border-color:var(--red);" data-eliminar-perfil="${esc(key)}">Eliminar</button></span></h3>
+        ${p.etiquetas && p.etiquetas.length ? `<div style="margin-bottom:8px;">${etiquetasHTML(p.etiquetas)}</div>` : ''}
+        <div class="meta-row"><span class="k">Empresa</span><span class="v">${p.empresa ? esc(p.empresa) : '—'}</span></div>
+        <div class="meta-row"><span class="k">Cédula</span><span class="v">${p.cedula ? esc(p.cedula) : '—'}</span></div>
+        ${p.notas ? `<div class="meta-row"><span class="k">Notas</span><span class="v">${esc(p.notas)}</span></div>` : ''}
+      </div>`;
+  }
+
   function renderClienteDetalle(key){
     if(clienteSeleccionadoTipo === 'compras'){
       const clientes = agruparClientesCompras();
@@ -2613,10 +4092,17 @@
               <div class="cliente-kpi"><b>${c.totalCompras}</b><small>Compras totales</small></div>
               <div class="cliente-kpi"><b>${c.totalEquiposComprados}</b><small>Equipos comprados</small></div>
               <div class="cliente-kpi"><b>₡${c.totalPagado.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Total pagado</small></div>
-              <div class="cliente-kpi"><b style="color:${c.totalPendiente>0?'#b3261e':'inherit'}">₡${c.totalPendiente.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Pendiente</small></div>
+              <div class="cliente-kpi"><b style="color:${c.totalPendiente>0?'#DC2626':'inherit'}">₡${c.totalPendiente.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Pendiente</small></div>
             </div>
           </div>
-          <button class="btn-primary" id="btn-nueva-venta-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}" style="margin-bottom:16px;">+ Registrar venta de equipo</button>
+          ${perfilClienteHTML(key, c.nombre, c.telefono)}
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+            <button class="btn-primary" id="btn-nueva-venta-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Registrar venta de equipo</button>
+            <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
+            <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nuevo contrato</button>
+            <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
+          </div>
+          ${crmClienteResumenHTML(key)}
           <div class="grid">${comprasOrdenadas.map(ventaCardHTML).join('')}</div>
         </div>
       `;
@@ -2642,12 +4128,19 @@
             <div class="cliente-kpi"><b>${c.totalServicios}</b><small>Servicios totales</small></div>
             <div class="cliente-kpi"><b>${c.totalExtintores}</b><small>Extintores</small></div>
             <div class="cliente-kpi"><b>₡${c.totalPagado.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Total pagado</small></div>
-            <div class="cliente-kpi"><b style="color:${c.totalPendiente>0?'#b3261e':'inherit'}">₡${c.totalPendiente.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Pendiente</small></div>
+            <div class="cliente-kpi"><b style="color:${c.totalPendiente>0?'#DC2626':'inherit'}">₡${c.totalPendiente.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Pendiente</small></div>
           </div>
         </div>
+        ${perfilClienteHTML(key, c.nombre, c.telefono)}
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+          <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
+          <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nuevo contrato</button>
+          <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
+        </div>
+        ${crmClienteResumenHTML(key)}
         ${registrosOrdenados.length ? `<div class="grid">${registrosOrdenados.map(cardHTML).join('')}</div>` : ''}
         ${informalesOrdenados.length ? `
-        <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#8a8371;margin:20px 0 10px;">Servicios rápidos (cobrados en caja, sin boleta)</h3>
+        <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#6B7280;margin:20px 0 10px;">Servicios rápidos (cobrados en caja, sin boleta)</h3>
         <div class="caja-card" style="padding:6px 18px;">
           <div class="mov-list">
             ${informalesOrdenados.map(m=>`
@@ -2769,6 +4262,10 @@
     const vencimientos = proximosVencimientos();
     const vencidosCount = vencimientos.filter(x=>x.vs==='vencido').length;
     const proximoCount = vencimientos.filter(x=>x.vs==='proximo').length;
+    const riesgoCount = clientesEnRiesgo().length;
+    const renovacion = tasaRenovacionAnual();
+    const hoyISO = todayISO();
+    const seguimientosHoyCount = recordatorios.filter(r=>!r.completado && r.fecha<=hoyISO).length;
     const pagadoCount = records.filter(r=>saldoOf(r).saldo<=0 && saldoOf(r).precio>0).length;
     const pendienteCount = records.filter(r=>saldoOf(r).saldo>0).length;
 
@@ -2777,9 +4274,12 @@
         <div class="quick-actions">
           <span class="quick-title">Acciones rápidas</span>
           <button class="btn-primary" id="dash-quick-new">+ Registrar ingreso</button>
+          <button class="btn-ghost" id="dash-quick-oportunidad">+ Nueva oportunidad</button>
+          <button class="btn-ghost" data-view="crm">Ver CRM</button>
           <button class="btn-ghost" data-view="listado">Ver órdenes</button>
           <button class="btn-ghost" data-view="clientes">Ver clientes</button>
           <button class="btn-ghost" data-view="caja">Abrir caja</button>
+          <button class="btn-ghost" data-view="inventario">Ver inventario</button>
         </div>
 
         <div class="kpi-grid">
@@ -2803,6 +4303,26 @@
             <div class="kpi-value">${vencidosCount}</div>
             <div class="kpi-sub">Requieren atención</div>
           </div>
+          <div class="kpi-card kpi-red ${riesgoCount>0?'kpi-critical':''}">
+            <div class="kpi-label">Clientes en riesgo</div>
+            <div class="kpi-value">${riesgoCount}</div>
+            <div class="kpi-sub">Vencidos +${DIAS_RIESGO_CLIENTE}d sin volver</div>
+          </div>
+          <div class="kpi-card kpi-amber ${seguimientosHoyCount>0?'kpi-critical':''}">
+            <div class="kpi-label">Seguimientos pendientes</div>
+            <div class="kpi-value">${seguimientosHoyCount}</div>
+            <div class="kpi-sub">Para hoy o atrasados</div>
+          </div>
+          <div class="kpi-card ${renovacion.porcentaje!==null && renovacion.porcentaje<60?'kpi-red':'kpi-green'}">
+            <div class="kpi-label">Tasa de renovación</div>
+            <div class="kpi-value">${renovacion.porcentaje!==null ? renovacion.porcentaje+'%' : '—'}</div>
+            <div class="kpi-sub">${renovacion.juzgables>0 ? renovacion.renovaron+' de '+renovacion.juzgables+' renovaron' : 'Sin datos suficientes aún'}</div>
+          </div>
+          <div class="kpi-card kpi-red ${productosStockBajo().length>0?'kpi-critical':''}">
+            <div class="kpi-label">Stock bajo</div>
+            <div class="kpi-value">${productosStockBajo().length}</div>
+            <div class="kpi-sub">Productos por reponer</div>
+          </div>
         </div>
 
         <div class="dash-grid">
@@ -2820,6 +4340,61 @@
                   <div class="v-date ${vs==='vencido'?'venc-vencido':'venc-proximo'}">${esc(fecha)}</div>
                 </div>`).join('')}
             </div>
+          </div>
+
+          <div class="dash-panel full">
+            <h3>Clientes en riesgo <span>vencidos hace más de ${DIAS_RIESGO_CLIENTE} días sin volver</span></h3>
+            <div class="vence-list">
+              ${(()=>{
+                const riesgo = clientesEnRiesgo();
+                if(riesgo.length === 0) return '<div class="dash-empty">Ningún cliente en riesgo por ahora.</div>';
+                return riesgo.map(c=>`
+                  <div class="vence-item">
+                    <div>
+                      <div class="v-name">${esc(c.nombre)}</div>
+                      <div class="v-order">${c.telefono ? esc(c.telefono) : 'Sin teléfono'} · ${c.diasVencido} días vencido</div>
+                    </div>
+                    <button class="btn-ghost" data-cliente-riesgo="${esc(c.key)}" style="padding:6px 12px;font-size:11px;">Ver cliente</button>
+                  </div>`).join('');
+              })()}
+            </div>
+          </div>
+
+          <div class="dash-panel">
+            <h3>Embudo de ventas <span>${oportunidades.length} oportunidad(es) activas</span></h3>
+            ${oportunidades.length === 0 ? '<div class="dash-empty">Todavía no hay oportunidades registradas.</div>' : (()=>{
+              const maxEtapa = Math.max(...ETAPAS_EMBUDO.map(et=>oportunidades.filter(o=>o.etapa===et.id).length), 1);
+              return ETAPAS_EMBUDO.map(et=>{
+                const items = oportunidades.filter(o=>o.etapa===et.id);
+                const monto = items.reduce((s,o)=>s+(parseFloat(o.montoEstimado)||0),0);
+                const colorCls = et.id==='ganado'?'c-green':(et.id==='perdido'?'c-ink':(et.id==='cotizado'?'c-amber':'c-red'));
+                return `
+                <div class="bar-row">
+                  <div class="bar-label">${et.label}</div>
+                  <div class="bar-track"><div class="bar-fill ${colorCls}" style="width:${Math.max(4,(items.length/maxEtapa*100))}%"></div></div>
+                  <div class="bar-value">${items.length}</div>
+                </div>
+                ${monto>0 ? `<div style="font-size:10.5px;color:#6B7280;padding:0 0 6px 0;text-align:right;">₡${monto.toLocaleString('es-CR',{maximumFractionDigits:0})} estimado</div>` : ''}`;
+              }).join('');
+            })()}
+            <button class="btn-ghost" data-view="crm" style="width:100%;margin-top:10px;">Ver embudo completo</button>
+          </div>
+
+          <div class="dash-panel">
+            <h3>Seguimientos de hoy <span>${seguimientosHoyCount} pendiente(s)</span></h3>
+            ${(()=>{
+              const lista = recordatorios.filter(r=>!r.completado && r.fecha<=hoyISO).sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||'')).slice(0,6);
+              if(lista.length === 0) return '<div class="dash-empty">No tienes seguimientos pendientes por ahora.</div>';
+              return `<div class="vence-list">${lista.map(r=>`
+                <div class="vence-item">
+                  <div>
+                    <div class="v-name">${esc(r.texto)}</div>
+                    <div class="v-order">${r.cliente ? esc(r.cliente) : 'General'}</div>
+                  </div>
+                  <div class="v-date ${r.fecha<hoyISO?'venc-vencido':'venc-proximo'}">${r.fecha<hoyISO?'Atrasado':'Hoy'}</div>
+                </div>`).join('')}</div>`;
+            })()}
+            <button class="btn-ghost" data-view="crm" style="width:100%;margin-top:10px;">Ver recordatorios</button>
           </div>
 
           ${(()=>{
@@ -2992,7 +4567,7 @@
           <div class="stat"><b class="mono">${counts.total}</b><small>Total</small></div>
           <div class="stat"><b class="mono">${counts.activos}</b><small>En taller</small></div>
           <div class="stat"><b class="mono">${counts.listos}</b><small>Listos</small></div>
-          <div class="stat ${counts.vencidos>0?'stat-critical':''}"><b class="mono" style="color:${counts.vencidos>0?'#e08a85':'inherit'}">${counts.vencidos}</b><small>Vencidos</small></div>
+          <div class="stat ${counts.vencidos>0?'stat-critical':''}"><b class="mono" style="color:${counts.vencidos>0?'#DC2626':'inherit'}">${counts.vencidos}</b><small>Vencidos</small></div>
           <div class="stat"><b class="mono">₡${counts.porCobrar}</b><small>Por cobrar</small></div>
         </div>
         <div class="user-box">
@@ -3010,6 +4585,8 @@
           <button data-view="panel" class="${view==='panel'?'active':''}">Panel de control</button>
           <button data-view="clientes" class="${view==='clientes'?'active':''}">Clientes</button>
           <button data-view="caja" class="${view==='caja'?'active':''}">Caja</button>
+          <button data-view="crm" class="${view==='crm'?'active':''}">CRM</button>
+          <button data-view="inventario" class="${view==='inventario'?'active':''}">Inventario</button>
         </div>
       </div>
 
@@ -3038,16 +4615,16 @@
         ${filtered.length === 0 ? `
           <div class="empty">
             <svg viewBox="0 0 64 64" fill="none">
-              <rect x="24" y="10" width="16" height="44" rx="6" stroke="#8a8371" stroke-width="2.5"/>
-              <rect x="28" y="4" width="8" height="8" rx="1.5" stroke="#8a8371" stroke-width="2.5"/>
-              <path d="M20 22 L24 22" stroke="#8a8371" stroke-width="2.5" stroke-linecap="round"/>
+              <rect x="24" y="10" width="16" height="44" rx="6" stroke="#6B7280" stroke-width="2.5"/>
+              <rect x="28" y="4" width="8" height="8" rx="1.5" stroke="#6B7280" stroke-width="2.5"/>
+              <path d="M20 22 L24 22" stroke="#6B7280" stroke-width="2.5" stroke-linecap="round"/>
             </svg>
             <p>${records.length===0 ? 'Aún no hay extintores registrados.' : 'Nada coincide con ese filtro o búsqueda.'}</p>
           </div>` : `
           <div class="grid">${agruparPorOrden(filtered).map(orderCardHTML).join('')}</div>`
         }
       </div>
-      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista())))}
+      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista())))))}
       </div>
       </div>
     `;
@@ -3079,8 +4656,19 @@
     if(quickNew) quickNew.addEventListener('click', openNew);
     const dashQuickNew = document.getElementById('dash-quick-new');
     if(dashQuickNew) dashQuickNew.addEventListener('click', openNew);
+    const dashQuickOp = document.getElementById('dash-quick-oportunidad');
+    if(dashQuickOp) dashQuickOp.addEventListener('click', ()=> openNuevaOportunidad());
     document.querySelectorAll('.quick-actions [data-view]').forEach(b=>{
       b.addEventListener('click', ()=> setView(b.getAttribute('data-view')));
+    });
+    document.querySelectorAll('[data-cliente-riesgo]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        view = 'clientes';
+        clienteSeleccionado = b.getAttribute('data-cliente-riesgo');
+        clienteSeleccionadoTipo = 'mantenimiento';
+        animateViewChange = true;
+        render();
+      });
     });
 
     if(view === 'caja'){
@@ -3095,7 +4683,116 @@
       document.querySelectorAll('[data-mov-id]').forEach(b=>{
         b.addEventListener('click', async ()=>{
           const movId = b.getAttribute('data-mov-id');
-          await conAutorizacionAdmin(()=> quitarMovimiento(movId));
+          await quitarMovimiento(movId);
+        });
+      });
+      const cajaFechaInput = document.getElementById('caja-fecha-input');
+      if(cajaFechaInput) cajaFechaInput.addEventListener('change', (e)=>{ irACajaFecha(e.target.value); });
+      const btnDiaAnterior = document.getElementById('btn-caja-dia-anterior');
+      if(btnDiaAnterior) btnDiaAnterior.addEventListener('click', ()=> irACajaFecha(addDays(cajaVistaFecha || todayISO(), -1)));
+      const btnDiaSiguiente = document.getElementById('btn-caja-dia-siguiente');
+      if(btnDiaSiguiente) btnDiaSiguiente.addEventListener('click', ()=> irACajaFecha(addDays(cajaVistaFecha || todayISO(), 1)));
+      const btnIrHoy = document.getElementById('btn-caja-ir-hoy');
+      if(btnIrHoy) btnIrHoy.addEventListener('click', ()=> irACajaFecha(todayISO()));
+      document.querySelectorAll('[data-ir-fecha]').forEach(row=>{
+        row.addEventListener('click', ()=> irACajaFecha(row.getAttribute('data-ir-fecha')));
+      });
+    }
+
+    if(view === 'inventario'){
+      const btnNuevoProducto = document.getElementById('btn-nuevo-producto');
+      if(btnNuevoProducto) btnNuevoProducto.addEventListener('click', openNuevoProducto);
+      const inventarioSearchInput = document.getElementById('inventario-search-input');
+      if(inventarioSearchInput) inventarioSearchInput.addEventListener('input', (e)=> setInventarioQuery(e.target.value));
+      document.querySelectorAll('[data-inventario-filtro]').forEach(b=>{
+        b.addEventListener('click', ()=> setInventarioFiltro(b.getAttribute('data-inventario-filtro')));
+      });
+      document.querySelectorAll('[data-action="editar-producto"]').forEach(b=>{
+        b.addEventListener('click', ()=> openEditarProducto(b.getAttribute('data-id')));
+      });
+      document.querySelectorAll('[data-action="eliminar-producto"]').forEach(b=>{
+        b.addEventListener('click', ()=> removeProducto(b.getAttribute('data-id')));
+      });
+      document.querySelectorAll('[data-action="movimiento-producto"]').forEach(b=>{
+        b.addEventListener('click', ()=> abrirMovimientoInventarioModal(b.getAttribute('data-id')));
+      });
+    }
+
+    if(view === 'crm'){
+      document.querySelectorAll('[data-crm-subvista]').forEach(b=>{
+        b.addEventListener('click', ()=> setCrmSubvista(b.getAttribute('data-crm-subvista')));
+      });
+      const btnNuevaOp = document.getElementById('btn-nueva-oportunidad');
+      if(btnNuevaOp) btnNuevaOp.addEventListener('click', ()=> openNuevaOportunidad());
+
+      if(oportunidadSeleccionada){
+        const btnVolver = document.getElementById('btn-volver-pipeline');
+        if(btnVolver) btnVolver.addEventListener('click', volverPipeline);
+        document.querySelectorAll('[data-cambiar-etapa]').forEach(b=>{
+          b.addEventListener('click', ()=> cambiarEtapaOportunidad(b.getAttribute('data-oportunidad-etapa'), b.getAttribute('data-cambiar-etapa')));
+        });
+        document.querySelectorAll('[data-generar-cotizacion]').forEach(b=>{
+          b.addEventListener('click', ()=> printCotizacion(b.getAttribute('data-generar-cotizacion')));
+        });
+        document.querySelectorAll('[data-action="editar-oportunidad"]').forEach(b=>{
+          b.addEventListener('click', ()=> openEditarOportunidad(b.getAttribute('data-id')));
+        });
+        document.querySelectorAll('[data-action="eliminar-oportunidad"]').forEach(b=>{
+          b.addEventListener('click', async ()=>{
+            const id = b.getAttribute('data-id');
+            await removeOportunidad(id);
+          });
+        });
+        const btnAgregarBit = document.getElementById('btn-agregar-bitacora');
+        if(btnAgregarBit) btnAgregarBit.addEventListener('click', ()=> agregarBitacora(btnAgregarBit.getAttribute('data-oportunidad')));
+        const btnRecVinc = document.getElementById('btn-crear-recordatorio-vinculado');
+        if(btnRecVinc) btnRecVinc.addEventListener('click', ()=>{
+          const o = oportunidades.find(x=>x.id===btnRecVinc.getAttribute('data-oportunidad'));
+          crearRecordatorioRapido(o ? o.cliente : '', o ? o.telefono : '', o ? o.id : null);
+        });
+      } else if(crmSubvista === 'pipeline'){
+        document.querySelectorAll('[data-oportunidad-key]').forEach(card=>{
+          card.addEventListener('click', ()=> abrirOportunidad(card.getAttribute('data-oportunidad-key')));
+        });
+        // Arrastrar y soltar tarjetas entre columnas del embudo.
+        document.querySelectorAll('[data-drag-id]').forEach(card=>{
+          card.addEventListener('dragstart', (e)=>{ e.dataTransfer.setData('text/plain', card.getAttribute('data-drag-id')); e.stopPropagation(); });
+        });
+        document.querySelectorAll('[data-etapa-drop]').forEach(col=>{
+          col.addEventListener('dragover', (e)=> e.preventDefault());
+          col.addEventListener('drop', (e)=>{
+            e.preventDefault();
+            const id = e.dataTransfer.getData('text/plain');
+            const nuevaEtapa = col.getAttribute('data-etapa-drop');
+            if(id) cambiarEtapaOportunidad(id, nuevaEtapa);
+          });
+        });
+      } else if(crmSubvista === 'recordatorios'){
+        const btnCrearRec = document.getElementById('btn-crear-recordatorio');
+        if(btnCrearRec) btnCrearRec.addEventListener('click', ()=> crearRecordatorioRapido());
+      } else if(crmSubvista === 'contratos'){
+        document.querySelectorAll('[data-contratos-filtro]').forEach(b=>{
+          b.addEventListener('click', ()=> setContratosFiltro(b.getAttribute('data-contratos-filtro')));
+        });
+        const btnNuevoContrato = document.getElementById('btn-nuevo-contrato');
+        if(btnNuevoContrato) btnNuevoContrato.addEventListener('click', ()=> openNuevoContrato());
+        document.querySelectorAll('[data-action="editar-contrato"]').forEach(b=>{
+          b.addEventListener('click', ()=> openEditarContrato(b.getAttribute('data-id')));
+        });
+        document.querySelectorAll('[data-action="eliminar-contrato"]').forEach(b=>{
+          b.addEventListener('click', async ()=>{
+            const id = b.getAttribute('data-id');
+            await removeContrato(id);
+          });
+        });
+      }
+      document.querySelectorAll('[data-toggle-rec]').forEach(chk=>{
+        chk.addEventListener('change', ()=> toggleRecordatorio(chk.getAttribute('data-toggle-rec')));
+      });
+      document.querySelectorAll('[data-del-rec]').forEach(b=>{
+        b.addEventListener('click', async ()=>{
+          const id = b.getAttribute('data-del-rec');
+          await removeRecordatorio(id);
         });
       });
     }
@@ -3106,6 +4803,29 @@
         if(btnVolver) btnVolver.addEventListener('click', volverClientes);
         const btnNuevaVenta = document.getElementById('btn-nueva-venta-cliente');
         if(btnNuevaVenta) btnNuevaVenta.addEventListener('click', ()=> openNuevaVenta(btnNuevaVenta.getAttribute('data-cliente'), btnNuevaVenta.getAttribute('data-telefono')));
+        const btnNuevaOpCliente = document.getElementById('btn-nueva-oportunidad-cliente');
+        if(btnNuevaOpCliente) btnNuevaOpCliente.addEventListener('click', ()=> openNuevaOportunidad(btnNuevaOpCliente.getAttribute('data-cliente'), btnNuevaOpCliente.getAttribute('data-telefono')));
+        const btnNuevoContratoCliente = document.getElementById('btn-nuevo-contrato-cliente');
+        if(btnNuevoContratoCliente) btnNuevoContratoCliente.addEventListener('click', ()=> openNuevoContrato(btnNuevoContratoCliente.getAttribute('data-cliente'), btnNuevoContratoCliente.getAttribute('data-telefono')));
+        const btnRecCliente = document.getElementById('btn-recordatorio-cliente');
+        if(btnRecCliente) btnRecCliente.addEventListener('click', ()=> abrirRecordatorioRapidoModal(btnRecCliente.getAttribute('data-cliente'), btnRecCliente.getAttribute('data-telefono')));
+        document.querySelectorAll('[data-abrir-oportunidad]').forEach(b=>{
+          b.addEventListener('click', ()=>{
+            view = 'crm'; crmSubvista = 'pipeline';
+            oportunidadSeleccionada = b.getAttribute('data-abrir-oportunidad');
+            animateViewChange = true;
+            render();
+          });
+        });
+        document.querySelectorAll('[data-agregar-perfil]').forEach(b=>{
+          b.addEventListener('click', ()=> openEditarPerfilCliente(b.getAttribute('data-agregar-perfil'), b.getAttribute('data-nombre'), b.getAttribute('data-telefono')));
+        });
+        document.querySelectorAll('[data-editar-perfil]').forEach(b=>{
+          b.addEventListener('click', ()=> openEditarPerfilCliente(b.getAttribute('data-editar-perfil')));
+        });
+        document.querySelectorAll('[data-eliminar-perfil]').forEach(b=>{
+          b.addEventListener('click', ()=> removePerfilCliente(b.getAttribute('data-eliminar-perfil')));
+        });
         document.querySelectorAll('[data-action="receipt"]').forEach(b=>{
           b.addEventListener('click', ()=> printReceipt(b.getAttribute('data-id')));
         });
@@ -3118,7 +4838,7 @@
         document.querySelectorAll('[data-action="delete"]').forEach(b=>{
           b.addEventListener('click', async ()=>{
             const id = b.getAttribute('data-id');
-            await conAutorizacionAdmin(()=> remove(id));
+            await remove(id);
           });
         });
         document.querySelectorAll('[data-action="editar-venta"]').forEach(b=>{
@@ -3127,7 +4847,7 @@
         document.querySelectorAll('[data-action="eliminar-venta"]').forEach(b=>{
           b.addEventListener('click', async ()=>{
             const id = b.getAttribute('data-id');
-            await conAutorizacionAdmin(()=> removeVenta(id));
+            await removeVenta(id);
           });
         });
       } else {
@@ -3139,8 +4859,13 @@
         document.querySelectorAll('[data-clientes-subvista]').forEach(b=>{
           b.addEventListener('click', ()=> setClientesSubvista(b.getAttribute('data-clientes-subvista')));
         });
+        document.querySelectorAll('[data-etiqueta-filtro]').forEach(b=>{
+          b.addEventListener('click', ()=> setEtiquetaFiltro(b.getAttribute('data-etiqueta-filtro')));
+        });
         const btnNuevaVentaListado = document.getElementById('btn-nueva-venta-listado');
         if(btnNuevaVentaListado) btnNuevaVentaListado.addEventListener('click', ()=> openNuevaVenta());
+        const btnNuevoCliente = document.getElementById('btn-nuevo-cliente');
+        if(btnNuevoCliente) btnNuevoCliente.addEventListener('click', openNuevoPerfilCliente);
       }
     }
 
@@ -3166,7 +4891,7 @@
       document.querySelectorAll('[data-action="delete"]').forEach(b=>{
         b.addEventListener('click', async ()=>{
           const id = b.getAttribute('data-id');
-          await conAutorizacionAdmin(()=> remove(id));
+          await remove(id);
         });
       });
     }
