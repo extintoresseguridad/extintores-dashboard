@@ -6,15 +6,23 @@
 <style>
   @font-face{ font-family:'sysfallback'; }
   :root{
-    --ink:#1B1F23;
-    --paper:#F6F7F9;
-    --tag:#FBE9E9;
+    --ink:#171B22;
+    --paper:#EEF0F4;
+    --tag:#EEF1F6;
     --red:#DC2626;
     --red-dark:#B91C1C;
-    --brass:#64748B;
+    --brass:#5B6B82;
     --green:#16A34A;
     --amber:#D97706;
-    --line:#E5E7EB;
+    --line:#E1E4EA;
+    --primary:#1E2F4E;
+    --primary-2:#2F4874;
+    --primary-soft:#E8ECF3;
+    --sidebar-bg:#11161F;
+    --sidebar-bg-2:#161D29;
+    --sidebar-ink:#AEB8C6;
+    --sidebar-ink-dim:#6E7A8C;
+    --sidebar-active:#1E2F4E;
   }
   *{box-sizing:border-box;}
   #app-root{
@@ -42,7 +50,7 @@
   .brand-logo{width:44px;height:44px;flex-shrink:0;object-fit:contain;border-radius:8px;}
   .brand h1{font-size:21px;text-transform:uppercase;margin:0;letter-spacing:.04em;color:var(--ink);}
   .brand span{
-    display:block;font-size:11px;color:var(--red);
+    display:block;font-size:11px;color:var(--primary);
     letter-spacing:.1em;text-transform:uppercase;margin-top:2px;
     font-weight:600;
   }
@@ -84,17 +92,17 @@
     text-transform:uppercase;letter-spacing:.05em;font-weight:600;
     color:var(--ink);opacity:.6;
   }
-  .chip.active{opacity:1;background:var(--red);color:#fff;border-color:var(--red);}
+  .chip.active{opacity:1;background:var(--primary);color:#fff;border-color:var(--primary);}
   .search{
     padding:8px 12px;border:1px solid var(--line);border-radius:2px;
     background:#fff;font-size:13px;min-width:220px;
   }
   .btn-primary{
-    background:var(--red);color:#fff;border:none;padding:8px 16px;
+    background:var(--primary);color:#fff;border:none;padding:8px 16px;
     border-radius:2px;font-weight:700;cursor:pointer;font-size:12px;
     text-transform:uppercase;letter-spacing:.05em;
   }
-  .btn-primary:hover{background:var(--red-dark);}
+  .btn-primary:hover{background:var(--primary-2);}
 
   .content{padding:20px 28px 60px;}
   .empty{text-align:center;padding:60px 20px;color:#6B7280;}
@@ -114,7 +122,7 @@
     padding:3px 9px;border-radius:12px;color:#fff;
   }
   .b-recibido{background:var(--amber);}
-  .b-proceso{background:var(--red);}
+  .b-proceso{background:var(--primary);}
   .b-listo{background:var(--green);}
   .b-entregado{background:#6B7280;}
   .venc-vencido{color:var(--red)!important;font-weight:700;}
@@ -158,7 +166,7 @@
     box-shadow:0 20px 60px rgba(0,0,0,.3);
   }
   .modal-head{
-    background:var(--red);color:#fff;padding:18px 24px;
+    background:var(--primary);color:#fff;padding:18px 24px;
     display:flex;justify-content:space-between;align-items:center;
   }
   .modal-head h2{margin:0;font-size:18px;font-family:'Inter',-apple-system,sans-serif;font-weight:700;text-transform:uppercase;}
@@ -219,7 +227,7 @@
     max-width:420px;text-align:center;background:#fff;border:1px solid var(--line);
     border-radius:4px;padding:32px 28px;
   }
-  .error-box h2{font-family:'Inter',-apple-system,sans-serif;font-weight:700;font-size:19px;margin:0 0 10px;color:var(--red-dark);}
+  .error-box h2{font-family:'Inter',-apple-system,sans-serif;font-weight:700;font-size:19px;margin:0 0 10px;color:var(--primary);}
   .error-box p{font-size:13px;color:#6B7280;line-height:1.5;margin-bottom:20px;}
   .storage-warning{
     background:#f4d35e;color:#3a2f00;padding:8px 28px;font-size:12.5px;font-weight:600;
@@ -236,7 +244,7 @@
     text-transform:uppercase;letter-spacing:.05em;color:var(--ink);opacity:.55;
   }
   .view-toggle button + button{border-left:1px solid var(--line);}
-  .view-toggle button.active{opacity:1;background:var(--red);color:#fff;}
+  .view-toggle button.active{opacity:1;background:var(--primary);color:#fff;}
 
   .dash-toolbar{
     padding:20px 28px 0;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;
@@ -578,7 +586,7 @@
   }
   .view-toggle{border-radius:8px;background:#fff;box-shadow:var(--shadow-sm);}
   .view-toggle button{padding:9px 15px;}
-  .view-toggle button.active{background:var(--red);}
+  .view-toggle button.active{background:var(--primary);}
 
   .toolbar,.clientes-toolbar{padding-left:28px;padding-right:28px;}
   .toolbar{gap:10px;}
@@ -603,7 +611,7 @@
     border-radius:8px;
     min-height:38px;
   }
-  .btn-primary{padding:9px 15px;box-shadow:0 2px 5px rgba(179,38,30,.18);}
+  .btn-primary{padding:9px 15px;box-shadow:0 2px 5px rgba(30,47,78,.25);}
   .btn-primary:hover{transform:translateY(-1px);}
   .btn-ghost{background:#fff;}
   .btn-ghost:hover{background:#fff;box-shadow:var(--shadow-sm);}
@@ -690,7 +698,7 @@
   .cierre-diff{border-radius:9px;}
 
   .storage-warning{
-    position:sticky;top:76px;z-index:25;
+    position:sticky;top:0;z-index:35;
     padding:9px 20px;
   }
 
@@ -859,10 +867,147 @@
 }
 .crm-mini b{display:block;font-size:20px}
 .crm-mini span{font-size:9.5px;color:#6B7280;text-transform:uppercase;letter-spacing:.05em}
-.crm-nav-dot{width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;margin-right:7px}
+.crm-nav-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:7px}
 @media(max-width:1200px){.crm-kpis-industrial{grid-template-columns:repeat(3,1fr)}.crm-industrial-grid{grid-template-columns:1fr 1fr}.crm-panel.full{grid-column:1/-1}}
 @media(max-width:760px){.crm-industrial{padding:16px 14px 50px}.crm-hero{display:block}.crm-hero-actions{justify-content:flex-start;margin-top:14px}.crm-kpis-industrial{grid-template-columns:1fr 1fr}.crm-industrial-grid{grid-template-columns:1fr}.crm-panel.full{grid-column:auto}.crm-mini-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:440px){.crm-kpis-industrial{grid-template-columns:1fr}.crm-actions-grid{grid-template-columns:1fr}}
+
+/* =========================================================
+   V4 — Shell tipo CRM (barra lateral + cabecera)
+   ========================================================= */
+.app-shell{display:flex;align-items:stretch;min-height:100vh;}
+.sidebar{
+  width:236px;flex-shrink:0;background:var(--sidebar-bg);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+  border-right:1px solid #05070B;
+}
+.sidebar-brand{
+  display:flex;align-items:center;gap:11px;padding:20px 18px 16px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.sidebar-brand .brand-logo{width:36px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);}
+.sidebar-brand h1{
+  margin:0;font-size:13px;line-height:1.2;letter-spacing:.01em;color:#fff;
+  text-transform:none;font-weight:800;
+}
+.sidebar-brand span{
+  display:block;margin-top:3px;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--sidebar-ink-dim);font-weight:700;
+}
+.sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:14px 12px;flex:1;overflow-y:auto;}
+.sidebar-nav button{
+  display:flex;align-items:center;gap:11px;text-align:left;width:100%;
+  padding:10px 12px;border-radius:8px;border:none;background:transparent;
+  color:var(--sidebar-ink);font-size:13px;font-weight:600;cursor:pointer;
+  font-family:inherit;letter-spacing:.01em;
+}
+.sidebar-nav button:hover{background:rgba(255,255,255,.06);color:#fff;}
+.sidebar-nav button.active{background:var(--sidebar-active);color:#fff;box-shadow:inset 3px 0 0 var(--red);}
+.sidebar-nav .snav-ico{
+  width:18px;flex-shrink:0;text-align:center;font-size:13px;opacity:.85;font-style:normal;
+}
+.sidebar-foot{
+  padding:14px 14px 16px;border-top:1px solid rgba(255,255,255,.07);
+  display:flex;flex-direction:column;gap:6px;
+}
+.sidebar-user{
+  font-size:11px;color:var(--sidebar-ink-dim);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;padding:0 2px 6px;
+}
+.sidebar-foot-btn{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:var(--sidebar-ink);
+  padding:8px 10px;border-radius:7px;font-size:11.5px;font-weight:600;cursor:pointer;text-align:left;
+  font-family:inherit;
+}
+.sidebar-foot-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
+
+.main-area{flex:1;min-width:0;display:flex;flex-direction:column;}
+.main-area .topbar{
+  position:sticky;top:0;z-index:30;background:#fff;
+  padding:14px 28px;display:flex;align-items:center;justify-content:space-between;
+  gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line);box-shadow:0 1px 0 rgba(0,0,0,.03);
+}
+.main-area .stats{display:flex;gap:8px;}
+.main-area .stat{
+  min-width:70px;text-align:center;padding:6px 12px;border:1px solid var(--line);
+  border-radius:8px;background:var(--paper);
+}
+.main-area .stat b{font-size:18px;line-height:1.1;color:var(--ink);}
+.main-area .stat small{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#6B7280;}
+.main-area .dash-toolbar{position:sticky;top:63px;}
+.main-area .storage-warning{position:sticky;top:63px;z-index:25;}
+
+@media (max-width:900px){
+  .app-shell{flex-direction:column;}
+  .sidebar{
+    width:100%;height:auto;position:relative;flex-direction:row;align-items:stretch;
+    overflow-x:auto;
+  }
+  .sidebar-brand{border-bottom:none;border-right:1px solid rgba(255,255,255,.07);flex-shrink:0;}
+  .sidebar-nav{flex-direction:row;padding:10px 10px;overflow-x:auto;flex:none;}
+  .sidebar-nav button{flex-direction:column;gap:3px;white-space:nowrap;padding:8px 12px;font-size:10.5px;}
+  .sidebar-nav button.active{box-shadow:inset 0 -3px 0 var(--red);}
+  .sidebar-foot{flex-direction:row;align-items:center;border-top:none;border-left:1px solid rgba(255,255,255,.07);flex-shrink:0;}
+  .sidebar-user{display:none;}
+  .main-area .topbar{position:relative;padding:12px 18px;}
+  .main-area .dash-toolbar,.main-area .storage-warning{position:relative;top:auto;}
+  .main-area .stats{width:100%;overflow-x:auto;}
+}
+@media (max-width:560px){
+  .main-area .topbar{flex-direction:column;align-items:stretch;}
+  .main-area .topbar .btn-primary{width:100%;}
+}
+
+/* =========================================================
+   V5 — Lista de clientes tipo CRM (contactos)
+   ========================================================= */
+.contact-list{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow-sm);
+}
+.contact-row{
+  display:flex;align-items:center;gap:14px;padding:12px 16px;
+  border-bottom:1px solid #EEF0F2;cursor:pointer;
+}
+.contact-row:last-child{border-bottom:none;}
+.contact-row:hover{background:#F9FAFB;}
+.contact-row-head{
+  cursor:default;background:#F9FAFB;padding:9px 16px;
+  font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6B7280;font-weight:800;
+}
+.contact-row-head:hover{background:#F9FAFB;}
+.contact-avatar-col{flex-shrink:0;width:38px;display:flex;justify-content:center;}
+.contact-avatar{
+  width:36px;height:36px;border-radius:50%;background:var(--primary-soft);color:var(--primary);
+  display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;
+  letter-spacing:.02em;flex-shrink:0;
+}
+.contact-main{flex:1;min-width:0;}
+.contact-name{
+  font-size:14px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.contact-name .etiqueta-badge{margin:0;}
+.contact-sub{font-size:11.5px;color:#6B7280;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.contact-metrics{display:flex;gap:22px;flex-shrink:0;}
+.contact-metrics .cm{text-align:center;min-width:56px;}
+.contact-metrics .cm b{display:block;font-size:15px;font-weight:700;color:var(--ink);}
+.contact-metrics .cm span{font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:#6B7280;}
+.contact-balance{
+  flex-shrink:0;width:110px;text-align:right;font-family:'Courier New',monospace;
+  font-weight:700;font-size:13px;color:var(--ink);
+}
+.contact-balance.neg{color:var(--red);}
+.contact-chevron-col{flex-shrink:0;width:14px;text-align:center;color:#9AA3AF;font-size:16px;}
+
+@media (max-width:760px){
+  .contact-row{flex-wrap:wrap;gap:8px 12px;}
+  .contact-row-head{display:none;}
+  .contact-metrics{order:3;width:100%;padding-left:52px;gap:16px;}
+  .contact-metrics .cm{text-align:left;min-width:auto;}
+  .contact-balance{order:2;width:auto;margin-left:auto;}
+  .contact-chevron-col{order:2;}
+}
 
 </style>
 
@@ -3336,6 +3481,13 @@
     return nombre + '|' + tel;
   }
 
+  function inicialesDe(nombre){
+    const partes = (nombre||'').trim().split(/\s+/).filter(Boolean);
+    if(partes.length === 0) return '?';
+    if(partes.length === 1) return partes[0].slice(0,2).toUpperCase();
+    return (partes[0][0] + partes[partes.length-1][0]).toUpperCase();
+  }
+
   function perfilDeCliente(key){
     return clientesPerfil.find(p => clienteKey(p) === key) || null;
   }
@@ -3399,7 +3551,13 @@
     const nuevaKey = keyNuevo;
     closePerfilClienteModal();
     clienteSeleccionado = nuevaKey;
-    clienteSeleccionadoTipo = 'mantenimiento';
+    if(!editingPerfilKey){
+      // Solo es una creación nueva desde el listado de "Mantenimiento" (el botón
+      // "+ Nuevo cliente" solo existe en esa sub-pestaña); si veníamos editando el
+      // perfil desde la ficha de un cliente ya abierta, se respeta su tipo actual
+      // (mantenimiento o compras) para no mandarlo a la ficha equivocada.
+      clienteSeleccionadoTipo = 'mantenimiento';
+    }
     view = 'clientes';
     render();
   }
@@ -4071,22 +4229,32 @@
       </div>
       <div class="clientes-content">
         ${clientes.length === 0 ? `<div class="dash-empty">${esCompras ? 'Todavía no hay clientes de compras de equipo.' : 'No hay clientes que coincidan.'}</div>` : `
-        <div class="clientes-grid">
+        <div class="contact-list">
+          <div class="contact-row contact-row-head">
+            <div class="contact-avatar-col"></div>
+            <div class="contact-main">Cliente</div>
+            <div class="contact-metrics">${esCompras ? '<div class="cm">Compras</div><div class="cm">Equipos</div>' : '<div class="cm">Servicios</div><div class="cm">Extintores</div>'}</div>
+            <div class="contact-balance">Por cobrar</div>
+            <div class="contact-chevron-col"></div>
+          </div>
           ${clientes.map(c=>`
-            <div class="cliente-card" data-cliente-key="${esc(c.key)}" data-cliente-tipo="${esCompras?'compras':'mantenimiento'}">
-              <h3>${esc(c.nombre)}</h3>
-              <div class="sub">${c.telefono ? esc(c.telefono) : 'Sin teléfono'}</div>
-              ${c.etiquetas && c.etiquetas.length ? `<div style="margin:4px 0 2px;">${etiquetasHTML(c.etiquetas)}</div>` : ''}
-              <div class="cliente-stats">
-                ${esCompras ? `
-                <div class="cliente-stat"><b>${c.totalCompras}</b><small>Compras</small></div>
-                <div class="cliente-stat"><b>${c.totalEquiposComprados}</b><small>Equipos</small></div>
-                ` : `
-                <div class="cliente-stat"><b>${c.totalServicios}</b><small>Servicios</small></div>
-                <div class="cliente-stat"><b>${c.totalExtintores}</b><small>Extintores</small></div>
-                `}
-                <div class="cliente-stat"><b style="color:${c.totalPendiente>0?'#DC2626':'inherit'}">₡${c.totalPendiente.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Por cobrar</small></div>
+            <div class="contact-row" data-cliente-key="${esc(c.key)}" data-cliente-tipo="${esCompras?'compras':'mantenimiento'}">
+              <div class="contact-avatar-col"><div class="contact-avatar">${esc(inicialesDe(c.nombre))}</div></div>
+              <div class="contact-main">
+                <div class="contact-name">${esc(c.nombre)}${c.etiquetas && c.etiquetas.length ? etiquetasHTML(c.etiquetas) : ''}</div>
+                <div class="contact-sub">${c.telefono ? esc(c.telefono) : 'Sin teléfono'}${c.ultimaFecha ? ` · Última actividad ${esc(c.ultimaFecha)}` : ''}</div>
               </div>
+              <div class="contact-metrics">
+                ${esCompras ? `
+                <div class="cm"><b>${c.totalCompras}</b><span>Compras</span></div>
+                <div class="cm"><b>${c.totalEquiposComprados}</b><span>Equipos</span></div>
+                ` : `
+                <div class="cm"><b>${c.totalServicios}</b><span>Servicios</span></div>
+                <div class="cm"><b>${c.totalExtintores}</b><span>Extintores</span></div>
+                `}
+              </div>
+              <div class="contact-balance ${c.totalPendiente>0?'neg':''}">₡${c.totalPendiente.toLocaleString('es-CR',{maximumFractionDigits:0})}</div>
+              <div class="contact-chevron-col">›</div>
             </div>`).join('')}
         </div>`}
       </div>
@@ -4698,7 +4866,7 @@
             ${estadoCounts.map(x=>`
               <div style="margin-bottom:12px">
                 <div style="display:flex;justify-content:space-between;font-size:11px"><b>${x.e.label}</b><span>${x.n}</span></div>
-                <div class="crm-progress"><i style="width:${Math.max(x.n?4:0,x.n/totalEstado*100)}%;${x.e.id==='listo'?'background:var(--green)':x.e.id==='proceso'?'background:var(--red)':x.e.id==='recibido'?'background:var(--amber)':'background:#64748B'}"></i></div>
+                <div class="crm-progress"><i style="width:${Math.max(x.n?4:0,x.n/totalEstado*100)}%;${x.e.id==='listo'?'background:var(--green)':x.e.id==='proceso'?'background:var(--primary)':x.e.id==='recibido'?'background:var(--amber)':'background:#64748B'}"></i></div>
               </div>`).join('')}
             <button class="btn-ghost" style="width:100%;margin-top:4px" data-ind-view="listado">Abrir órdenes de trabajo</button>
           </div>
@@ -4788,14 +4956,33 @@
       ${!firebaseOK && !storageOK && !localBackupOK ? `<div class="storage-warning">⚠ No se detecta ninguna forma de guardar — lo que registres se perderá al cerrar.</div>` : ''}
       ${!firebaseOK && !storageOK && localBackupOK ? `<div class="storage-warning storage-warning-info">💾 Guardando solo en este navegador/computadora — no se comparte con otros dispositivos ni empleados.</div>` : ''}
       ${!firebaseOK && storageOK ? `<div class="storage-warning storage-warning-info">☁️ Guardando en la nube de Claude (no en Firebase) — funciona mientras uses esta app dentro de Claude.</div>` : ''}
-      <div class="topbar">
-        <div class="brand">
+      <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
           <img src="${LOGO_DATA_URL}" alt="Extintores Seguridad" class="brand-logo"/>
           <div>
-            <h1 class="head-font">Control de Mantenimiento</h1>
-            <span>Registro de extintores</span>
+            <h1 class="head-font">Extintores<br>Seguridad</h1>
+            <span>Control · CRM</span>
           </div>
         </div>
+        <nav class="sidebar-nav">
+          <button data-view="industrial" class="${view==='industrial'?'active':''}"><span class="snav-ico">⌂</span>Inicio</button>
+          <button data-view="listado" class="${view==='listado'?'active':''}"><span class="snav-ico">▤</span>Operaciones</button>
+          <button data-view="clientes" class="${view==='clientes'?'active':''}"><span class="snav-ico">◔</span>Clientes</button>
+          <button data-view="crm" class="${view==='crm'?'active':''}"><span class="snav-ico">◆</span>Ventas / CRM</button>
+          <button data-view="panel" class="${view==='panel'?'active':''}"><span class="snav-ico">▲</span>Indicadores</button>
+          <button data-view="inventario" class="${view==='inventario'?'active':''}"><span class="snav-ico">▣</span>Inventario</button>
+          <button data-view="caja" class="${view==='caja'?'active':''}"><span class="snav-ico">$</span>Caja</button>
+        </nav>
+        <div class="sidebar-foot">
+          <div class="sidebar-user" title="${esc(authUser ? authUser.email : '')}">${esc(authUser ? authUser.email : '')}</div>
+          <button class="sidebar-foot-btn" id="btn-papelera">Papelera${papelera.length ? ` (${papelera.length})` : ''}</button>
+          ${userRole === 'admin' ? `<button class="sidebar-foot-btn" id="btn-admin-panel">Panel de administración</button>` : ''}
+          <button class="sidebar-foot-btn" id="btn-logout">Cerrar sesión</button>
+        </div>
+      </aside>
+      <div class="main-area">
+      <div class="topbar">
         <div class="stats">
           <div class="stat"><b class="mono">${counts.total}</b><small>Total</small></div>
           <div class="stat"><b class="mono">${counts.activos}</b><small>En taller</small></div>
@@ -4803,25 +4990,7 @@
           <div class="stat ${counts.vencidos>0?'stat-critical':''}"><b class="mono" style="color:${counts.vencidos>0?'#DC2626':'inherit'}">${counts.vencidos}</b><small>Vencidos</small></div>
           <div class="stat"><b class="mono">₡${counts.porCobrar}</b><small>Por cobrar</small></div>
         </div>
-        <div class="user-box">
-          <span class="user-email">${esc(authUser ? authUser.email : '')}</span>
-          <button class="btn-primary" id="btn-quick-new">+ Nuevo ingreso</button>
-          <button class="btn-ghost" id="btn-papelera">Papelera${papelera.length ? ` (${papelera.length})` : ''}</button>
-          ${userRole === 'admin' ? `<button class="btn-ghost" id="btn-admin-panel">Panel de administración</button>` : ''}
-          <button class="btn-ghost" id="btn-logout">Cerrar sesión</button>
-        </div>
-      </div>
-
-      <div class="dash-toolbar">
-        <div class="view-toggle">
-          <button data-view="industrial" class="${view==='industrial'?'active':''}">Inicio</button>
-          <button data-view="listado" class="${view==='listado'?'active':''}">Operaciones</button>
-          <button data-view="panel" class="${view==='panel'?'active':''}">Indicadores</button>
-          <button data-view="clientes" class="${view==='clientes'?'active':''}">Clientes</button>
-          <button data-view="crm" class="${view==='crm'?'active':''}">Ventas / CRM</button>
-          <button data-view="inventario" class="${view==='inventario'?'active':''}">Inventario</button>
-          <button data-view="caja" class="${view==='caja'?'active':''}">Caja</button>
-        </div>
+        <button class="btn-primary" id="btn-quick-new">+ Nuevo ingreso</button>
       </div>
 
       <div class="${animateViewChange ? 'view-fade' : ''}">
@@ -4859,6 +5028,8 @@
         }
       </div>
       ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : renderIndustrial()))))))}
+      </div>
+      </div>
       </div>
       </div>
     `;
