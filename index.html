@@ -781,6 +781,89 @@
   }
 
 
+
+/* =========================================================
+   V3 — CRM INDUSTRIAL | Extintores Seguridad
+   Tablero operativo, mantenimiento, activos, ventas y control.
+   ========================================================= */
+.crm-industrial{
+  max-width:1500px;margin:0 auto;padding:24px 28px 70px;
+}
+.crm-hero{
+  display:flex;justify-content:space-between;align-items:flex-start;gap:20px;
+  padding:24px;background:linear-gradient(135deg,#fff 0%,#f8fafc 100%);
+  border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-sm);
+  margin-bottom:18px;
+}
+.crm-hero h2{margin:0 0 5px;font-size:26px;letter-spacing:-.03em}
+.crm-hero p{margin:0;color:#6B7280;font-size:13px}
+.crm-hero-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.crm-section-title{
+  display:flex;justify-content:space-between;align-items:end;gap:12px;margin:24px 0 10px;
+}
+.crm-section-title h3{margin:0;font-size:14px;text-transform:uppercase;letter-spacing:.06em}
+.crm-section-title span{font-size:11px;color:#6B7280}
+.crm-kpis-industrial{
+  display:grid;grid-template-columns:repeat(6,minmax(150px,1fr));gap:12px;
+}
+.crm-kpi{
+  background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px 16px;
+  box-shadow:var(--shadow-sm);cursor:pointer;transition:.16s;
+}
+.crm-kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.crm-kpi .icon{font-size:18px;margin-bottom:10px}
+.crm-kpi .value{font-size:27px;font-weight:800;letter-spacing:-.03em}
+.crm-kpi .label{font-size:10px;color:#6B7280;text-transform:uppercase;letter-spacing:.07em;margin-top:4px;font-weight:700}
+.crm-kpi .hint{font-size:10.5px;color:#6B7280;margin-top:8px}
+.crm-kpi.critical{border-color:#f3b6b6;background:#fff8f8}
+.crm-kpi.critical .value{color:var(--red)}
+.crm-industrial-grid{
+  display:grid;grid-template-columns:1.25fr .9fr .9fr;gap:15px;
+}
+.crm-panel{
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;
+  box-shadow:var(--shadow-sm);min-width:0;
+}
+.crm-panel.full{grid-column:1/-1}
+.crm-panel h4{margin:0 0 14px;font-size:14px}
+.crm-list{display:flex;flex-direction:column}
+.crm-list-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 0;border-bottom:1px solid #EEF0F2;font-size:12px;
+}
+.crm-list-row:last-child{border-bottom:none}
+.crm-list-main{min-width:0;flex:1}
+.crm-list-main b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crm-list-main span{display:block;color:#6B7280;font-size:10.5px;margin-top:2px}
+.crm-list-value{font-family:'Courier New',monospace;font-weight:700;white-space:nowrap}
+.crm-pill{
+  display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;
+  font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;
+  background:#f1f5f9;color:#475569;
+}
+.crm-pill.red{background:#fbe9e9;color:#b91c1c}
+.crm-pill.amber{background:#fff4df;color:#a15c00}
+.crm-pill.green{background:#eaf7ee;color:#166534}
+.crm-actions-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.crm-action{
+  display:flex;align-items:center;gap:9px;padding:11px 12px;border:1px solid var(--line);
+  background:#fff;border-radius:10px;cursor:pointer;text-align:left;font-weight:700;font-size:11px;
+}
+.crm-action:hover{background:#F8FAFC;border-color:#CBD5E1}
+.crm-action small{display:block;color:#6B7280;font-weight:500;margin-top:2px}
+.crm-progress{height:8px;background:#EEF2F7;border-radius:999px;overflow:hidden;margin-top:7px}
+.crm-progress i{display:block;height:100%;border-radius:999px;background:var(--red)}
+.crm-mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.crm-mini{
+  padding:12px;border:1px solid var(--line);border-radius:10px;background:#F9FAFB
+}
+.crm-mini b{display:block;font-size:20px}
+.crm-mini span{font-size:9.5px;color:#6B7280;text-transform:uppercase;letter-spacing:.05em}
+.crm-nav-dot{width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;margin-right:7px}
+@media(max-width:1200px){.crm-kpis-industrial{grid-template-columns:repeat(3,1fr)}.crm-industrial-grid{grid-template-columns:1fr 1fr}.crm-panel.full{grid-column:1/-1}}
+@media(max-width:760px){.crm-industrial{padding:16px 14px 50px}.crm-hero{display:block}.crm-hero-actions{justify-content:flex-start;margin-top:14px}.crm-kpis-industrial{grid-template-columns:1fr 1fr}.crm-industrial-grid{grid-template-columns:1fr}.crm-panel.full{grid-column:auto}.crm-mini-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:440px){.crm-kpis-industrial{grid-template-columns:1fr}.crm-actions-grid{grid-template-columns:1fr}}
+
 </style>
 
 
@@ -825,7 +908,7 @@
   let venceFilter = 'todos';
   let query = '';
   let editingId = null;
-  let view = 'listado'; // 'listado' | 'panel' | 'clientes' | 'caja' | 'crm'
+  let view = 'industrial'; // 'industrial' | 'listado' | 'panel' | 'clientes' | 'caja' | 'crm' | 'inventario'
   let crmSubvista = 'pipeline'; // 'pipeline' | 'recordatorios' | 'contratos'
   let pipelineQuery = '';
   let oportunidadSeleccionada = null;
@@ -4526,6 +4609,156 @@
     `;
   }
 
+
+  function exportarRespaldoIndustrial(){
+    const payload = {
+      version:'CRM Industrial Extintores Seguridad 3.0',
+      exportedAt:new Date().toISOString(),
+      records,cajas,papelera,ventas,oportunidades,recordatorios,clientesPerfil,contratos,inventario
+    };
+    const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`respaldo-extintores-seguridad-${todayISO()}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    showToast('Respaldo descargado.');
+  }
+
+  function irVistaIndustrial(v){
+    setView(v);
+  }
+
+  function renderIndustrial(){
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const en30 = records.filter(r=>{
+      if(!r.fechaVencimiento) return false;
+      const d=new Date(r.fechaVencimiento+'T00:00:00');
+      const diff=Math.ceil((d-hoy)/86400000);
+      return diff>=0 && diff<=30;
+    });
+    const vencidos = records.filter(r=>vencStatus(r.fechaVencimiento)==='vencido');
+    const taller = records.filter(r=>r.estado==='recibido'||r.estado==='proceso');
+    const listos = records.filter(r=>r.estado==='listo');
+    const clientes = new Set([
+      ...records.map(r=>r.cliente).filter(Boolean),
+      ...ventas.map(v=>v.cliente).filter(Boolean),
+      ...clientesPerfil.map(c=>c.cliente).filter(Boolean),
+      ...oportunidades.map(o=>o.cliente).filter(Boolean)
+    ]);
+    const porCobrar = records.reduce((s,r)=>s+(saldoOf(r).saldo||0),0);
+    const stockBajo = typeof productosStockBajo==='function' ? productosStockBajo() : [];
+    const contratosActivos = contratos.filter(c=>c.estado==='activo');
+    const opsAbiertas = oportunidades.filter(o=>o.etapa!=='perdido' && o.etapa!=='ganado');
+    const recPend = recordatorios.filter(r=>!r.completado).sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+    const proximos = [...en30].sort((a,b)=>(a.fechaVencimiento||'').localeCompare(b.fechaVencimiento||'')).slice(0,6);
+    const riesgo = typeof clientesEnRiesgo==='function' ? clientesEnRiesgo().slice(0,6) : [];
+    const estadoCounts = ESTADOS.map(e=>({e,n:records.filter(r=>r.estado===e.id).length}));
+    const totalEstado=Math.max(records.length,1);
+
+    return `
+      <div class="crm-industrial view-fade">
+        <div class="crm-hero">
+          <div>
+            <div class="crm-pill green"><span class="crm-nav-dot"></span>Operación conectada</div>
+            <h2>CRM Industrial</h2>
+            <p>Centro de control para clientes, activos, mantenimiento, ventas, contratos, inventario y cobranza.</p>
+          </div>
+          <div class="crm-hero-actions">
+            <button class="btn-primary" id="ind-nuevo">+ Nueva orden</button>
+            <button class="btn-ghost" id="ind-oportunidad">+ Oportunidad</button>
+            <button class="btn-ghost" id="ind-respaldo">Exportar respaldo</button>
+          </div>
+        </div>
+
+        <div class="crm-section-title"><h3>Indicadores de operación</h3><span>${todayISO()} · actualización en tiempo real de los datos cargados</span></div>
+        <div class="crm-kpis-industrial">
+          <div class="crm-kpi" data-ind-view="listado"><div class="icon">🧯</div><div class="value">${records.length}</div><div class="label">Activos registrados</div><div class="hint">${taller.length} en taller</div></div>
+          <div class="crm-kpi ${vencidos.length?'critical':''}" data-ind-view="listado"><div class="icon">⚠️</div><div class="value">${vencidos.length}</div><div class="label">Recargas vencidas</div><div class="hint">${en30.length} vencen en 30 días</div></div>
+          <div class="crm-kpi" data-ind-view="clientes"><div class="icon">🏢</div><div class="value">${clientes.size}</div><div class="label">Clientes</div><div class="hint">${riesgo.length} en riesgo detectado</div></div>
+          <div class="crm-kpi" data-ind-view="crm"><div class="icon">📈</div><div class="value">${opsAbiertas.length}</div><div class="label">Oportunidades abiertas</div><div class="hint">${oportunidades.length} en total</div></div>
+          <div class="crm-kpi" data-ind-view="inventario"><div class="icon">📦</div><div class="value">${stockBajo.length}</div><div class="label">Stock bajo</div><div class="hint">${inventario.length} productos controlados</div></div>
+          <div class="crm-kpi" data-ind-view="caja"><div class="icon">₡</div><div class="value">₡${porCobrar.toLocaleString('es-CR',{maximumFractionDigits:0})}</div><div class="label">Por cobrar</div><div class="hint">${contratosActivos.length} contratos activos</div></div>
+        </div>
+
+        <div class="crm-section-title"><h3>Operación diaria</h3><span>Prioridades que requieren atención</span></div>
+        <div class="crm-industrial-grid">
+          <div class="crm-panel">
+            <h4>Próximos vencimientos</h4>
+            <div class="crm-list">
+              ${proximos.length ? proximos.map(r=>`
+                <div class="crm-list-row">
+                  <div class="crm-list-main"><b>${esc(r.cliente||'Sin cliente')}</b><span>${esc(r.tipo||'Extintor')} · ${esc(r.capacidad||'')} · ${esc(r.orden||'Sin orden')}</span></div>
+                  <span class="crm-pill amber">${esc(r.fechaVencimiento)}</span>
+                </div>`).join('') : '<div class="dash-empty">No hay vencimientos en los próximos 30 días.</div>'}
+            </div>
+          </div>
+          <div class="crm-panel">
+            <h4>Producción / taller</h4>
+            ${estadoCounts.map(x=>`
+              <div style="margin-bottom:12px">
+                <div style="display:flex;justify-content:space-between;font-size:11px"><b>${x.e.label}</b><span>${x.n}</span></div>
+                <div class="crm-progress"><i style="width:${Math.max(x.n?4:0,x.n/totalEstado*100)}%;${x.e.id==='listo'?'background:var(--green)':x.e.id==='proceso'?'background:var(--red)':x.e.id==='recibido'?'background:var(--amber)':'background:#64748B'}"></i></div>
+              </div>`).join('')}
+            <button class="btn-ghost" style="width:100%;margin-top:4px" data-ind-view="listado">Abrir órdenes de trabajo</button>
+          </div>
+          <div class="crm-panel">
+            <h4>Acciones rápidas</h4>
+            <div class="crm-actions-grid">
+              <button class="crm-action" data-ind-view="clientes">👥 <span>Clientes<small>Ficha e historial</small></span></button>
+              <button class="crm-action" data-ind-view="crm">📈 <span>Ventas<small>Pipeline comercial</small></span></button>
+              <button class="crm-action" data-ind-view="inventario">📦 <span>Inventario<small>Repuestos y equipos</small></span></button>
+              <button class="crm-action" data-ind-view="caja">💳 <span>Caja<small>Ingresos y egresos</small></span></button>
+              <button class="crm-action" id="ind-rec">🔔 <span>Recordatorio<small>${recPend.length} pendientes</small></span></button>
+              <button class="crm-action" id="ind-print">🖨️ <span>Listado<small>Imprimir órdenes</small></span></button>
+            </div>
+          </div>
+
+          <div class="crm-panel">
+            <h4>Clientes en riesgo</h4>
+            <div class="crm-list">
+              ${riesgo.length ? riesgo.map(r=>`
+                <div class="crm-list-row">
+                  <div class="crm-list-main"><b>${esc(r.cliente||r.nombre||'Cliente')}</b><span>${esc(r.telefono||'')} · seguimiento recomendado</span></div>
+                  <span class="crm-pill red">Riesgo</span>
+                </div>`).join('') : '<div class="dash-empty">No se detectan clientes en riesgo.</div>'}
+            </div>
+          </div>
+          <div class="crm-panel">
+            <h4>Seguimientos pendientes</h4>
+            <div class="crm-list">
+              ${recPend.slice(0,6).length ? recPend.slice(0,6).map(r=>`
+                <div class="crm-list-row">
+                  <div class="crm-list-main"><b>${esc(r.texto)}</b><span>${esc(r.cliente||'General')}</span></div>
+                  <span class="crm-pill ${r.fecha && r.fecha<todayISO()?'red':'amber'}">${esc(r.fecha||'Sin fecha')}</span>
+                </div>`).join('') : '<div class="dash-empty">No hay recordatorios pendientes.</div>'}
+            </div>
+          </div>
+          <div class="crm-panel">
+            <h4>Inventario crítico</h4>
+            <div class="crm-list">
+              ${stockBajo.slice(0,6).length ? stockBajo.slice(0,6).map(x=>`
+                <div class="crm-list-row">
+                  <div class="crm-list-main"><b>${esc(x.nombre)}</b><span>${esc(x.tipo||'')} · mínimo ${x.cantidadMinima||0}</span></div>
+                  <span class="crm-pill red">${x.cantidad||0} uds</span>
+                </div>`).join('') : '<div class="dash-empty">No hay productos por debajo del mínimo.</div>'}
+            </div>
+          </div>
+
+          <div class="crm-panel full">
+            <h4>Resumen ejecutivo</h4>
+            <div class="crm-mini-grid">
+              <div class="crm-mini"><b>${listos.length}</b><span>Listos para entrega</span></div>
+              <div class="crm-mini"><b>${ventas.length}</b><span>Ventas registradas</span></div>
+              <div class="crm-mini"><b>${contratosActivos.length}</b><span>Contratos activos</span></div>
+              <div class="crm-mini"><b>₡${oportunidades.reduce((s,o)=>s+(parseFloat(o.montoEstimado)||0),0).toLocaleString('es-CR',{maximumFractionDigits:0})}</b><span>Pipeline estimado</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   function render(){
     if(loadError){
       root.innerHTML = `
@@ -4581,17 +4814,18 @@
 
       <div class="dash-toolbar">
         <div class="view-toggle">
-          <button data-view="listado" class="${view==='listado'?'active':''}">Listado</button>
-          <button data-view="panel" class="${view==='panel'?'active':''}">Panel de control</button>
+          <button data-view="industrial" class="${view==='industrial'?'active':''}">Inicio</button>
+          <button data-view="listado" class="${view==='listado'?'active':''}">Operaciones</button>
+          <button data-view="panel" class="${view==='panel'?'active':''}">Indicadores</button>
           <button data-view="clientes" class="${view==='clientes'?'active':''}">Clientes</button>
-          <button data-view="caja" class="${view==='caja'?'active':''}">Caja</button>
-          <button data-view="crm" class="${view==='crm'?'active':''}">CRM</button>
+          <button data-view="crm" class="${view==='crm'?'active':''}">Ventas / CRM</button>
           <button data-view="inventario" class="${view==='inventario'?'active':''}">Inventario</button>
+          <button data-view="caja" class="${view==='caja'?'active':''}">Caja</button>
         </div>
       </div>
 
       <div class="${animateViewChange ? 'view-fade' : ''}">
-      ${view === 'listado' ? `
+      ${view === 'industrial' ? renderIndustrial() : (view === 'listado' ? `
       <div class="toolbar">
         <div class="filters">
           <button class="chip ${filter==='todos'?'active':''}" data-filter="todos">Todos</button>
@@ -4624,7 +4858,7 @@
           <div class="grid">${agruparPorOrden(filtered).map(orderCardHTML).join('')}</div>`
         }
       </div>
-      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista())))))}
+      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : renderIndustrial()))))))}
       </div>
       </div>
     `;
@@ -4661,6 +4895,16 @@
     document.querySelectorAll('.quick-actions [data-view]').forEach(b=>{
       b.addEventListener('click', ()=> setView(b.getAttribute('data-view')));
     });
+    if(view === 'industrial'){
+      const indNuevo=document.getElementById('ind-nuevo'); if(indNuevo) indNuevo.addEventListener('click', openNew);
+      const indOp=document.getElementById('ind-oportunidad'); if(indOp) indOp.addEventListener('click', ()=>openNuevaOportunidad());
+      const indBackup=document.getElementById('ind-respaldo'); if(indBackup) indBackup.addEventListener('click', exportarRespaldoIndustrial);
+      const indRec=document.getElementById('ind-rec'); if(indRec) indRec.addEventListener('click', ()=>{ view='crm'; crmSubvista='recordatorios'; animateViewChange=true; render(); });
+      const indPrint=document.getElementById('ind-print'); if(indPrint) indPrint.addEventListener('click', ()=>printConsolidado());
+      document.querySelectorAll('[data-ind-view]').forEach(b=>{
+        b.addEventListener('click', ()=> setView(b.getAttribute('data-ind-view')));
+      });
+    }
     document.querySelectorAll('[data-cliente-riesgo]').forEach(b=>{
       b.addEventListener('click', ()=>{
         view = 'clientes';
