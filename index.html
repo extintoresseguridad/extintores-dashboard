@@ -868,6 +868,11 @@
 .crm-mini b{display:block;font-size:20px}
 .crm-mini span{font-size:9.5px;color:#6B7280;text-transform:uppercase;letter-spacing:.05em}
 .crm-nav-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:7px}
+.link-btn{
+  background:none;border:none;padding:0;margin-left:6px;color:var(--primary);
+  font-size:11px;font-weight:600;text-decoration:underline;cursor:pointer;font-family:inherit;
+}
+.link-btn:hover{color:var(--primary-2);}
 @media(max-width:1200px){.crm-kpis-industrial{grid-template-columns:repeat(3,1fr)}.crm-industrial-grid{grid-template-columns:1fr 1fr}.crm-panel.full{grid-column:1/-1}}
 @media(max-width:760px){.crm-industrial{padding:16px 14px 50px}.crm-hero{display:block}.crm-hero-actions{justify-content:flex-start;margin-top:14px}.crm-kpis-industrial{grid-template-columns:1fr 1fr}.crm-industrial-grid{grid-template-columns:1fr}.crm-panel.full{grid-column:auto}.crm-mini-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:440px){.crm-kpis-industrial{grid-template-columns:1fr}.crm-actions-grid{grid-template-columns:1fr}}
@@ -1160,6 +1165,39 @@
     .cot-foot{ margin-top:30px; text-align:center; font-size:10px; color:#6B7280; border-top:1px solid #E5E7EB; padding-top:10px; }
   `;
 
+  const MEMBRESIA_CSS = `
+    @page{ size:letter; margin:16mm; }
+    * { box-sizing:border-box; }
+    body{ font-family:Arial,Helvetica,sans-serif; color:#1B1F23; margin:0; padding:0; font-size:11.5px; line-height:1.65; }
+    .mem-head{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1E2F4E; padding-bottom:14px; margin-bottom:18px; }
+    .mem-logo{ max-width:140px; height:auto; }
+    .mem-empresa{ text-align:right; font-size:10.5px; color:#444; }
+    .mem-empresa b{ display:block; font-size:14px; color:#1B1F23; margin-bottom:2px; }
+    .mem-titulo{ text-align:center; margin:0 0 18px; }
+    .mem-titulo h1{ font-size:18px; letter-spacing:.05em; text-transform:uppercase; margin:0 0 4px; color:#1E2F4E; }
+    .mem-titulo div{ font-size:10.5px; color:#666; }
+    .mem-parties{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px; }
+    .mem-party{ border:1px solid #E5E7EB; border-radius:4px; padding:12px 14px; }
+    .mem-party h3{ margin:0 0 8px; font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:#6B7280; }
+    .mem-party .row{ margin-bottom:6px; font-size:11px; }
+    .mem-party .row b{ font-weight:600; }
+    .mem-section-title{ font-size:11.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.04em; color:#1E2F4E; margin:18px 0 8px; border-bottom:1px solid #E5E7EB; padding-bottom:4px; }
+    .mem-clause{ margin:0 0 9px; text-align:justify; }
+    .mem-clause b{ margin-right:3px; }
+    .mem-blank{ display:inline-block; border-bottom:1px solid #1B1F23; min-width:60px; padding:0 2px; }
+    .mem-blank-lg{ min-width:220px; }
+    .mem-check{ display:inline-block; width:11px; height:11px; border:1px solid #1B1F23; margin-right:5px; vertical-align:middle; }
+    .mem-notas{ background:#f7f4ec; border:1px solid #E5E7EB; border-radius:4px; padding:12px 14px; margin:14px 0; font-size:11px; }
+    .mem-notas h3{ margin:0 0 6px; font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:#6B7280; }
+    .mem-firmas{ display:flex; justify-content:space-between; gap:40px; margin-top:46px; }
+    .mem-firma{ flex:1; text-align:center; font-size:10.5px; }
+    .mem-firma .linea{ border-top:1px solid #1B1F23; margin-bottom:6px; padding-top:6px; }
+    .mem-firma .sub{ color:#6B7280; font-size:9.5px; margin-top:2px; }
+    .mem-foot{ margin-top:26px; text-align:center; font-size:9.5px; color:#6B7280; border-top:1px solid #E5E7EB; padding-top:10px; }
+    .mem-disclaimer{ font-size:9px; color:#9AA3AF; font-style:italic; text-align:center; margin-top:6px; }
+  `;
+
+
   function tagOpen(name){ return '<' + name + '>'; }
   function tagClose(name){ return '<' + '/' + name + '>'; }
 
@@ -1308,6 +1346,78 @@
     `;
     const safeName = (o.cliente||'cotizacion').toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,30);
     downloadPrintable(body, `cotizacion_${safeName}.html`, 'Cotización — ' + o.cliente, COTIZACION_CSS);
+  }
+
+  function printMembresia(contratoId){
+    const c = contratos.find(x => x.id === contratoId);
+    if(!c) return;
+    const numero = 'MEM-' + c.id.replace(/[^0-9]/g,'').slice(-6);
+    const fechaEmision = new Date().toLocaleDateString('es-CR', {year:'numeric', month:'long', day:'numeric'});
+    const blank = (min)=> `<span class="mem-blank${min?' mem-blank-lg':''}">&nbsp;</span>`;
+    const body = `
+      <div class="mem-head">
+        <img src="${LOGO_DATA_URL}" alt="Extintores Seguridad" class="mem-logo"/>
+        <div class="mem-empresa">
+          <b>Extintores Seguridad</b>
+          Tel: ${EMPRESA_TELEFONO}<br/>
+          ${EMPRESA_CORREO}
+        </div>
+      </div>
+      <div class="mem-titulo">
+        <h1>Contrato de Membresía de Mantenimiento</h1>
+        <div>N.° ${numero} · Emitido el ${fechaEmision}</div>
+      </div>
+
+      <div class="mem-parties">
+        <div class="mem-party">
+          <h3>La empresa</h3>
+          <div class="row"><b>Razón social:</b> Extintores Seguridad</div>
+          <div class="row"><b>Cédula jurídica:</b> ${blank(true)}</div>
+          <div class="row"><b>Representante:</b> ${blank(true)}</div>
+          <div class="row"><b>Teléfono:</b> ${EMPRESA_TELEFONO}</div>
+        </div>
+        <div class="mem-party">
+          <h3>El cliente / miembro</h3>
+          <div class="row"><b>Nombre o razón social:</b> ${esc(c.cliente) || blank(true)}</div>
+          <div class="row"><b>Cédula física/jurídica:</b> ${blank(true)}</div>
+          <div class="row"><b>Teléfono:</b> ${c.telefono ? esc(c.telefono) : blank(true)}</div>
+          <div class="row"><b>Dirección exacta:</b> ${blank(true)}</div>
+        </div>
+      </div>
+
+      <div class="mem-section-title">Cláusulas del contrato</div>
+
+      <div class="mem-clause"><b>1. Objeto.</b> LA EMPRESA se compromete a brindar el servicio de mantenimiento preventivo periódico a un total de ${blank()}${c.cantidadExtintores ? ` (${esc(String(c.cantidadExtintores))})` : ''} extintor(es) propiedad de EL CLIENTE, instalados en: ${blank(true)}, conforme a la normativa vigente de seguridad contra incendios. El servicio incluye inspección visual, recarga cuando corresponda, cambio de repuestos menores por desgaste normal de uso, y la emisión de la etiqueta o certificado correspondiente por cada visita.</div>
+
+      <div class="mem-clause"><b>2. Vigencia.</b> Este contrato inicia el ${c.fechaInicio ? esc(c.fechaInicio) : blank()} y tiene una vigencia hasta el ${c.fechaRenovacion ? esc(c.fechaRenovacion) : blank()}, fecha en la cual se renueva automáticamente por períodos iguales, salvo que alguna de las partes notifique por escrito su intención de no renovar con al menos 30 días naturales de anticipación.</div>
+
+      <div class="mem-clause"><b>3. Valor y forma de pago.</b> El valor anual de esta membresía es de ₡${c.valorAnual ? parseFloat(c.valorAnual).toLocaleString('es-CR',{maximumFractionDigits:0}) : blank()}, pagadero de la siguiente forma: <span class="mem-check"></span> Contado&nbsp;&nbsp;<span class="mem-check"></span> Trimestral&nbsp;&nbsp;<span class="mem-check"></span> Mensual&nbsp;&nbsp;<span class="mem-check"></span> Otro: ${blank()}</div>
+
+      <div class="mem-clause"><b>4. Exclusiones.</b> Quedan fuera del alcance de esta membresía los daños por mal uso, vandalismo, siniestro ya activado (incendio real), robo, o el cambio de cilindros y repuestos mayores, los cuales serán cotizados por separado.</div>
+
+      <div class="mem-clause"><b>5. Obligaciones de EL CLIENTE.</b> EL CLIENTE se compromete a facilitar el acceso a las instalaciones en las fechas programadas para el mantenimiento y a mantener los extintores en un lugar visible y accesible.</div>
+
+      <div class="mem-clause"><b>6. Incumplimiento de pago.</b> El atraso en el pago por más de 30 días naturales faculta a LA EMPRESA a suspender el servicio, sin responsabilidad de su parte, hasta que se regularice la situación.</div>
+
+      <div class="mem-clause"><b>7. Modificaciones.</b> Cualquier modificación a los términos de este contrato deberá constar por escrito y ser firmada por ambas partes.</div>
+
+      ${c.notas ? `<div class="mem-notas"><h3>Condiciones especiales / notas</h3>${esc(c.notas)}</div>` : ''}
+
+      <div class="mem-firmas">
+        <div class="mem-firma">
+          <div class="linea">Por Extintores Seguridad</div>
+          <div class="sub">Cédula: ${blank()} &nbsp; Fecha: ${blank()}</div>
+        </div>
+        <div class="mem-firma">
+          <div class="linea">Por el cliente / miembro</div>
+          <div class="sub">Cédula: ${blank()} &nbsp; Fecha: ${blank()}</div>
+        </div>
+      </div>
+      <div class="mem-foot">Extintores Seguridad · ${EMPRESA_TELEFONO} · ${EMPRESA_CORREO}</div>
+      <div class="mem-disclaimer">Documento generado a partir de los datos registrados en el sistema. Complete los espacios en blanco a mano antes de firmar.</div>
+    `;
+    const safeName = (c.cliente||'membresia').toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,30);
+    downloadPrintable(body, `membresia_${safeName}.html`, 'Membresía — ' + c.cliente, MEMBRESIA_CSS);
   }
 
   function printReceipt(id){
@@ -1783,7 +1893,7 @@
               sub = `Datos personales · eliminado ${fecha}`;
             } else if(item.tipo === 'contrato'){
               titulo = item.data.cliente || 'Cliente sin nombre';
-              sub = `Contrato de mantenimiento · eliminado ${fecha}`;
+              sub = `Membresía de mantenimiento · eliminado ${fecha}`;
             } else if(item.tipo === 'producto_inventario'){
               titulo = item.data.nombre || 'Producto sin nombre';
               sub = `Inventario · eliminado ${fecha}`;
@@ -2856,7 +2966,7 @@
     return `
       <div class="kpi-grid" style="margin-bottom:18px;">
         <div class="kpi-card">
-          <div class="kpi-label">Contratos activos</div>
+          <div class="kpi-label">Membresías activas</div>
           <div class="kpi-value">${activos.length}</div>
           <div class="kpi-sub">₡${valorTotalAnual.toLocaleString('es-CR',{maximumFractionDigits:0})}/año en total</div>
         </div>
@@ -2875,7 +2985,7 @@
           <button class="chip ${contratosFiltro==='activo'?'active':''}" data-contratos-filtro="activo">Activos</button>
           <button class="chip ${contratosFiltro==='cancelado'?'active':''}" data-contratos-filtro="cancelado">Cancelados</button>
         </div>
-        <button class="btn-primary" id="btn-nuevo-contrato">+ Nuevo contrato</button>
+        <button class="btn-primary" id="btn-nuevo-contrato">+ Nueva membresía</button>
       </div>
       ${filtrados.length === 0 ? '<div class="dash-empty">No hay contratos que coincidan.</div>' : `<div class="grid">${filtrados.map(contratoCardHTML).join('')}</div>`}
     `;
@@ -2946,7 +3056,7 @@
         <div class="view-toggle" style="margin-bottom:16px;">
           <button data-crm-subvista="pipeline" class="${crmSubvista==='pipeline'?'active':''}">Embudo de ventas</button>
           <button data-crm-subvista="recordatorios" class="${crmSubvista==='recordatorios'?'active':''}">Recordatorios${recordatorios.filter(r=>!r.completado).length ? ' ('+recordatorios.filter(r=>!r.completado).length+')' : ''}</button>
-          <button data-crm-subvista="contratos" class="${crmSubvista==='contratos'?'active':''}">Contratos${contratos.filter(c=>c.estado==='activo').length ? ' ('+contratos.filter(c=>c.estado==='activo').length+')' : ''}</button>
+          <button data-crm-subvista="contratos" class="${crmSubvista==='contratos'?'active':''}">Membresías${contratos.filter(c=>c.estado==='activo').length ? ' ('+contratos.filter(c=>c.estado==='activo').length+')' : ''}</button>
         </div>
         ${oportunidadSeleccionada ? renderOportunidadDetalle(oportunidadSeleccionada) : (crmSubvista==='pipeline' ? renderPipeline() : (crmSubvista==='recordatorios' ? renderRecordatorios() : renderContratos()))}
       </div>
@@ -3475,10 +3585,10 @@
   function setClienteQuery(v){ clienteQuery = v; render(); }
 
   function clienteKey(rec){
-    // Un cliente se identifica por nombre + teléfono (normalizado). Si no hay teléfono, solo el nombre.
-    const nombre = (rec.cliente||'').trim().toLowerCase();
-    const tel = cleanPhone(rec.telefono);
-    return nombre + '|' + tel;
+    // Un cliente se identifica solo por el nombre (normalizado), para que un mismo cliente
+    // con distintos números de teléfono en diferentes registros se unifique en una sola ficha
+    // en vez de partirse en varias. Los teléfonos se acumulan aparte (ver telefonosDeCliente).
+    return (rec.cliente||'').trim().toLowerCase();
   }
 
   function inicialesDe(nombre){
@@ -3486,6 +3596,12 @@
     if(partes.length === 0) return '?';
     if(partes.length === 1) return partes[0].slice(0,2).toUpperCase();
     return (partes[0][0] + partes[partes.length-1][0]).toUpperCase();
+  }
+
+  function telefonosTexto(c){
+    const lista = (c && c.telefonos) || [];
+    if(lista.length === 0) return '';
+    return lista.join(' · ');
   }
 
   function perfilDeCliente(key){
@@ -3498,6 +3614,112 @@
   }
   let perfilForm = emptyPerfilCliente();
   let editingPerfilKey = null; // clienteKey del perfil que se está editando (null = creando uno nuevo)
+
+  /* ---------- Separar cliente (cuando dos personas distintas quedaron unidas por compartir nombre) ---------- */
+
+  let separarClienteKey = null;
+
+  function abrirSepararCliente(key){
+    separarClienteKey = key;
+    renderSepararClienteModal(true);
+  }
+  function closeSepararClienteModal(){
+    separarClienteKey = null;
+    renderSepararClienteModal(false);
+  }
+
+  function separarClientePorTelefono(key, telefonoElegidoRaw, nuevoNombreRaw){
+    const nuevoNombre = (nuevoNombreRaw||'').trim();
+    if(!nuevoNombre) return false;
+    if(nuevoNombre.trim().toLowerCase() === key) return false; // no tiene sentido "separar" con el mismo nombre
+    const telLimpio = cleanPhone(telefonoElegidoRaw);
+    const coincide = (obj) => clienteKey(obj) === key && cleanPhone(obj.telefono) === telLimpio;
+
+    records = records.map(r => coincide(r) ? { ...r, cliente: nuevoNombre } : r);
+    ventas = ventas.map(v => coincide(v) ? { ...v, cliente: nuevoNombre } : v);
+    contratos = contratos.map(c => coincide(c) ? { ...c, cliente: nuevoNombre } : c);
+    oportunidades = oportunidades.map(o => coincide(o) ? { ...o, cliente: nuevoNombre } : o);
+    recordatorios = recordatorios.map(r => coincide(r) ? { ...r, cliente: nuevoNombre } : r);
+    clientesPerfil = clientesPerfil.map(p => coincide(p) ? { ...p, cliente: nuevoNombre } : p);
+    cajas = cajas.map(c => ({
+      ...c,
+      movimientos: (c.movimientos||[]).map(m => coincide(m) ? { ...m, cliente: nuevoNombre } : m),
+    }));
+    return true;
+  }
+
+  async function saveSepararCliente(){
+    const key = separarClienteKey;
+    const telefono = document.getElementById('sep-telefono').value;
+    const nuevoNombre = document.getElementById('sep-nombre').value.trim();
+    if(!nuevoNombre){
+      showToast('Escribí el nombre para la persona que se va a separar.');
+      return;
+    }
+    const saveBtn = document.getElementById('separar-modal-save');
+    if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Separando...'; }
+    const ok = separarClientePorTelefono(key, telefono, nuevoNombre);
+    if(!ok){
+      if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = 'Separar'; }
+      showToast('Elegí un nombre distinto al del cliente actual.');
+      return;
+    }
+    const persistOk = await persist();
+    if(!persistOk){
+      if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = 'Separar'; }
+      return;
+    }
+    showToast(`Listo — "${nuevoNombre}" quedó separado como un cliente aparte.`);
+    closeSepararClienteModal();
+    clienteSeleccionado = null;
+    render();
+  }
+
+  function renderSepararClienteModal(open){
+    let overlay = document.querySelector('.separar-cliente-overlay');
+    if(!open){
+      if(overlay) overlay.remove();
+      return;
+    }
+    if(overlay) overlay.remove();
+    const key = separarClienteKey;
+    const clientes = agruparClientesMantenimiento().concat(agruparClientesCompras());
+    const c = clientes.find(x=>x.key===key);
+    const telefonos = (c && c.telefonos) || [];
+    if(!key || telefonos.length < 2) return;
+    overlay = document.createElement('div');
+    overlay.className = 'overlay separar-cliente-overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:460px;">
+        <div class="modal-head">
+          <h2>Separar cliente</h2>
+          <button id="separar-modal-close">×</button>
+        </div>
+        <div class="modal-body">
+          <p class="caja-hint" style="margin-top:0;">"${esc(c.nombre)}" tiene más de un número guardado. Si en realidad son dos personas distintas que comparten el mismo nombre, elegí el número que pertenece a la otra persona y escribí su nombre para separarla en una ficha aparte con su propio historial.</p>
+          <div class="form-row full">
+            <div><label>Número a separar</label>
+              <select id="sep-telefono">
+                ${telefonos.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div><label>Nombre de esa persona</label><input id="sep-nombre" placeholder="Ej: ${esc(c.nombre)} (Cartago)"/></div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn-ghost" id="separar-modal-cancel">Cancelar</button>
+          <button class="btn-primary" id="separar-modal-save">Separar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeSepararClienteModal(); });
+    document.getElementById('separar-modal-close').addEventListener('click', closeSepararClienteModal);
+    document.getElementById('separar-modal-cancel').addEventListener('click', closeSepararClienteModal);
+    document.getElementById('separar-modal-save').addEventListener('click', saveSepararCliente);
+  }
 
   function openNuevoPerfilCliente(){
     perfilForm = emptyPerfilCliente();
@@ -3536,7 +3758,15 @@
       return;
     }
     if(editingPerfilKey){
-      clientesPerfil = clientesPerfil.map(p => clienteKey(p) === editingPerfilKey ? datos : p);
+      const idx = clientesPerfil.findIndex(p => clienteKey(p) === editingPerfilKey);
+      if(idx !== -1){
+        // Ya existía una ficha para este cliente: se actualiza en su lugar.
+        clientesPerfil = clientesPerfil.map((p,i) => i === idx ? datos : p);
+      } else {
+        // Se abrió como "editar" (venía con un cliente ya identificado), pero todavía
+        // no tenía ficha de datos guardada — se crea por primera vez.
+        clientesPerfil = [datos, ...clientesPerfil];
+      }
     } else {
       clientesPerfil = [datos, ...clientesPerfil];
     }
@@ -3683,10 +3913,10 @@
     if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
     const ok = await persist();
     if(!ok){
-      if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = editingContratoId ? 'Guardar cambios' : 'Registrar contrato'; }
+      if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = editingContratoId ? 'Guardar cambios' : 'Registrar membresía'; }
       return;
     }
-    showToast(editingContratoId ? 'Contrato actualizado.' : 'Contrato registrado.');
+    showToast(editingContratoId ? 'Membresía actualizada.' : 'Membresía registrada.');
     closeContratoModal();
     render();
   }
@@ -3694,11 +3924,11 @@
   async function removeContrato(id){
     const c = contratos.find(x => x.id === id);
     if(!c) return;
-    if(!confirm(`¿Eliminar el contrato de ${c.cliente || 'este cliente'}? Podrás recuperarlo desde la Papelera durante 30 días.`)) return;
+    if(!confirm(`¿Eliminar la membresía de ${c.cliente || 'este cliente'}? Podrás recuperarla desde la Papelera durante 30 días.`)) return;
     contratos = contratos.filter(x => x.id !== id);
     papelera.push({ id: uid(), tipo: 'contrato', fechaEliminado: Date.now(), data: c });
     await persist();
-    showToast('Contrato movido a la papelera.');
+    showToast('Membresía movida a la papelera.');
     render();
   }
 
@@ -3714,7 +3944,7 @@
     overlay.innerHTML = `
       <div class="modal">
         <div class="modal-head">
-          <h2>${editingContratoId ? 'Editar contrato' : 'Nuevo contrato de mantenimiento'}</h2>
+          <h2>${editingContratoId ? 'Editar membresía' : 'Nueva membresía de mantenimiento'}</h2>
           <button id="contrato-modal-close">×</button>
         </div>
         <div class="modal-body">
@@ -3744,7 +3974,7 @@
         </div>
         <div class="modal-foot">
           <button class="btn-ghost" id="contrato-modal-cancel">Cancelar</button>
-          <button class="btn-primary" id="contrato-modal-save">${editingContratoId ? 'Guardar cambios' : 'Registrar contrato'}</button>
+          <button class="btn-primary" id="contrato-modal-save">${editingContratoId ? 'Guardar cambios' : 'Registrar membresía'}</button>
         </div>
       </div>
     `;
@@ -3781,6 +4011,7 @@
             ${c.notas ? `<div class="meta-row"><span class="k">Notas</span><span class="v">${esc(c.notas)}</span></div>` : ''}
           </div>
           <div class="card-actions">
+            <button data-action="generar-membresia" data-id="${c.id}">📄 Membresía (PDF)</button>
             <button data-action="editar-contrato" data-id="${c.id}">Editar</button>
             <button class="danger" data-action="eliminar-contrato" data-id="${c.id}">Eliminar</button>
           </div>
@@ -4080,14 +4311,14 @@
     return `
       <div class="dash-panel" style="margin-bottom:16px;">
         ${contratosCliente.length ? `
-        <h3 style="margin-bottom:8px;">Contratos de mantenimiento <span>${contratosCliente.length}</span></h3>
+        <h3 style="margin-bottom:8px;">Membresías de mantenimiento <span>${contratosCliente.length}</span></h3>
         <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length)?'14px':'0'};">
           ${contratosCliente.map(c=>{
             const vs = c.estado==='activo' ? vencStatus(c.fechaRenovacion) : null;
             return `
             <div class="vence-item">
               <div>
-                <div class="v-name">${c.cantidadExtintores ? c.cantidadExtintores+' extintores' : 'Contrato'}${c.valorAnual ? ' · ₡'+parseFloat(c.valorAnual).toLocaleString('es-CR',{maximumFractionDigits:0})+'/año' : ''}</div>
+                <div class="v-name">${c.cantidadExtintores ? c.cantidadExtintores+' extintores' : 'Membresía'}${c.valorAnual ? ' · ₡'+parseFloat(c.valorAnual).toLocaleString('es-CR',{maximumFractionDigits:0})+'/año' : ''}</div>
                 <div class="v-order">${c.estado==='activo' ? 'Activo' : 'Cancelado'}</div>
               </div>
               <div class="v-date ${vs==='vencido'?'venc-vencido':(vs==='proximo'?'venc-proximo':'')}">${esc(c.fechaRenovacion)}</div>
@@ -4133,29 +4364,38 @@
     return lista;
   }
 
+  function agregarTelefono(c, telefono){
+    if(!telefono) return;
+    const limpio = cleanPhone(telefono);
+    if(!limpio) return;
+    if(!c._telSet) c._telSet = new Map();
+    if(!c._telSet.has(limpio)) c._telSet.set(limpio, telefono.trim());
+  }
+
   function agruparClientesMantenimiento(){
     const map = {};
     records.forEach(r=>{
       const key = clienteKey(r);
       if(!map[key]){
-        map[key] = { key, nombre: r.cliente || 'Sin nombre', telefono: r.telefono || '', registros: [], movimientosInformales: [] };
+        map[key] = { key, nombre: r.cliente || 'Sin nombre', registros: [], movimientosInformales: [] };
       }
       map[key].registros.push(r);
-      if(!map[key].telefono && r.telefono) map[key].telefono = r.telefono;
+      agregarTelefono(map[key], r.telefono);
     });
     movimientosConCliente().forEach(m=>{
       const key = clienteKey(m);
       if(!map[key]){
-        map[key] = { key, nombre: m.cliente || 'Sin nombre', telefono: m.telefono || '', registros: [], movimientosInformales: [] };
+        map[key] = { key, nombre: m.cliente || 'Sin nombre', registros: [], movimientosInformales: [] };
       }
       map[key].movimientosInformales.push(m);
-      if(!map[key].telefono && m.telefono) map[key].telefono = m.telefono;
+      agregarTelefono(map[key], m.telefono);
     });
     clientesPerfil.forEach(p=>{
       const key = clienteKey(p);
       if(!map[key]){
-        map[key] = { key, nombre: p.cliente || 'Sin nombre', telefono: p.telefono || '', registros: [], movimientosInformales: [] };
+        map[key] = { key, nombre: p.cliente || 'Sin nombre', registros: [], movimientosInformales: [] };
       }
+      agregarTelefono(map[key], p.telefono);
     });
     return Object.values(map).map(c=>{
       const totalPagadoRegistros = c.registros.reduce((s,r)=> s + (saldoOf(r).precio - saldoOf(r).saldo), 0);
@@ -4163,8 +4403,11 @@
       const totalInformal = c.movimientosInformales.reduce((s,m)=> s + (m.tipo==='entrada' ? m.monto : 0), 0);
       const ultimaFecha = c.registros.reduce((max,r)=> (r.fechaIngreso||'') > max ? (r.fechaIngreso||'') : max, '');
       const perfil = perfilDeCliente(c.key);
+      const telefonos = c._telSet ? Array.from(c._telSet.values()) : [];
       return {
         ...c,
+        telefonos,
+        telefono: telefonos[0] || '',
         totalExtintores: c.registros.reduce((s,r)=>s+(r.cantidad||1),0),
         totalServicios: c.registros.length + c.movimientosInformales.length,
         totalPagado: totalPagadoRegistros + totalInformal,
@@ -4180,18 +4423,21 @@
     ventas.forEach(v=>{
       const key = clienteKey(v);
       if(!map[key]){
-        map[key] = { key, nombre: v.cliente || 'Sin nombre', telefono: v.telefono || '', compras: [] };
+        map[key] = { key, nombre: v.cliente || 'Sin nombre', compras: [] };
       }
       map[key].compras.push(v);
-      if(!map[key].telefono && v.telefono) map[key].telefono = v.telefono;
+      agregarTelefono(map[key], v.telefono);
     });
     return Object.values(map).map(c=>{
       const totalPagado = c.compras.reduce((s,v)=> s + (saldoOf(v).precio - saldoOf(v).saldo), 0);
       const totalPendiente = c.compras.reduce((s,v)=> s + saldoOf(v).saldo, 0);
       const ultimaFecha = c.compras.reduce((max,v)=> (v.fechaCompra||'') > max ? (v.fechaCompra||'') : max, '');
       const perfil = perfilDeCliente(c.key);
+      const telefonos = c._telSet ? Array.from(c._telSet.values()) : [];
       return {
         ...c,
+        telefonos,
+        telefono: telefonos[0] || '',
         totalCompras: c.compras.length,
         totalEquiposComprados: c.compras.reduce((s,v)=>s+(v.cantidad||1),0),
         totalPagado, totalPendiente, ultimaFecha,
@@ -4209,7 +4455,7 @@
       if(etiquetaFiltro !== 'todas' && !(c.etiquetas||[]).includes(etiquetaFiltro)) return false;
       if(!clienteQuery) return true;
       const q = clienteQuery.toLowerCase();
-      return c.nombre.toLowerCase().includes(q) || (c.telefono||'').includes(q);
+      return c.nombre.toLowerCase().includes(q) || (c.telefonos||[]).some(t=>t.includes(q));
     });
     return `
       <div class="clientes-toolbar" style="flex-wrap:wrap;gap:10px;">
@@ -4242,7 +4488,7 @@
               <div class="contact-avatar-col"><div class="contact-avatar">${esc(inicialesDe(c.nombre))}</div></div>
               <div class="contact-main">
                 <div class="contact-name">${esc(c.nombre)}${c.etiquetas && c.etiquetas.length ? etiquetasHTML(c.etiquetas) : ''}</div>
-                <div class="contact-sub">${c.telefono ? esc(c.telefono) : 'Sin teléfono'}${c.ultimaFecha ? ` · Última actividad ${esc(c.ultimaFecha)}` : ''}</div>
+                <div class="contact-sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono'}${c.ultimaFecha ? ` · Última actividad ${esc(c.ultimaFecha)}` : ''}</div>
               </div>
               <div class="contact-metrics">
                 ${esCompras ? `
@@ -4337,7 +4583,7 @@
           <div class="cliente-detail-head">
             <div>
               <h2>${esc(c.nombre)}</h2>
-              <div class="sub">${c.telefono ? esc(c.telefono) : 'Sin teléfono registrado'}</div>
+              <div class="sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono registrado'}${c.telefonos && c.telefonos.length>1 ? ` <button class="link-btn" data-separar-cliente="${esc(key)}">¿Son dos personas distintas? Separar</button>` : ''}</div>
             </div>
             <div class="cliente-kpis">
               <div class="cliente-kpi"><b>${c.totalCompras}</b><small>Compras totales</small></div>
@@ -4350,7 +4596,7 @@
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
             <button class="btn-primary" id="btn-nueva-venta-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Registrar venta de equipo</button>
             <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
-            <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nuevo contrato</button>
+            <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
             <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
           </div>
           ${crmClienteResumenHTML(key)}
@@ -4373,7 +4619,7 @@
         <div class="cliente-detail-head">
           <div>
             <h2>${esc(c.nombre)}</h2>
-            <div class="sub">${c.telefono ? esc(c.telefono) : 'Sin teléfono registrado'}</div>
+            <div class="sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono registrado'}${c.telefonos && c.telefonos.length>1 ? ` <button class="link-btn" data-separar-cliente="${esc(key)}">¿Son dos personas distintas? Separar</button>` : ''}</div>
           </div>
           <div class="cliente-kpis">
             <div class="cliente-kpi"><b>${c.totalServicios}</b><small>Servicios totales</small></div>
@@ -4385,7 +4631,7 @@
         ${perfilClienteHTML(key, c.nombre, c.telefono)}
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
           <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
-          <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nuevo contrato</button>
+          <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
           <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
         </div>
         ${crmClienteResumenHTML(key)}
@@ -4830,7 +5076,7 @@
           <div>
             <div class="crm-pill green"><span class="crm-nav-dot"></span>Operación conectada</div>
             <h2>CRM Industrial</h2>
-            <p>Centro de control para clientes, activos, mantenimiento, ventas, contratos, inventario y cobranza.</p>
+            <p>Centro de control para clientes, activos, mantenimiento, ventas, membresías, inventario y cobranza.</p>
           </div>
           <div class="crm-hero-actions">
             <button class="btn-primary" id="ind-nuevo">+ Nueva orden</button>
@@ -4846,7 +5092,7 @@
           <div class="crm-kpi" data-ind-view="clientes"><div class="icon">🏢</div><div class="value">${clientes.size}</div><div class="label">Clientes</div><div class="hint">${riesgo.length} en riesgo detectado</div></div>
           <div class="crm-kpi" data-ind-view="crm"><div class="icon">📈</div><div class="value">${opsAbiertas.length}</div><div class="label">Oportunidades abiertas</div><div class="hint">${oportunidades.length} en total</div></div>
           <div class="crm-kpi" data-ind-view="inventario"><div class="icon">📦</div><div class="value">${stockBajo.length}</div><div class="label">Stock bajo</div><div class="hint">${inventario.length} productos controlados</div></div>
-          <div class="crm-kpi" data-ind-view="caja"><div class="icon">₡</div><div class="value">₡${porCobrar.toLocaleString('es-CR',{maximumFractionDigits:0})}</div><div class="label">Por cobrar</div><div class="hint">${contratosActivos.length} contratos activos</div></div>
+          <div class="crm-kpi" data-ind-view="caja"><div class="icon">₡</div><div class="value">₡${porCobrar.toLocaleString('es-CR',{maximumFractionDigits:0})}</div><div class="label">Por cobrar</div><div class="hint">${contratosActivos.length} membresías activas</div></div>
         </div>
 
         <div class="crm-section-title"><h3>Operación diaria</h3><span>Prioridades que requieren atención</span></div>
@@ -4918,7 +5164,7 @@
             <div class="crm-mini-grid">
               <div class="crm-mini"><b>${listos.length}</b><span>Listos para entrega</span></div>
               <div class="crm-mini"><b>${ventas.length}</b><span>Ventas registradas</span></div>
-              <div class="crm-mini"><b>${contratosActivos.length}</b><span>Contratos activos</span></div>
+              <div class="crm-mini"><b>${contratosActivos.length}</b><span>Membresías activas</span></div>
               <div class="crm-mini"><b>₡${oportunidades.reduce((s,o)=>s+(parseFloat(o.montoEstimado)||0),0).toLocaleString('es-CR',{maximumFractionDigits:0})}</b><span>Pipeline estimado</span></div>
             </div>
           </div>
@@ -5191,6 +5437,9 @@
         });
         const btnNuevoContrato = document.getElementById('btn-nuevo-contrato');
         if(btnNuevoContrato) btnNuevoContrato.addEventListener('click', ()=> openNuevoContrato());
+        document.querySelectorAll('[data-action="generar-membresia"]').forEach(b=>{
+          b.addEventListener('click', ()=> printMembresia(b.getAttribute('data-id')));
+        });
         document.querySelectorAll('[data-action="editar-contrato"]').forEach(b=>{
           b.addEventListener('click', ()=> openEditarContrato(b.getAttribute('data-id')));
         });
@@ -5216,6 +5465,8 @@
       if(clienteSeleccionado){
         const btnVolver = document.getElementById('btn-volver-clientes');
         if(btnVolver) btnVolver.addEventListener('click', volverClientes);
+        const btnSepararCliente = document.querySelector('[data-separar-cliente]');
+        if(btnSepararCliente) btnSepararCliente.addEventListener('click', ()=> abrirSepararCliente(btnSepararCliente.getAttribute('data-separar-cliente')));
         const btnNuevaVenta = document.getElementById('btn-nueva-venta-cliente');
         if(btnNuevaVenta) btnNuevaVenta.addEventListener('click', ()=> openNuevaVenta(btnNuevaVenta.getAttribute('data-cliente'), btnNuevaVenta.getAttribute('data-telefono')));
         const btnNuevaOpCliente = document.getElementById('btn-nueva-oportunidad-cliente');
