@@ -497,6 +497,7 @@
   .etiqueta-corporativo{background:var(--brass);}
   .etiqueta-residencial{background:var(--green);}
   .etiqueta-moroso{background:var(--red);}
+  .etiqueta-membresia{background:var(--primary);}
   .etapa-contactado{background:var(--brass);}
   .etapa-cotizado{background:var(--amber);}
   .etapa-ganado{background:var(--green);}
@@ -1033,6 +1034,8 @@
   const OWNER_EMAIL = 'extintoresseguridad.cr@gmail.com';
   const EMPRESA_TELEFONO = '2101-4399 / 8839-9134';
   const EMPRESA_CORREO = 'extintoresseguridad.cr@gmail.com';
+  const EMPRESA_CEDULA_JURIDICA = '104830006';
+  const EMPRESA_REPRESENTANTE = 'Álvaro Sandi Chaves';
   const AUTH_SESSION_KEY = 'extintores:session';
   const ESTADOS = [
     {id:'recibido', label:'Recibido', cls:'b-recibido'},
@@ -1186,7 +1189,14 @@
     .mem-clause b{ margin-right:3px; }
     .mem-blank{ display:inline-block; border-bottom:1px solid #1B1F23; min-width:60px; padding:0 2px; }
     .mem-blank-lg{ min-width:220px; }
-    .mem-check{ display:inline-block; width:11px; height:11px; border:1px solid #1B1F23; margin-right:5px; vertical-align:middle; }
+    .mem-check{ display:inline-flex; align-items:center; justify-content:center; width:11px; height:11px; border:1px solid #1B1F23; margin-right:5px; vertical-align:middle; font-size:9px; line-height:1; font-weight:bold; }
+    .mem-field{ display:flex; align-items:baseline; gap:10px; margin-bottom:9px; font-size:11px; }
+    .mem-field .fl{ flex-shrink:0; min-width:190px; color:#444; }
+    .mem-field .mem-blank{ flex:1; }
+    .mem-list{ margin:6px 0 10px; padding-left:20px; }
+    .mem-list li{ margin-bottom:4px; }
+    .mem-list-cols{ columns:2; column-gap:24px; }
+    .mem-list-cols li{ break-inside:avoid; }
     .mem-notas{ background:#f7f4ec; border:1px solid #E5E7EB; border-radius:4px; padding:12px 14px; margin:14px 0; font-size:11px; }
     .mem-notas h3{ margin:0 0 6px; font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:#6B7280; }
     .mem-firmas{ display:flex; justify-content:space-between; gap:40px; margin-top:46px; }
@@ -1351,69 +1361,132 @@
   function printMembresia(contratoId){
     const c = contratos.find(x => x.id === contratoId);
     if(!c) return;
-    const numero = 'MEM-' + c.id.replace(/[^0-9]/g,'').slice(-6);
-    const fechaEmision = new Date().toLocaleDateString('es-CR', {year:'numeric', month:'long', day:'numeric'});
     const blank = (min)=> `<span class="mem-blank${min?' mem-blank-lg':''}">&nbsp;</span>`;
+    const fechaDMA = (iso)=>{
+      if(iso){
+        const p = iso.split('-');
+        if(p.length===3) return `<span class="mem-blank">${esc(p[2])}</span> / <span class="mem-blank">${esc(p[1])}</span> / <span class="mem-blank mem-blank-lg">${esc(p[0])}</span>`;
+      }
+      return `<span class="mem-blank">&nbsp;</span> / <span class="mem-blank">&nbsp;</span> / <span class="mem-blank mem-blank-lg">&nbsp;</span>`;
+    };
+    const duracionTexto = (()=>{
+      if(!c.fechaInicio || !c.fechaRenovacion) return null;
+      const d1 = new Date(c.fechaInicio+'T00:00:00');
+      const d2 = new Date(c.fechaRenovacion+'T00:00:00');
+      if(isNaN(d1) || isNaN(d2) || d2<=d1) return null;
+      const meses = Math.round((d2-d1)/(1000*60*60*24*30.44));
+      if(meses>=11 && meses<=13) return '1 año';
+      if(meses>0 && meses%12===0) return (meses/12)+' años';
+      return meses>0 ? meses+' meses' : null;
+    })();
     const body = `
       <div class="mem-head">
         <img src="${LOGO_DATA_URL}" alt="Extintores Seguridad" class="mem-logo"/>
         <div class="mem-empresa">
           <b>Extintores Seguridad</b>
+          Cédula jurídica: ${EMPRESA_CEDULA_JURIDICA}<br/>
           Tel: ${EMPRESA_TELEFONO}<br/>
           ${EMPRESA_CORREO}
         </div>
       </div>
       <div class="mem-titulo">
-        <h1>Contrato de Membresía de Mantenimiento</h1>
-        <div>N.° ${numero} · Emitido el ${fechaEmision}</div>
+        <h1>Contrato de Adhesión — Membresía Seguridad</h1>
       </div>
 
-      <div class="mem-parties">
-        <div class="mem-party">
-          <h3>La empresa</h3>
-          <div class="row"><b>Razón social:</b> Extintores Seguridad</div>
-          <div class="row"><b>Cédula jurídica:</b> ${blank(true)}</div>
-          <div class="row"><b>Representante:</b> ${blank(true)}</div>
-          <div class="row"><b>Teléfono:</b> ${EMPRESA_TELEFONO}</div>
-        </div>
-        <div class="mem-party">
-          <h3>El cliente / miembro</h3>
-          <div class="row"><b>Nombre o razón social:</b> ${esc(c.cliente) || blank(true)}</div>
-          <div class="row"><b>Cédula física/jurídica:</b> ${blank(true)}</div>
-          <div class="row"><b>Teléfono:</b> ${c.telefono ? esc(c.telefono) : blank(true)}</div>
-          <div class="row"><b>Dirección exacta:</b> ${blank(true)}</div>
-        </div>
+      <div class="mem-clause" style="text-align:right;">Fecha: ${fechaDMA('')}</div>
+
+      <div class="mem-section-title">1. Datos del cliente</div>
+      <div class="mem-field"><span class="fl">Nombre de la empresa</span><span class="mem-blank mem-blank-lg">${esc(c.cliente)||'&nbsp;'}</span></div>
+      <div class="mem-field"><span class="fl">Cédula jurídica / identificación</span><span class="mem-blank mem-blank-lg">${c.cedulaCliente ? esc(c.cedulaCliente) : '&nbsp;'}</span></div>
+      <div class="mem-field"><span class="fl">Nombre del encargado</span><span class="mem-blank mem-blank-lg">${c.encargado ? esc(c.encargado) : '&nbsp;'}</span></div>
+      <div class="mem-field"><span class="fl">Teléfono / WhatsApp</span><span class="mem-blank mem-blank-lg">${c.telefono ? esc(c.telefono) : '&nbsp;'}</span></div>
+      <div class="mem-field"><span class="fl">Correo electrónico</span><span class="mem-blank mem-blank-lg">${c.correo ? esc(c.correo) : '&nbsp;'}</span></div>
+      <div class="mem-field"><span class="fl">Dirección</span><span class="mem-blank mem-blank-lg">${c.direccion ? esc(c.direccion) : '&nbsp;'}</span></div>
+
+      <div class="mem-section-title">2. Datos de la membresía</div>
+      <div class="mem-clause">
+        Tipo de membresía:
+        <span class="mem-check">${c.tipoMembresia==='seguridad'?'✓':''}</span> Seguridad&nbsp;&nbsp;
+        <span class="mem-check">${c.tipoMembresia==='seguridad_pro'?'✓':''}</span> Seguridad Pro&nbsp;&nbsp;
+        <span class="mem-check">${c.tipoMembresia==='seguridad_corporativa'?'✓':''}</span> Seguridad Corporativa
       </div>
+      <div class="mem-field"><span class="fl">Cantidad de extintores registrados</span><span class="mem-blank mem-blank-lg">${c.cantidadExtintores ? esc(String(c.cantidadExtintores)) : '&nbsp;'}</span></div>
+      <div class="mem-field"><span class="fl">Fecha de inicio</span>${fechaDMA(c.fechaInicio)}</div>
+      <div class="mem-field"><span class="fl">Fecha de renovación</span>${fechaDMA(c.fechaRenovacion)}</div>
 
-      <div class="mem-section-title">Cláusulas del contrato</div>
+      <div class="mem-section-title">3. Objeto de la membresía</div>
+      <div class="mem-clause">Por medio del presente documento, el cliente solicita su incorporación al programa Membresía Seguridad de Extintores Seguridad, cuyo objetivo es facilitar el seguimiento, mantenimiento y atención de los equipos contra incendios registrados.</div>
+      <div class="mem-clause">La membresía permite al cliente acceder a beneficios comerciales y de servicio de acuerdo con el nivel contratado y las condiciones establecidas por Extintores Seguridad.</div>
 
-      <div class="mem-clause"><b>1. Objeto.</b> LA EMPRESA se compromete a brindar el servicio de mantenimiento preventivo periódico a un total de ${blank()}${c.cantidadExtintores ? ` (${esc(String(c.cantidadExtintores))})` : ''} extintor(es) propiedad de EL CLIENTE, instalados en: ${blank(true)}, conforme a la normativa vigente de seguridad contra incendios. El servicio incluye inspección visual, recarga cuando corresponda, cambio de repuestos menores por desgaste normal de uso, y la emisión de la etiqueta o certificado correspondiente por cada visita.</div>
+      <div class="mem-section-title">4. Beneficios</div>
+      <div class="mem-clause">De acuerdo con el nivel de membresía asignado, el cliente podrá recibir:</div>
+      <ul class="mem-list">
+        <li>Tarifas preferenciales en mantenimiento y servicios.</li>
+        <li>Registro y control de sus equipos.</li>
+        <li>Recordatorios de próximas fechas de mantenimiento.</li>
+        <li>Atención preferencial, según disponibilidad.</li>
+        <li>Condiciones especiales en la compra de nuevos equipos.</li>
+        <li>Beneficios adicionales por volumen de equipos.</li>
+        <li>Seguimiento de los equipos registrados.</li>
+      </ul>
+      <div class="mem-clause">Los beneficios podrán variar según la cantidad, tipo y ubicación de los equipos, así como las condiciones comerciales acordadas entre las partes.</div>
 
-      <div class="mem-clause"><b>2. Vigencia.</b> Este contrato inicia el ${c.fechaInicio ? esc(c.fechaInicio) : blank()} y tiene una vigencia hasta el ${c.fechaRenovacion ? esc(c.fechaRenovacion) : blank()}, fecha en la cual se renueva automáticamente por períodos iguales, salvo que alguna de las partes notifique por escrito su intención de no renovar con al menos 30 días naturales de anticipación.</div>
+      <div class="mem-section-title">5. Registro de los equipos</div>
+      <div class="mem-clause">El cliente autoriza a Extintores Seguridad a mantener un registro de los equipos incluidos en el programa, con información necesaria para facilitar su identificación y seguimiento.</div>
+      <div class="mem-clause">El registro podrá incluir:</div>
+      <ul class="mem-list mem-list-cols">
+        <li>Tipo de extintor.</li>
+        <li>Capacidad.</li>
+        <li>Marca.</li>
+        <li>Número de serie o identificación.</li>
+        <li>Ubicación.</li>
+        <li>Fecha de compra.</li>
+        <li>Fecha del último mantenimiento.</li>
+        <li>Próxima fecha recomendada de mantenimiento.</li>
+        <li>Estado del equipo.</li>
+      </ul>
 
-      <div class="mem-clause"><b>3. Valor y forma de pago.</b> El valor anual de esta membresía es de ₡${c.valorAnual ? parseFloat(c.valorAnual).toLocaleString('es-CR',{maximumFractionDigits:0}) : blank()}, pagadero de la siguiente forma: <span class="mem-check"></span> Contado&nbsp;&nbsp;<span class="mem-check"></span> Trimestral&nbsp;&nbsp;<span class="mem-check"></span> Mensual&nbsp;&nbsp;<span class="mem-check"></span> Otro: ${blank()}</div>
+      <div class="mem-section-title">6. Recordatorios y seguimiento</div>
+      <div class="mem-clause">El cliente autoriza a Extintores Seguridad a comunicarse con los contactos proporcionados para enviar recordatorios relacionados con mantenimiento, recarga, inspección, renovación o sustitución de los equipos registrados.</div>
+      <div class="mem-clause">Los recordatorios constituyen un servicio de apoyo y no sustituyen las obligaciones del propietario, administrador o responsable del establecimiento de mantener sus equipos conforme a la normativa y requisitos aplicables.</div>
 
-      <div class="mem-clause"><b>4. Exclusiones.</b> Quedan fuera del alcance de esta membresía los daños por mal uso, vandalismo, siniestro ya activado (incendio real), robo, o el cambio de cilindros y repuestos mayores, los cuales serán cotizados por separado.</div>
+      <div class="mem-section-title">7. Servicios y pagos</div>
+      <div class="mem-clause">La membresía no implica que los servicios de mantenimiento, recarga, reparación, instalación o sustitución de equipos sean gratuitos, salvo que exista una promoción o condición comercial escrita que indique lo contrario.</div>
+      <div class="mem-clause">Los servicios realizados serán cotizados y cobrados de acuerdo con las tarifas y condiciones vigentes o previamente acordadas con el cliente.</div>
+      <div class="mem-clause">Los descuentos o tarifas preferenciales correspondientes a la membresía estarán sujetos al nivel asignado y a las condiciones comerciales establecidas por Extintores Seguridad.</div>
 
-      <div class="mem-clause"><b>5. Obligaciones de EL CLIENTE.</b> EL CLIENTE se compromete a facilitar el acceso a las instalaciones en las fechas programadas para el mantenimiento y a mantener los extintores en un lugar visible y accesible.</div>
+      <div class="mem-section-title">8. Vigencia y cancelación</div>
+      <div class="mem-clause">La membresía tendrá una vigencia de ${duracionTexto ? esc(duracionTexto) : blank()} a partir de la fecha de inscripción.</div>
+      <div class="mem-clause">El cliente podrá solicitar la cancelación de su membresía en cualquier momento.</div>
+      <div class="mem-clause">Extintores Seguridad podrá modificar, suspender o cancelar una membresía cuando existan razones comerciales, incumplimiento de las condiciones acordadas o cualquier otra circunstancia que lo justifique, procurando comunicarlo previamente al cliente cuando corresponda.</div>
 
-      <div class="mem-clause"><b>6. Incumplimiento de pago.</b> El atraso en el pago por más de 30 días naturales faculta a LA EMPRESA a suspender el servicio, sin responsabilidad de su parte, hasta que se regularice la situación.</div>
-
-      <div class="mem-clause"><b>7. Modificaciones.</b> Cualquier modificación a los términos de este contrato deberá constar por escrito y ser firmada por ambas partes.</div>
+      <div class="mem-section-title">9. Responsabilidad del cliente</div>
+      <div class="mem-clause">El cliente se compromete a proporcionar información correcta sobre sus equipos y a permitir, cuando sea necesario, el acceso a los mismos para realizar los servicios contratados.</div>
+      <div class="mem-clause">La membresía y los recordatorios proporcionados por Extintores Seguridad no constituyen una garantía de funcionamiento del equipo ni sustituyen las inspecciones, mantenimientos o servicios técnicamente requeridos.</div>
 
       ${c.notas ? `<div class="mem-notas"><h3>Condiciones especiales / notas</h3>${esc(c.notas)}</div>` : ''}
 
-      <div class="mem-firmas">
-        <div class="mem-firma">
-          <div class="linea">Por Extintores Seguridad</div>
-          <div class="sub">Cédula: ${blank()} &nbsp; Fecha: ${blank()}</div>
+      <div class="mem-section-title">10. Aceptación</div>
+      <div class="mem-clause">El cliente manifiesta que ha leído y comprendido las condiciones de la Membresía Seguridad, acepta sus términos y solicita voluntariamente su incorporación al programa.</div>
+
+      <div class="mem-parties" style="margin-top:14px;">
+        <div class="mem-party">
+          <h3>El cliente</h3>
+          <div class="mem-field"><span class="fl">Nombre del cliente o representante</span>${blank(true)}</div>
+          <div class="mem-field"><span class="fl">Cédula</span>${blank(true)}</div>
+          <div class="mem-field"><span class="fl">Firma</span>${blank(true)}</div>
+          <div class="mem-field"><span class="fl">Fecha</span>${fechaDMA('')}</div>
         </div>
-        <div class="mem-firma">
-          <div class="linea">Por el cliente / miembro</div>
-          <div class="sub">Cédula: ${blank()} &nbsp; Fecha: ${blank()}</div>
+        <div class="mem-party">
+          <h3>Por Extintores Seguridad</h3>
+          <div class="mem-field"><span class="fl">Nombre</span><span class="mem-blank mem-blank-lg">${esc(EMPRESA_REPRESENTANTE)}</span></div>
+          <div class="mem-field"><span class="fl">Cargo</span><span class="mem-blank mem-blank-lg">Representante Legal</span></div>
+          <div class="mem-field"><span class="fl">Firma</span>${blank(true)}</div>
+          <div class="mem-field"><span class="fl">Fecha</span>${fechaDMA('')}</div>
         </div>
       </div>
-      <div class="mem-foot">Extintores Seguridad · ${EMPRESA_TELEFONO} · ${EMPRESA_CORREO}</div>
+
+      <div class="mem-foot">Extintores Seguridad · Protección, mantenimiento y seguimiento para su tranquilidad.<br/>${EMPRESA_TELEFONO} · ${EMPRESA_CORREO}</div>
       <div class="mem-disclaimer">Documento generado a partir de los datos registrados en el sistema. Complete los espacios en blanco a mano antes de firmar.</div>
     `;
     const safeName = (c.cliente||'membresia').toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,30);
@@ -3859,7 +3932,7 @@
   /* ---------- Contratos de mantenimiento recurrente ---------- */
 
   function emptyContrato(){
-    return { id:null, cliente:'', telefono:'', cantidadExtintores:'', fechaInicio: todayISO(), fechaRenovacion:'', valorAnual:'', estado:'activo', notas:'' };
+    return { id:null, cliente:'', telefono:'', cedulaCliente:'', encargado:'', correo:'', direccion:'', tipoMembresia:'seguridad', cantidadExtintores:'', fechaInicio: todayISO(), fechaRenovacion:'', valorAnual:'', estado:'activo', notas:'' };
   }
   let contratoForm = emptyContrato();
   let editingContratoId = null;
@@ -3875,7 +3948,7 @@
   function openEditarContrato(id){
     const c = contratos.find(x => x.id === id);
     if(!c) return;
-    contratoForm = Object.assign({}, c);
+    contratoForm = Object.assign({}, emptyContrato(), c);
     editingContratoId = id;
     renderContratoModal(true);
   }
@@ -3897,6 +3970,11 @@
       id: editingContratoId || uid(),
       cliente,
       telefono: document.getElementById('ct-telefono').value.trim(),
+      cedulaCliente: document.getElementById('ct-cedulaCliente').value.trim(),
+      encargado: document.getElementById('ct-encargado').value.trim(),
+      correo: document.getElementById('ct-correo').value.trim(),
+      direccion: document.getElementById('ct-direccion').value.trim(),
+      tipoMembresia: document.getElementById('ct-tipoMembresia').value,
       cantidadExtintores: document.getElementById('ct-cantidad').value.trim(),
       fechaInicio: document.getElementById('ct-fechaInicio').value,
       fechaRenovacion,
@@ -3950,7 +4028,30 @@
         <div class="modal-body">
           <div class="form-row">
             <div><label>Cliente *</label><input id="ct-cliente" value="${esc(contratoForm.cliente)}" placeholder="Nombre o empresa"/></div>
-            <div><label>Teléfono</label><input type="tel" id="ct-telefono" value="${esc(contratoForm.telefono)}" placeholder="8888-8888"/></div>
+            <div><label>Teléfono / WhatsApp</label><input type="tel" id="ct-telefono" value="${esc(contratoForm.telefono)}" placeholder="8888-8888"/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Cédula jurídica / identificación</label><input id="ct-cedulaCliente" value="${esc(contratoForm.cedulaCliente)}" placeholder="3-101-XXXXXX"/></div>
+            <div><label>Nombre del encargado</label><input id="ct-encargado" value="${esc(contratoForm.encargado)}" placeholder="Persona de contacto"/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Correo electrónico</label><input type="email" id="ct-correo" value="${esc(contratoForm.correo)}" placeholder="correo@empresa.com"/></div>
+            <div><label>Dirección</label><input id="ct-direccion" value="${esc(contratoForm.direccion)}" placeholder="Dirección exacta"/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Tipo de membresía</label>
+              <select id="ct-tipoMembresia">
+                <option value="seguridad" ${contratoForm.tipoMembresia==='seguridad'?'selected':''}>Seguridad</option>
+                <option value="seguridad_pro" ${contratoForm.tipoMembresia==='seguridad_pro'?'selected':''}>Seguridad Pro</option>
+                <option value="seguridad_corporativa" ${contratoForm.tipoMembresia==='seguridad_corporativa'?'selected':''}>Seguridad Corporativa</option>
+              </select>
+            </div>
+            <div><label>Estado</label>
+              <select id="ct-estado">
+                <option value="activo" ${contratoForm.estado==='activo'?'selected':''}>Activo</option>
+                <option value="cancelado" ${contratoForm.estado==='cancelado'?'selected':''}>Cancelado</option>
+              </select>
+            </div>
           </div>
           <div class="form-row">
             <div><label>Cantidad de extintores cubiertos</label><input type="number" id="ct-cantidad" min="1" step="1" value="${esc(contratoForm.cantidadExtintores)}" placeholder="ej. 25"/></div>
@@ -3959,14 +4060,6 @@
           <div class="form-row">
             <div><label>Fecha de inicio</label><input type="date" id="ct-fechaInicio" value="${esc(contratoForm.fechaInicio)}"/></div>
             <div><label>Próxima renovación *</label><input type="date" id="ct-fechaRenovacion" value="${esc(contratoForm.fechaRenovacion)}"/></div>
-          </div>
-          <div class="form-row">
-            <div><label>Estado</label>
-              <select id="ct-estado">
-                <option value="activo" ${contratoForm.estado==='activo'?'selected':''}>Activo</option>
-                <option value="cancelado" ${contratoForm.estado==='cancelado'?'selected':''}>Cancelado</option>
-              </select>
-            </div>
           </div>
           <div class="form-row full">
             <div><label>Notas</label><textarea id="ct-notas" placeholder="Alcance del contrato, condiciones especiales...">${esc(contratoForm.notas)}</textarea></div>
@@ -4414,6 +4507,7 @@
         totalPendiente: totalPendienteRegistros,
         ultimaFecha,
         etiquetas: (perfil && perfil.etiquetas) || [],
+        membresiaActiva: contratos.some(ct => clienteKey(ct) === c.key && ct.estado === 'activo'),
       };
     }).sort((a,b)=> a.nombre.localeCompare(b.nombre));
   }
@@ -4442,6 +4536,7 @@
         totalEquiposComprados: c.compras.reduce((s,v)=>s+(v.cantidad||1),0),
         totalPagado, totalPendiente, ultimaFecha,
         etiquetas: (perfil && perfil.etiquetas) || [],
+        membresiaActiva: contratos.some(ct => clienteKey(ct) === c.key && ct.estado === 'activo'),
       };
     }).sort((a,b)=> a.nombre.localeCompare(b.nombre));
   }
@@ -4487,7 +4582,7 @@
             <div class="contact-row" data-cliente-key="${esc(c.key)}" data-cliente-tipo="${esCompras?'compras':'mantenimiento'}">
               <div class="contact-avatar-col"><div class="contact-avatar">${esc(inicialesDe(c.nombre))}</div></div>
               <div class="contact-main">
-                <div class="contact-name">${esc(c.nombre)}${c.etiquetas && c.etiquetas.length ? etiquetasHTML(c.etiquetas) : ''}</div>
+                <div class="contact-name">${esc(c.nombre)}${c.membresiaActiva ? '<span class="etiqueta-badge etiqueta-membresia">Membresía</span>' : ''}${c.etiquetas && c.etiquetas.length ? etiquetasHTML(c.etiquetas) : ''}</div>
                 <div class="contact-sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono'}${c.ultimaFecha ? ` · Última actividad ${esc(c.ultimaFecha)}` : ''}</div>
               </div>
               <div class="contact-metrics">
@@ -4582,7 +4677,7 @@
           <button class="back-link" id="btn-volver-clientes">← Volver a clientes</button>
           <div class="cliente-detail-head">
             <div>
-              <h2>${esc(c.nombre)}</h2>
+              <h2>${esc(c.nombre)}${c.membresiaActiva ? ' <span class="etiqueta-badge etiqueta-membresia">Membresía activa</span>' : ''}</h2>
               <div class="sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono registrado'}${c.telefonos && c.telefonos.length>1 ? ` <button class="link-btn" data-separar-cliente="${esc(key)}">¿Son dos personas distintas? Separar</button>` : ''}</div>
             </div>
             <div class="cliente-kpis">
@@ -4618,7 +4713,7 @@
         <button class="back-link" id="btn-volver-clientes">← Volver a clientes</button>
         <div class="cliente-detail-head">
           <div>
-            <h2>${esc(c.nombre)}</h2>
+            <h2>${esc(c.nombre)}${c.membresiaActiva ? ' <span class="etiqueta-badge etiqueta-membresia">Membresía activa</span>' : ''}</h2>
             <div class="sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono registrado'}${c.telefonos && c.telefonos.length>1 ? ` <button class="link-btn" data-separar-cliente="${esc(key)}">¿Son dos personas distintas? Separar</button>` : ''}</div>
           </div>
           <div class="cliente-kpis">
