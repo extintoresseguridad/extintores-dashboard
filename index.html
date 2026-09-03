@@ -210,7 +210,7 @@
   }
   .detalle-vs-total.ok{background:#eaf3ec;color:#1e4d2b;}
   .detalle-vs-total.diff{background:#fbeceb;color:#7a231d;}
-  .modal-foot{padding:16px 24px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--line);}
+  .modal-foot{padding:16px 24px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--line);flex-wrap:wrap;}
   .btn-ghost{background:transparent;border:1px solid var(--line);padding:7px 14px;border-radius:2px;cursor:pointer;font-size:12px;font-weight:600;}
   .toast{
     position:fixed;bottom:24px;right:24px;background:var(--ink);color:var(--paper);
@@ -356,6 +356,16 @@
     font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;margin-bottom:14px;
   }
   .btn-add-linea:hover{background:#fff;border-color:var(--brass);}
+  .of-totales-preview{
+    background:var(--paper);border:1px solid var(--line);border-radius:8px;
+    padding:10px 14px;margin-bottom:14px;
+  }
+  .of-totales-row{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;color:#4B5563;}
+  .of-totales-row.of-desc b{color:var(--red);}
+  .of-totales-row.of-total{
+    border-top:1px solid var(--line);margin-top:4px;padding-top:7px;
+    font-size:14.5px;font-weight:800;color:var(--ink);
+  }
 
   /* ---- Tarjeta de orden agrupada (varios extintores) ---- */
   .order-card{
@@ -1161,6 +1171,11 @@
     .cot-total-box{ border:2px solid #1B1F23; border-radius:4px; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
     .cot-total-box .lbl{ font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
     .cot-total-box .val{ font-size:22px; font-weight:bold; }
+    .cot-totales-table{ width:100%; margin:0 0 12px; border-collapse:collapse; }
+    .cot-totales-table td{ padding:4px 0; font-size:12px; }
+    .cot-totales-table td:first-child{ color:#555; }
+    .cot-totales-table td:last-child{ text-align:right; width:140px; font-family:'Courier New',monospace; }
+    .cot-totales-table .cot-desc-row td{ color:#B45309; }
     .cot-validez{ font-size:10.5px; color:#666; font-style:italic; margin-bottom:36px; }
     .cot-firmas{ display:flex; justify-content:space-between; gap:40px; }
     .cot-firma{ flex:1; text-align:center; }
@@ -1310,7 +1325,11 @@
     const fechaVencimiento = addDays(todayISO(), 15);
     const itemsValidos = (o.items||[]).filter(it => it.descripcion || it.precio);
     const montoItems = itemsValidos.reduce((s,it)=> s + (parseFloat(it.precio)||0), 0);
-    const monto = itemsValidos.length ? montoItems : (parseFloat(o.montoEstimado) || 0);
+    const subtotal = itemsValidos.length ? montoItems : (parseFloat(o.montoEstimado) || 0);
+    const descuento = Math.min(parseFloat(o.descuento) || 0, subtotal);
+    const baseImponible = subtotal - descuento;
+    const iva = baseImponible * 0.13;
+    const total = baseImponible + iva;
     const body = `
       <div class="cot-head">
         <img src="${LOGO_DATA_URL}" alt="Extintores Seguridad" class="cot-logo"/>
@@ -1343,9 +1362,14 @@
         <p style="margin:0;">${o.descripcion ? esc(o.descripcion) : 'Servicio de mantenimiento de extintores.'}</p>
       </div>
       `}
+      <table class="cot-totales-table">
+        <tr><td>Subtotal</td><td>₡${subtotal.toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>
+        ${descuento>0 ? `<tr class="cot-desc-row"><td>Descuento</td><td>− ₡${descuento.toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>` : ''}
+        <tr><td>IVA (13%)</td><td>₡${iva.toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>
+      </table>
       <div class="cot-total-box">
         <span class="lbl">Monto total</span>
-        <span class="val">₡${monto.toLocaleString('es-CR',{maximumFractionDigits:0})}</span>
+        <span class="val">₡${total.toLocaleString('es-CR',{maximumFractionDigits:0})}</span>
       </div>
       <div class="cot-validez">Esta cotización tiene una validez de 15 días a partir de su fecha de emisión. Precios sujetos a cambio después de esa fecha.</div>
       <div class="cot-firmas">
@@ -2476,7 +2500,7 @@
   function etapaOf(id){ return ETAPAS_EMBUDO.find(e=>e.id===id) || ETAPAS_EMBUDO[0]; }
 
   function emptyOportunidad(){
-    return { id:null, cliente:'', telefono:'', descripcion:'', montoEstimado:'', etapa:'contactado', fechaCreacion: todayISO(), bitacora:[], items:[] };
+    return { id:null, cliente:'', telefono:'', descripcion:'', montoEstimado:'', descuento:'', etapa:'contactado', fechaCreacion: todayISO(), bitacora:[], items:[] };
   }
   function emptyItemCotizacion(){
     return { id: uid(), descripcion:'', precio:'', productoId:null };
@@ -2527,7 +2551,7 @@
   function openEditarOportunidad(id){
     const o = oportunidades.find(x => x.id === id);
     if(!o) return;
-    oportunidadForm = Object.assign({}, o, {
+    oportunidadForm = Object.assign({}, emptyOportunidad(), o, {
       bitacora: [...(o.bitacora||[])],
       items: (o.items && o.items.length) ? o.items.map(x=>({...x})) : [emptyItemCotizacion()],
     });
@@ -2564,11 +2588,11 @@
     renderOportunidadModal(true);
   }
 
-  async function saveOportunidad(){
+  function construirOportunidadDesdeForm(){
     const cliente = document.getElementById('of-cliente').value.trim();
     if(!cliente){
       showToast('El cliente es obligatorio.');
-      return;
+      return null;
     }
     const items = Array.from(document.querySelectorAll('[data-item-line]')).map(div=>{
       const itemId = div.getAttribute('data-item-line');
@@ -2580,12 +2604,13 @@
         productoId: selectEl ? (selectEl.value || null) : null,
       };
     }).filter(it => it.descripcion || it.precio); // no guardamos líneas totalmente vacías
-    const nueva = {
+    return {
       id: editingOportunidadId || uid(),
       cliente,
       telefono: document.getElementById('of-telefono').value.trim(),
       descripcion: document.getElementById('of-descripcion').value.trim(),
       montoEstimado: document.getElementById('of-monto').value.trim(),
+      descuento: document.getElementById('of-descuento').value.trim(),
       etapa: document.getElementById('of-etapa').value,
       fechaCreacion: editingOportunidadId ? oportunidadForm.fechaCreacion : todayISO(),
       bitacora: oportunidadForm.bitacora || [],
@@ -2594,6 +2619,36 @@
       // para que no se vuelva a duplicar en la próxima carga.
       ...(oportunidadForm.origenRecordId ? { origenRecordId: oportunidadForm.origenRecordId, autoGenerada: true } : {}),
     };
+  }
+
+  function actualizarTotalesPreviewOportunidad(){
+    const cont = document.getElementById('of-totales-preview');
+    if(!cont) return;
+    const montoEl = document.getElementById('of-monto');
+    const descEl = document.getElementById('of-descuento');
+    if(!montoEl || !descEl) return;
+    const itemsValidos = Array.from(document.querySelectorAll('[data-item-line]')).map(div=>{
+      const itemId = div.getAttribute('data-item-line');
+      const precioEl = document.getElementById('oi-precio-'+itemId);
+      return parseFloat(precioEl ? precioEl.value : '') || 0;
+    });
+    const sumaItems = itemsValidos.reduce((s,v)=>s+v, 0);
+    const subtotal = sumaItems > 0 ? sumaItems : (parseFloat(montoEl.value) || 0);
+    const descuento = Math.min(parseFloat(descEl.value) || 0, subtotal);
+    const baseImponible = subtotal - descuento;
+    const iva = baseImponible * 0.13;
+    const total = baseImponible + iva;
+    cont.innerHTML = `
+      <div class="of-totales-row"><span>Subtotal</span><b>₡${subtotal.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>
+      ${descuento>0 ? `<div class="of-totales-row of-desc"><span>Descuento</span><b>− ₡${descuento.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>` : ''}
+      <div class="of-totales-row"><span>IVA (13%)</span><b>₡${iva.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>
+      <div class="of-totales-row of-total"><span>Total</span><b>₡${total.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>
+    `;
+  }
+
+  async function saveOportunidad(){
+    const nueva = construirOportunidadDesdeForm();
+    if(!nueva) return;
     if(editingOportunidadId){
       oportunidades = oportunidades.map(o => o.id === editingOportunidadId ? nueva : o);
     } else {
@@ -2609,6 +2664,27 @@
     showToast(editingOportunidadId ? 'Oportunidad actualizada.' : 'Oportunidad creada.');
     closeOportunidadModal();
     render();
+  }
+
+  async function guardarEImprimirCotizacion(){
+    const nueva = construirOportunidadDesdeForm();
+    if(!nueva) return;
+    if(editingOportunidadId){
+      oportunidades = oportunidades.map(o => o.id === editingOportunidadId ? nueva : o);
+    } else {
+      oportunidades = [nueva, ...oportunidades];
+    }
+    const printBtn = document.getElementById('oportunidad-modal-print');
+    if(printBtn){ printBtn.disabled = true; printBtn.textContent = 'Guardando...'; }
+    const ok = await persist();
+    if(!ok){
+      if(printBtn){ printBtn.disabled = false; printBtn.textContent = '🖨️ Guardar e imprimir cotización'; }
+      return;
+    }
+    showToast(editingOportunidadId ? 'Oportunidad actualizada.' : 'Oportunidad creada.');
+    closeOportunidadModal();
+    render();
+    printCotizacion(nueva.id);
   }
 
   async function removeOportunidad(id){
@@ -2857,7 +2933,11 @@
           <div><label>Elegir del inventario (opcional)</label>
             <select class="oi-select-inventario" data-item-select="${it.id}">
               <option value="">— Escribir manualmente —</option>
-              ${inventario.map(p=>`<option value="${p.id}" ${it.productoId===p.id?'selected':''}>${esc(p.nombre)}${p.precioUnitario ? ' · ₡'+parseFloat(p.precioUnitario).toLocaleString('es-CR',{maximumFractionDigits:0}) : ''}${estadoStock(p)!=='ok' ? ' · '+(estadoStock(p)==='agotado'?'AGOTADO':'stock bajo') : ''}</option>`).join('')}
+              ${inventario.map(p=>{
+                const detalle = [p.tipo, p.capacidad].filter(Boolean).join(' ');
+                const detalleTxt = detalle || 'sin capacidad registrada — edítala en Inventario';
+                return `<option value="${p.id}" ${it.productoId===p.id?'selected':''}>${esc(p.nombre)} — ${esc(detalleTxt)}${p.precioUnitario ? ' · ₡'+parseFloat(p.precioUnitario).toLocaleString('es-CR',{maximumFractionDigits:0}) : ''}${estadoStock(p)!=='ok' ? ' · '+(estadoStock(p)==='agotado'?'AGOTADO':'stock bajo') : ''}</option>`;
+              }).join('')}
             </select>
           </div>
         </div>` : ''}
@@ -2897,7 +2977,11 @@
           </div>
           <button type="button" class="btn-add-linea" id="btn-add-item-cotizacion">+ Agregar línea de cotización</button>
           <div class="form-row" style="margin-top:14px;">
-            <div><label>Monto total (suma automática, editable)</label><input type="number" id="of-monto" min="0" step="0.01" value="${esc(oportunidadForm.montoEstimado)}" placeholder="0.00"/></div>
+            <div><label>Subtotal (suma automática, editable)</label><input type="number" id="of-monto" min="0" step="0.01" value="${esc(oportunidadForm.montoEstimado)}" placeholder="0.00"/></div>
+            <div><label>Descuento al cliente (₡, opcional)</label><input type="number" id="of-descuento" min="0" step="0.01" value="${esc(oportunidadForm.descuento)}" placeholder="0.00"/></div>
+          </div>
+          <div id="of-totales-preview" class="of-totales-preview"></div>
+          <div class="form-row">
             <div><label>Etapa</label>
               <select id="of-etapa">
                 ${ETAPAS_EMBUDO.map(e=>`<option value="${e.id}" ${e.id===oportunidadForm.etapa?'selected':''}>${e.label}</option>`).join('')}
@@ -2907,6 +2991,7 @@
         </div>
         <div class="modal-foot">
           <button class="btn-ghost" id="oportunidad-modal-cancel">Cancelar</button>
+          <button class="btn-ghost" id="oportunidad-modal-print">🖨️ Guardar e imprimir cotización</button>
           <button class="btn-primary" id="oportunidad-modal-save">${editingOportunidadId ? 'Guardar cambios' : 'Crear oportunidad'}</button>
         </div>
       </div>
@@ -2916,6 +3001,7 @@
     document.getElementById('oportunidad-modal-close').addEventListener('click', closeOportunidadModal);
     document.getElementById('oportunidad-modal-cancel').addEventListener('click', closeOportunidadModal);
     document.getElementById('oportunidad-modal-save').addEventListener('click', saveOportunidad);
+    document.getElementById('oportunidad-modal-print').addEventListener('click', guardarEImprimirCotizacion);
     document.getElementById('btn-add-item-cotizacion').addEventListener('click', agregarLineaCotizacion);
     document.querySelectorAll('[data-remove-item-linea]').forEach(b=>{
       b.addEventListener('click', ()=> quitarLineaCotizacion(b.getAttribute('data-remove-item-linea')));
@@ -2943,8 +3029,14 @@
         });
         const totalInput = document.getElementById('of-monto');
         if(totalInput) totalInput.value = suma > 0 ? suma : '';
+        actualizarTotalesPreviewOportunidad();
       });
     });
+    const ofMontoEl = document.getElementById('of-monto');
+    const ofDescuentoEl = document.getElementById('of-descuento');
+    if(ofMontoEl) ofMontoEl.addEventListener('input', actualizarTotalesPreviewOportunidad);
+    if(ofDescuentoEl) ofDescuentoEl.addEventListener('input', actualizarTotalesPreviewOportunidad);
+    actualizarTotalesPreviewOportunidad();
   }
 
   function oportunidadCardHTML(o){
