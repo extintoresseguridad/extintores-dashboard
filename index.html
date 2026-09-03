@@ -173,6 +173,8 @@
   .modal-head button{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;}
   .modal-body{padding:22px 24px;}
   .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .form-row.linea-cant-precio{grid-template-columns:0.8fr 1fr 1fr;}
+  .form-row.linea-cant-precio input:disabled{background:var(--paper);color:var(--ink);font-weight:700;border-color:var(--line);}
   .form-row.full{grid-template-columns:1fr;}
   label{
     display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
@@ -770,6 +772,7 @@
     .toolbar .btn-ghost,.toolbar .btn-primary{flex:1;}
     .grid{grid-template-columns:1fr;}
     .form-row{grid-template-columns:1fr;}
+    .form-row.linea-cant-precio{grid-template-columns:1fr 1fr;}
     .service-checks{grid-template-columns:1fr;}
     .service-checks-priced{grid-template-columns:1fr;}
     .modal-body{padding:16px;max-height:72vh;}
@@ -1167,7 +1170,10 @@
     .cot-items-table{ width:100%; border-collapse:collapse; margin-bottom:20px; }
     .cot-items-table th{ background:#1B1F23; color:#fff; font-size:10px; text-transform:uppercase; letter-spacing:.04em; padding:8px 10px; text-align:left; }
     .cot-items-table td{ padding:8px 10px; border-bottom:1px solid #E5E7EB; font-size:12px; }
-    .cot-items-table td:last-child, .cot-items-table th:last-child{ text-align:right; width:120px; }
+    .cot-items-table th:nth-child(2), .cot-items-table td:nth-child(2){ text-align:center; width:60px; }
+    .cot-items-table th:nth-child(3), .cot-items-table td:nth-child(3),
+    .cot-items-table th:nth-child(4), .cot-items-table td:nth-child(4){ text-align:right; width:120px; }
+    .cot-items-table td:last-child{ font-weight:bold; }
     .cot-total-box{ border:2px solid #1B1F23; border-radius:4px; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
     .cot-total-box .lbl{ font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
     .cot-total-box .val{ font-size:22px; font-weight:bold; }
@@ -1324,7 +1330,7 @@
     const fechaEmision = new Date().toLocaleDateString('es-CR', {year:'numeric', month:'long', day:'numeric'});
     const fechaVencimiento = addDays(todayISO(), 15);
     const itemsValidos = (o.items||[]).filter(it => it.descripcion || it.precio);
-    const montoItems = itemsValidos.reduce((s,it)=> s + (parseFloat(it.precio)||0), 0);
+    const montoItems = itemsValidos.reduce((s,it)=> s + ((parseFloat(it.cantidad)||1) * (parseFloat(it.precio)||0)), 0);
     const subtotal = itemsValidos.length ? montoItems : (parseFloat(o.montoEstimado) || 0);
     const descuento = Math.min(parseFloat(o.descuento) || 0, subtotal);
     const baseImponible = subtotal - descuento;
@@ -1350,9 +1356,13 @@
       </div>
       ${itemsValidos.length ? `
       <table class="cot-items-table">
-        <thead><tr><th>Descripción</th><th>Precio</th></tr></thead>
+        <thead><tr><th>Descripción</th><th>Cant.</th><th>Precio unitario</th><th>Total</th></tr></thead>
         <tbody>
-          ${itemsValidos.map(it=>`<tr><td>${esc(it.descripcion||'—')}</td><td>₡${(parseFloat(it.precio)||0).toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>`).join('')}
+          ${itemsValidos.map(it=>{
+            const cant = parseFloat(it.cantidad)||1;
+            const precio = parseFloat(it.precio)||0;
+            return `<tr><td>${esc(it.descripcion||'—')}</td><td>${cant}</td><td>₡${precio.toLocaleString('es-CR',{maximumFractionDigits:0})}</td><td>₡${(cant*precio).toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>`;
+          }).join('')}
         </tbody>
       </table>
       ${o.descripcion ? `<div class="cot-desc-box"><h3>Notas</h3><p style="margin:0;">${esc(o.descripcion)}</p></div>` : ''}
@@ -2503,7 +2513,7 @@
     return { id:null, cliente:'', telefono:'', descripcion:'', montoEstimado:'', descuento:'', etapa:'contactado', fechaCreacion: todayISO(), bitacora:[], items:[] };
   }
   function emptyItemCotizacion(){
-    return { id: uid(), descripcion:'', precio:'', productoId:null };
+    return { id: uid(), descripcion:'', cantidad:'1', precio:'', productoId:null };
   }
   let oportunidadForm = emptyOportunidad();
   let editingOportunidadId = null;
@@ -2570,6 +2580,7 @@
       return {
         ...it,
         descripcion: descEl.value,
+        cantidad: document.getElementById('oi-cantidad-'+it.id).value,
         precio: document.getElementById('oi-precio-'+it.id).value,
         productoId: selectEl ? (selectEl.value || null) : it.productoId,
       };
@@ -2600,6 +2611,7 @@
       return {
         id: itemId,
         descripcion: document.getElementById('oi-desc-'+itemId).value.trim(),
+        cantidad: document.getElementById('oi-cantidad-'+itemId).value.trim(),
         precio: document.getElementById('oi-precio-'+itemId).value.trim(),
         productoId: selectEl ? (selectEl.value || null) : null,
       };
@@ -2630,7 +2642,9 @@
     const itemsValidos = Array.from(document.querySelectorAll('[data-item-line]')).map(div=>{
       const itemId = div.getAttribute('data-item-line');
       const precioEl = document.getElementById('oi-precio-'+itemId);
-      return parseFloat(precioEl ? precioEl.value : '') || 0;
+      const cantEl = document.getElementById('oi-cantidad-'+itemId);
+      const cant = cantEl ? (parseFloat(cantEl.value) || 0) : 1;
+      return cant * (parseFloat(precioEl ? precioEl.value : '') || 0);
     });
     const sumaItems = itemsValidos.reduce((s,v)=>s+v, 0);
     const subtotal = sumaItems > 0 ? sumaItems : (parseFloat(montoEl.value) || 0);
@@ -2941,9 +2955,13 @@
             </select>
           </div>
         </div>` : ''}
-        <div class="form-row">
+        <div class="form-row full">
           <div><label>Descripción</label><input id="oi-desc-${it.id}" value="${esc(it.descripcion)}" placeholder="ej. Extintor PQS 10 lb"/></div>
-          <div><label>Precio</label><input type="number" id="oi-precio-${it.id}" min="0" step="0.01" value="${esc(it.precio)}" placeholder="0.00" data-item-precio="${it.id}"/></div>
+        </div>
+        <div class="form-row linea-cant-precio">
+          <div><label>Cantidad</label><input type="number" id="oi-cantidad-${it.id}" min="1" step="1" value="${esc(it.cantidad||'1')}" placeholder="1" data-item-cantidad="${it.id}"/></div>
+          <div><label>Precio unitario</label><input type="number" id="oi-precio-${it.id}" min="0" step="0.01" value="${esc(it.precio)}" placeholder="0.00" data-item-precio="${it.id}"/></div>
+          <div><label>Total línea</label><input type="text" id="oi-total-${it.id}" value="₡${((parseFloat(it.cantidad)||1) * (parseFloat(it.precio)||0)).toLocaleString('es-CR',{maximumFractionDigits:0})}" disabled/></div>
         </div>
       </div>`;
   }
@@ -3020,17 +3038,32 @@
         precioEl.dispatchEvent(new Event('input'));
       });
     });
-    document.querySelectorAll('[data-item-precio]').forEach(inp=>{
-      inp.addEventListener('input', ()=>{
-        // Recalcula el total en el DOM directamente, sin redibujar el modal (para no perder el foco).
-        let suma = 0;
-        document.querySelectorAll('[data-item-precio]').forEach(precioEl=>{
-          suma += parseFloat(precioEl.value) || 0;
-        });
-        const totalInput = document.getElementById('of-monto');
-        if(totalInput) totalInput.value = suma > 0 ? suma : '';
-        actualizarTotalesPreviewOportunidad();
+    function recalcularLineaYTotales(itemId){
+      const cantEl = document.getElementById('oi-cantidad-'+itemId);
+      const precioEl = document.getElementById('oi-precio-'+itemId);
+      const totalEl = document.getElementById('oi-total-'+itemId);
+      if(cantEl && precioEl && totalEl){
+        const cant = parseFloat(cantEl.value) || 0;
+        const precio = parseFloat(precioEl.value) || 0;
+        totalEl.value = '₡' + (cant * precio).toLocaleString('es-CR',{maximumFractionDigits:0});
+      }
+      // Recalcula el subtotal general en el DOM directamente, sin redibujar el modal (para no perder el foco).
+      let suma = 0;
+      document.querySelectorAll('[data-item-precio]').forEach(precioElx=>{
+        const idx = precioElx.getAttribute('data-item-precio');
+        const cantElx = document.getElementById('oi-cantidad-'+idx);
+        const cantx = cantElx ? (parseFloat(cantElx.value) || 0) : 1;
+        suma += cantx * (parseFloat(precioElx.value) || 0);
       });
+      const totalInput = document.getElementById('of-monto');
+      if(totalInput) totalInput.value = suma > 0 ? suma : '';
+      actualizarTotalesPreviewOportunidad();
+    }
+    document.querySelectorAll('[data-item-precio]').forEach(inp=>{
+      inp.addEventListener('input', ()=> recalcularLineaYTotales(inp.getAttribute('data-item-precio')));
+    });
+    document.querySelectorAll('[data-item-cantidad]').forEach(inp=>{
+      inp.addEventListener('input', ()=> recalcularLineaYTotales(inp.getAttribute('data-item-cantidad')));
     });
     const ofMontoEl = document.getElementById('of-monto');
     const ofDescuentoEl = document.getElementById('of-descuento');
