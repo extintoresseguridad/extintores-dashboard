@@ -1068,7 +1068,7 @@
   let recordatorios = []; // { id, texto, fecha, cliente, telefono, oportunidadId, completado }
   let clientesPerfil = []; // { id, cliente, telefono, empresa, cedula, notas, etiquetas, fechaCreacion } — datos personales del cliente, independientes de sus órdenes/ventas
   let contratos = []; // { id, cliente, telefono, cantidadExtintores, fechaInicio, fechaRenovacion, valorAnual, estado:'activo'|'cancelado', notas }
-  let inventario = []; // { id, nombre, categoria:'extintor'|'repuesto', tipo, capacidad, cantidad, cantidadMinima, precioUnitario, notas, movimientos:[{id,tipo,cantidad,fecha,nota}] }
+  let inventario = []; // { id, nombre, categoria:'extintor'|'repuesto'|'servicio', tipo, capacidad, cantidad, cantidadMinima, precioUnitario, notas, movimientos:[{id,tipo,cantidad,fecha,nota}] }
   let loadError = null;
   let filter = 'todos';
   let venceFilter = 'todos';
@@ -1331,11 +1331,14 @@
     const fechaVencimiento = addDays(todayISO(), 15);
     const itemsValidos = (o.items||[]).filter(it => it.descripcion || it.precio);
     const montoItems = itemsValidos.reduce((s,it)=> s + ((parseFloat(it.cantidad)||1) * (parseFloat(it.precio)||0)), 0);
+    // Los precios que se ingresan (los del inventario y los de cada línea) ya incluyen el IVA —
+    // es el mismo precio final que paga el cliente, igual que en el facturador — así que el
+    // impuesto se desglosa hacia atrás en vez de sumarse encima.
     const subtotal = itemsValidos.length ? montoItems : (parseFloat(o.montoEstimado) || 0);
     const descuento = Math.min(parseFloat(o.descuento) || 0, subtotal);
-    const baseImponible = subtotal - descuento;
-    const iva = baseImponible * 0.13;
-    const total = baseImponible + iva;
+    const total = subtotal - descuento; // precio final que paga el cliente (IVA incluido)
+    const baseImponible = total / 1.13;
+    const iva = total - baseImponible;
     const body = `
       <div class="cot-head">
         <img src="${LOGO_DATA_URL}" alt="Extintores Seguridad" class="cot-logo"/>
@@ -1375,7 +1378,8 @@
       <table class="cot-totales-table">
         <tr><td>Subtotal</td><td>₡${subtotal.toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>
         ${descuento>0 ? `<tr class="cot-desc-row"><td>Descuento</td><td>− ₡${descuento.toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>` : ''}
-        <tr><td>IVA (13%)</td><td>₡${iva.toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>
+        <tr><td>Base imponible</td><td>₡${baseImponible.toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>
+        <tr><td>IVA (13%, incluido)</td><td>₡${iva.toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>
       </table>
       <div class="cot-total-box">
         <span class="lbl">Monto total</span>
@@ -2571,8 +2575,22 @@
 
   function closeOportunidadModal(){ renderOportunidadModal(false); }
 
-  function capturarItemsCotizacionDesdeDOM(){
-    // Guarda lo que el usuario ya escribió en las líneas antes de agregar/quitar una y volver a dibujar el modal.
+  function capturarFormularioDesdeDOM(){
+    // Guarda en oportunidadForm TODO lo que el usuario ya escribió en el modal (cliente, teléfono,
+    // descripción, montos, etapa y cada línea) antes de agregar/quitar una línea y volver a dibujar
+    // el modal — si no se hace esto, redibujar pierde lo que no se había sincronizado todavía.
+    const clienteEl = document.getElementById('of-cliente');
+    if(clienteEl) oportunidadForm.cliente = clienteEl.value;
+    const telefonoEl = document.getElementById('of-telefono');
+    if(telefonoEl) oportunidadForm.telefono = telefonoEl.value;
+    const descripcionEl = document.getElementById('of-descripcion');
+    if(descripcionEl) oportunidadForm.descripcion = descripcionEl.value;
+    const montoEl = document.getElementById('of-monto');
+    if(montoEl) oportunidadForm.montoEstimado = montoEl.value;
+    const descuentoEl = document.getElementById('of-descuento');
+    if(descuentoEl) oportunidadForm.descuento = descuentoEl.value;
+    const etapaEl = document.getElementById('of-etapa');
+    if(etapaEl) oportunidadForm.etapa = etapaEl.value;
     oportunidadForm.items = (oportunidadForm.items||[]).map(it=>{
       const descEl = document.getElementById('oi-desc-'+it.id);
       if(!descEl) return it; // línea nueva sin DOM todavía
@@ -2588,13 +2606,13 @@
   }
 
   function agregarLineaCotizacion(){
-    capturarItemsCotizacionDesdeDOM();
+    capturarFormularioDesdeDOM();
     oportunidadForm.items.push(emptyItemCotizacion());
     renderOportunidadModal(true);
   }
   function quitarLineaCotizacion(itemId){
     if((oportunidadForm.items||[]).length <= 1) return;
-    capturarItemsCotizacionDesdeDOM();
+    capturarFormularioDesdeDOM();
     oportunidadForm.items = oportunidadForm.items.filter(it => it.id !== itemId);
     renderOportunidadModal(true);
   }
@@ -2649,13 +2667,15 @@
     const sumaItems = itemsValidos.reduce((s,v)=>s+v, 0);
     const subtotal = sumaItems > 0 ? sumaItems : (parseFloat(montoEl.value) || 0);
     const descuento = Math.min(parseFloat(descEl.value) || 0, subtotal);
-    const baseImponible = subtotal - descuento;
-    const iva = baseImponible * 0.13;
-    const total = baseImponible + iva;
+    // Los precios ya incluyen el IVA (igual que en el facturador): se desglosa hacia atrás, no se suma encima.
+    const total = subtotal - descuento;
+    const baseImponible = total / 1.13;
+    const iva = total - baseImponible;
     cont.innerHTML = `
       <div class="of-totales-row"><span>Subtotal</span><b>₡${subtotal.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>
       ${descuento>0 ? `<div class="of-totales-row of-desc"><span>Descuento</span><b>− ₡${descuento.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>` : ''}
-      <div class="of-totales-row"><span>IVA (13%)</span><b>₡${iva.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>
+      <div class="of-totales-row"><span>Base imponible</span><b>₡${baseImponible.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>
+      <div class="of-totales-row"><span>IVA (13%, incluido)</span><b>₡${iva.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>
       <div class="of-totales-row of-total"><span>Total</span><b>₡${total.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>
     `;
   }
@@ -2949,8 +2969,8 @@
               <option value="">— Escribir manualmente —</option>
               ${inventario.map(p=>{
                 const detalle = [p.tipo, p.capacidad].filter(Boolean).join(' ');
-                const detalleTxt = detalle || 'sin capacidad registrada — edítala en Inventario';
-                return `<option value="${p.id}" ${it.productoId===p.id?'selected':''}>${esc(p.nombre)} — ${esc(detalleTxt)}${p.precioUnitario ? ' · ₡'+parseFloat(p.precioUnitario).toLocaleString('es-CR',{maximumFractionDigits:0}) : ''}${estadoStock(p)!=='ok' ? ' · '+(estadoStock(p)==='agotado'?'AGOTADO':'stock bajo') : ''}</option>`;
+                const detalleTxt = detalle || (p.categoria==='servicio' ? '' : 'sin capacidad registrada — edítala en Inventario');
+                return `<option value="${p.id}" ${it.productoId===p.id?'selected':''}>${esc(p.nombre)}${detalleTxt ? ' — '+esc(detalleTxt) : ''}${p.precioUnitario ? ' · ₡'+parseFloat(p.precioUnitario).toLocaleString('es-CR',{maximumFractionDigits:0}) : ''}${estadoStock(p)!=='ok' ? ' · '+(estadoStock(p)==='agotado'?'AGOTADO':'stock bajo') : ''}</option>`;
               }).join('')}
             </select>
           </div>
@@ -4242,6 +4262,7 @@
   const CATEGORIAS_INVENTARIO = [
     { id:'extintor', label:'Extintores' },
     { id:'repuesto', label:'Repuestos' },
+    { id:'servicio', label:'Servicios' },
   ];
 
   function emptyProducto(){
@@ -4253,6 +4274,7 @@
   let inventarioQuery = '';
 
   function estadoStock(p){
+    if(p.categoria === 'servicio') return 'ok'; // los servicios no se cuentan por unidades, no aplica "stock bajo"
     const cant = parseFloat(p.cantidad) || 0;
     const min = parseFloat(p.cantidadMinima) || 0;
     if(cant <= 0) return 'agotado';
@@ -4289,15 +4311,18 @@
       showToast('El nombre del producto es obligatorio.');
       return;
     }
+    const categoria = document.getElementById('pr-categoria').value;
+    const esServicio = categoria === 'servicio';
+    const precioEl = esServicio ? document.getElementById('pr-precio-servicio') : document.getElementById('pr-precio');
     const nuevo = {
       id: editingProductoId || uid(),
       nombre,
-      categoria: document.getElementById('pr-categoria').value,
+      categoria,
       tipo: document.getElementById('pr-tipo').value.trim(),
-      capacidad: document.getElementById('pr-capacidad').value.trim(),
-      cantidad: document.getElementById('pr-cantidad').value.trim() || '0',
-      cantidadMinima: document.getElementById('pr-cantidad-minima').value.trim() || '0',
-      precioUnitario: document.getElementById('pr-precio').value.trim(),
+      capacidad: esServicio ? '' : document.getElementById('pr-capacidad').value.trim(),
+      cantidad: esServicio ? '0' : (document.getElementById('pr-cantidad').value.trim() || '0'),
+      cantidadMinima: esServicio ? '0' : (document.getElementById('pr-cantidad-minima').value.trim() || '0'),
+      precioUnitario: precioEl ? precioEl.value.trim() : '',
       notas: document.getElementById('pr-notas').value.trim(),
       movimientos: productoForm.movimientos || [],
     };
@@ -4354,13 +4379,16 @@
                 ${CATEGORIAS_INVENTARIO.map(c=>`<option value="${c.id}" ${c.id===productoForm.categoria?'selected':''}>${c.label}</option>`).join('')}
               </select>
             </div>
-            <div><label>Tipo / capacidad</label><input id="pr-tipo" value="${esc(productoForm.tipo)}" placeholder="ej. PQS, CO2..."/></div>
+            <div><label>Tipo</label><input id="pr-tipo" value="${esc(productoForm.tipo)}" placeholder="${productoForm.categoria==='servicio'?'ej. Mantenimiento, Instalación...':'ej. PQS, CO2...'}"/></div>
           </div>
-          <div class="form-row">
+          <div id="pr-campos-capacidad" class="form-row" style="${productoForm.categoria==='servicio'?'display:none;':''}">
             <div><label>Capacidad</label><input id="pr-capacidad" value="${esc(productoForm.capacidad)}" placeholder="ej. 10 lb"/></div>
             <div><label>Precio unitario</label><input type="number" id="pr-precio" min="0" step="0.01" value="${esc(productoForm.precioUnitario)}" placeholder="0.00"/></div>
           </div>
-          <div class="form-row">
+          <div id="pr-precio-solo" class="form-row full" style="${productoForm.categoria==='servicio'?'':'display:none;'}">
+            <div><label>Precio del servicio</label><input type="number" id="pr-precio-servicio" min="0" step="0.01" value="${esc(productoForm.precioUnitario)}" placeholder="0.00"/></div>
+          </div>
+          <div id="pr-campos-cantidad" class="form-row" style="${productoForm.categoria==='servicio'?'display:none;':''}">
             <div><label>Cantidad en stock</label><input type="number" id="pr-cantidad" min="0" step="1" value="${esc(productoForm.cantidad)}"/></div>
             <div><label>Cantidad mínima (alerta)</label><input type="number" id="pr-cantidad-minima" min="0" step="1" value="${esc(productoForm.cantidadMinima)}"/></div>
           </div>
@@ -4379,6 +4407,20 @@
     document.getElementById('producto-modal-close').addEventListener('click', closeProductoModal);
     document.getElementById('producto-modal-cancel').addEventListener('click', closeProductoModal);
     document.getElementById('producto-modal-save').addEventListener('click', saveProducto);
+    const catEl = document.getElementById('pr-categoria');
+    if(catEl) catEl.addEventListener('change', ()=>{
+      const esServicio = catEl.value === 'servicio';
+      const camposCapacidad = document.getElementById('pr-campos-capacidad');
+      const precioSolo = document.getElementById('pr-precio-solo');
+      const camposCantidad = document.getElementById('pr-campos-cantidad');
+      // Traspasa lo que ya se había escrito en el precio al campo que quede visible, para no perderlo.
+      const precioActual = document.getElementById('pr-precio').value || document.getElementById('pr-precio-servicio').value;
+      document.getElementById('pr-precio').value = precioActual;
+      document.getElementById('pr-precio-servicio').value = precioActual;
+      if(camposCapacidad) camposCapacidad.style.display = esServicio ? 'none' : '';
+      if(precioSolo) precioSolo.style.display = esServicio ? '' : 'none';
+      if(camposCantidad) camposCantidad.style.display = esServicio ? 'none' : '';
+    });
   }
 
   function abrirMovimientoInventarioModal(productoId){
@@ -4441,6 +4483,7 @@
   }
 
   function productoCardHTML(p){
+    const esServicio = p.categoria === 'servicio';
     const estado = estadoStock(p);
     const estadoCls = estado === 'agotado' ? 'venc-vencido' : (estado === 'bajo' ? 'venc-proximo' : '');
     const estadoLabel = estado === 'agotado' ? 'Agotado' : (estado === 'bajo' ? 'Stock bajo' : 'Stock ok');
@@ -4454,18 +4497,21 @@
             <div class="sub-line">${p.tipo ? esc(p.tipo)+' · ' : ''}${p.capacidad ? esc(p.capacidad)+' · ' : ''}${CATEGORIAS_INVENTARIO.find(c=>c.id===p.categoria)?.label || ''}</div>
           </div>
           <div class="summary-side">
-            <span class="badge" style="background:${estado==='agotado'?'var(--red)':(estado==='bajo'?'var(--amber)':'var(--green)')};">${estadoLabel}</span>
-            <span class="summary-price ${estadoCls}">${p.cantidad || 0} en stock</span>
+            ${esServicio
+              ? (p.precioUnitario ? `<span class="summary-price">₡${parseFloat(p.precioUnitario).toLocaleString('es-CR',{maximumFractionDigits:0})}</span>` : '')
+              : `<span class="badge" style="background:${estado==='agotado'?'var(--red)':(estado==='bajo'?'var(--amber)':'var(--green)')};">${estadoLabel}</span>
+                 <span class="summary-price ${estadoCls}">${p.cantidad || 0} en stock</span>`
+            }
           </div>
         </summary>
         <div class="card-inner-body">
           <div class="card-body">
-            <div class="meta-row"><span class="k">Cantidad mínima</span><span class="v">${p.cantidadMinima || 0}</span></div>
-            ${p.precioUnitario ? `<div class="meta-row"><span class="k">Precio unitario</span><span class="v">₡${parseFloat(p.precioUnitario).toLocaleString('es-CR',{maximumFractionDigits:0})}</span></div>` : ''}
+            ${esServicio ? '' : `<div class="meta-row"><span class="k">Cantidad mínima</span><span class="v">${p.cantidadMinima || 0}</span></div>`}
+            ${p.precioUnitario ? `<div class="meta-row"><span class="k">Precio ${esServicio?'del servicio':'unitario'}</span><span class="v">₡${parseFloat(p.precioUnitario).toLocaleString('es-CR',{maximumFractionDigits:0})}</span></div>` : ''}
             ${p.notas ? `<div class="meta-row"><span class="k">Notas</span><span class="v">${esc(p.notas)}</span></div>` : ''}
           </div>
           <div class="card-actions">
-            <button data-action="movimiento-producto" data-id="${p.id}">± Stock</button>
+            ${esServicio ? '' : `<button data-action="movimiento-producto" data-id="${p.id}">± Stock</button>`}
             <button data-action="editar-producto" data-id="${p.id}">Editar</button>
             <button class="danger" data-action="eliminar-producto" data-id="${p.id}">Eliminar</button>
           </div>
@@ -4502,6 +4548,7 @@
             <button class="chip ${inventarioFiltro==='todos'?'active':''}" data-inventario-filtro="todos">Todos</button>
             <button class="chip ${inventarioFiltro==='extintor'?'active':''}" data-inventario-filtro="extintor">Extintores</button>
             <button class="chip ${inventarioFiltro==='repuesto'?'active':''}" data-inventario-filtro="repuesto">Repuestos</button>
+            <button class="chip ${inventarioFiltro==='servicio'?'active':''}" data-inventario-filtro="servicio">Servicios</button>
             <button class="chip ${inventarioFiltro==='bajo'?'active':''}" data-inventario-filtro="bajo">Stock bajo</button>
           </div>
           <input class="search" id="inventario-search-input" placeholder="Buscar producto..." value="${esc(inventarioQuery)}" style="flex:1;min-width:180px;"/>
