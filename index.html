@@ -1206,8 +1206,10 @@
     .mem-party .row{ margin-bottom:6px; font-size:18px; }
     .mem-party .row b{ font-weight:600; }
     .mem-party .mem-field{ display:block; margin-bottom:12px; }
-    .mem-party .mem-field .fl{ display:block; min-width:0; margin-bottom:4px; font-size:14.5px; color:#6B7280; }
-    .mem-party .mem-field .mem-blank{ display:block; width:100%; min-width:0; }
+    .mem-party .mem-field .fl{ display:block; min-width:0; margin-bottom:5px; font-size:14.5px; color:#6B7280; }
+    .mem-party .mem-field .mem-blank{ min-width:36px; }
+    .mem-party .mem-field .mem-blank-lg{ display:block; width:100%; min-width:0; }
+    .mem-blank-year{ min-width:56px; }
     .mem-no-break{ break-inside:avoid; page-break-inside:avoid; }
     .mem-section-title{ font-size:18.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.04em; color:#1E2F4E; margin:20px 0 9px; border-bottom:1px solid #E5E7EB; padding-bottom:4px; }
     .mem-clause{ margin:0 0 11px; text-align:justify; }
@@ -1413,7 +1415,7 @@
         const p = iso.split('-');
         if(p.length===3) return `<span class="mem-value">${esc(p[2])}</span> / <span class="mem-value">${esc(p[1])}</span> / <span class="mem-value">${esc(p[0])}</span>`;
       }
-      return `<span class="mem-blank">&nbsp;</span> / <span class="mem-blank">&nbsp;</span> / <span class="mem-blank mem-blank-lg">&nbsp;</span>`;
+      return `<span class="mem-blank">&nbsp;</span> / <span class="mem-blank">&nbsp;</span> / <span class="mem-blank mem-blank-year">&nbsp;</span>`;
     };
     const duracionTexto = (()=>{
       if(!c.fechaInicio || !c.fechaRenovacion) return null;
