@@ -1028,6 +1028,192 @@
   .contact-chevron-col{order:2;}
 }
 
+
+/* =========================================================
+   V6 — Rediseño integral "Moderno / SaaS"
+   Solo retoca color, tipografía, radios, sombras e interacción.
+   No cambia grillas, anchos, breakpoints ni estructura responsive
+   para no interferir con las reglas de @media ya existentes.
+   ========================================================= */
+
+:root{
+  /* Paleta refinada — navy más profundo, grises fríos, rojo de marca intacto */
+  --ink:#111827;
+  --ink-soft:#5B6472;
+  --paper:#F4F6FA;
+  --tag:#EDF1F7;
+  --red:#DC2626;
+  --red-dark:#B91C1C;
+  --brass:#5E6B84;
+  --green:#15803D;
+  --amber:#B45309;
+  --line:#E4E8EF;
+  --primary:#152C52;
+  --primary-2:#1F4C86;
+  --primary-soft:#E9EFF9;
+  --sidebar-bg:#0B1220;
+  --sidebar-bg-2:#101A2C;
+  --sidebar-ink:#A9B4C6;
+  --sidebar-ink-dim:#66728A;
+  --sidebar-active:#17335E;
+
+  /* Escala de radios y sombras unificada */
+  --radius-xs:8px;
+  --radius-sm:10px;
+  --radius:14px;
+  --radius-lg:20px;
+  --shadow-sm:0 1px 2px rgba(17,24,39,.04), 0 1px 3px rgba(17,24,39,.06);
+  --shadow-md:0 6px 20px rgba(17,24,39,.08), 0 2px 6px rgba(17,24,39,.04);
+  --shadow-lg:0 24px 60px rgba(17,24,39,.18), 0 6px 16px rgba(17,24,39,.06);
+  --mono: ui-monospace,'SF Mono','Cascadia Mono','Roboto Mono',monospace;
+  --focus-ring: rgba(21,44,82,.16);
+}
+
+#app-root{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+
+/* ---- Quitar el tracking en mayúsculas heredado (deja el texto ya bien
+       capitalizado que produce la app) en labels, botones, badges y
+       títulos de sección; se conserva solo en el logotipo de marca
+       y en los encabezados reales de columna de la lista de contactos ---- */
+.stat small,
+.user-row-actions button,
+.chip,
+.btn-primary,
+.card .badge,
+.pay-badge,
+.card-actions button,
+.meta-row .k,
+.modal-head h2,
+label,
+.service-group-title,
+.view-toggle button,
+.kpi-label,
+.dash-panel h3,
+.month-bar-label,
+.cliente-stat small,
+.cliente-kpi small,
+.linea-head b,
+.caja-card h3,
+.caja-open-form label,
+.caja-kpi small,
+.mov-form label,
+.papelera-pendiente,
+.caja-subtitle,
+.metodo-label,
+.m-metodo-tag,
+.pipeline-col-head,
+.etapa-badge,
+.etiqueta-badge,
+.quick-actions .quick-title,
+.crm-section-title h3,
+.crm-kpi .label,
+.crm-pill,
+.crm-mini span,
+.main-area .stat small,
+.contact-metrics .cm span{
+  text-transform:none;
+  letter-spacing:normal;
+}
+.brand span{letter-spacing:.06em;}
+
+/* ---- Tipografía: tracking negativo sutil en títulos grandes ---- */
+.dash-panel h3,.caja-card h3,.modal-head h2,.crm-panel h4,
+.cliente-detail-head h2,.crm-section-title h3{letter-spacing:-.01em;}
+.kpi-value,.crm-kpi .value,.stat b,.main-area .stat b{letter-spacing:-.02em;}
+
+/* ---- Cifras monetarias/horas: monoespaciada más limpia que Courier ---- */
+.bar-value,.month-bar-value,.vence-item .v-date,.summary-price,
+.mov-row .m-hora,.mov-row .m-monto,.metodo-monto,.oc-monto,
+.crm-list-value,.contact-balance{font-family:var(--mono);}
+
+/* ---- Botones y controles ---- */
+.btn-primary,.btn-ghost{
+  border-radius:var(--radius-sm);
+  font-weight:600;
+  letter-spacing:0;
+}
+.btn-primary{
+  box-shadow:0 1px 2px rgba(21,44,82,.18);
+}
+.btn-primary:hover{background:var(--primary-2);box-shadow:0 4px 12px rgba(21,44,82,.28);}
+.btn-ghost:hover{background:var(--tag);border-color:#CBD3DF;}
+.user-row-actions button{border-radius:var(--radius-xs);font-weight:600;}
+.user-row-actions button:hover{background:var(--tag);}
+.chip{font-weight:600;}
+.chip.active{box-shadow:0 2px 6px rgba(21,44,82,.22);}
+.view-toggle{border-radius:var(--radius-xs);overflow:hidden;}
+.view-toggle button{font-weight:600;}
+.card-actions button:hover{background:var(--tag);}
+.back-link{border-radius:var(--radius-xs);font-weight:600;}
+.back-link:hover{background:var(--tag);}
+
+/* ---- Formularios ---- */
+input,select,textarea{
+  border-radius:var(--radius-xs);
+  border-color:var(--line);
+}
+input:focus,select:focus,textarea:focus,.search:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px var(--focus-ring);
+}
+label{color:var(--ink-soft);font-weight:600;}
+.field-hint{color:var(--ink-soft);}
+.servicio-precio-input{border-radius:6px;}
+.caja-open-form input,.mov-form input,.mov-form select{border-radius:var(--radius-xs);}
+
+/* ---- Tarjetas, paneles y contenedores: radio y sombra consistentes ---- */
+.pipeline-col,.oportunidad-card,.metodo-item,.papelera-pendiente,
+.linea-extintor,.btn-add-linea,.detalle-vs-total,.cierre-diff,.toast,
+.m-metodo-tag{border-radius:var(--radius-sm);}
+.oportunidad-card{box-shadow:var(--shadow-sm);}
+.oportunidad-card:hover{box-shadow:var(--shadow-md);border-color:#D6DCE6;}
+.crm-kpi,.crm-panel,.crm-action,.crm-mini,.pipeline-col{border-color:#E4E8EF;}
+.toast{box-shadow:var(--shadow-lg);}
+
+/* ---- Badges y píldoras de estado: mismo tratamiento tipográfico ---- */
+.badge,.etapa-badge,.etiqueta-badge,.pay-badge,.crm-pill{font-weight:700;}
+.b-recibido{background:var(--amber);}
+.b-proceso{background:var(--primary);}
+
+/* ---- KPIs ---- */
+.kpi-card{transition:box-shadow .18s,transform .18s,border-color .18s;}
+.kpi-card:hover{box-shadow:var(--shadow-md);border-color:#D6DCE6;transform:translateY(-1px);}
+.kpi-card.kpi-critical{
+  box-shadow:0 0 0 1px rgba(220,38,38,.14), var(--shadow-md);
+  border-color:transparent;
+}
+.crm-kpi.critical{box-shadow:0 0 0 1px rgba(220,38,38,.14), var(--shadow-sm);}
+
+/* ---- Sidebar: acabado más pulido ---- */
+.sidebar{background:linear-gradient(180deg,var(--sidebar-bg) 0%,var(--sidebar-bg-2) 100%);}
+.sidebar-nav button{border-radius:var(--radius-xs);}
+.sidebar-nav button.active{box-shadow:inset 3px 0 0 var(--red);}
+.sidebar-foot-btn{border-radius:var(--radius-xs);}
+
+/* ---- Filas de listas/tablas: hover consistente ---- */
+.mov-row,.crm-list-row,.recordatorio-row{transition:background .12s;}
+.mov-row:hover,.crm-list-row:hover{background:#FAFBFD;}
+.caja-history-item:hover{background:#FAFBFD;}
+
+/* ---- Modales ---- */
+.modal{border-radius:var(--radius-lg);}
+.modal-head{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-2) 100%);}
+.overlay{background:rgba(11,18,32,.55);backdrop-filter:blur(2px);}
+
+/* ---- Barras de progreso / gráficos ---- */
+.bar-fill,.month-bar,.crm-progress i{transition:width .3s,height .3s;}
+
+/* ---- Scrollbars finos (mejora cosmética, degrada con gracia) ---- */
+.sidebar-nav::-webkit-scrollbar,.modal-body::-webkit-scrollbar,
+.vence-list::-webkit-scrollbar,.pipeline-col-body::-webkit-scrollbar{width:7px;height:7px;}
+.sidebar-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:99px;}
+.modal-body::-webkit-scrollbar-thumb,.vence-list::-webkit-scrollbar-thumb{
+  background:#D6DCE6;border-radius:99px;
+}
+
+/* ---- Estados vacíos ---- */
+.empty,.dash-empty,.caja-empty,.pipeline-empty{color:var(--ink-soft);}
+
 </style>
 
 
