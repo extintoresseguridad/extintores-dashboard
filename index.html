@@ -1214,6 +1214,90 @@ label{color:var(--ink-soft);font-weight:600;}
 /* ---- Estados vacíos ---- */
 .empty,.dash-empty,.caja-empty,.pipeline-empty{color:var(--ink-soft);}
 
+
+/* =========================================================
+   V7 — Segunda pasada, cambio visual mucho más notorio
+   Sigue siendo solo CSS (cero riesgo para JS/Firebase), pero
+   con más contraste real a simple vista frente a la versión anterior.
+   ========================================================= */
+
+/* Fondo general con leve profundidad, no plano */
+body{
+  background:
+    radial-gradient(1100px 520px at 12% -10%, #E9F0FB 0%, transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, #FDECEC 0%, transparent 55%),
+    var(--paper);
+}
+
+/* Acento de marca: línea degradada bajo la barra superior */
+.main-area .topbar,.topbar{position:relative;}
+.main-area .topbar::after,.topbar::after{
+  content:'';position:absolute;left:0;right:0;bottom:-1px;height:3px;
+  background:linear-gradient(90deg,var(--primary) 0%,var(--primary-2) 45%,var(--red) 100%);
+}
+
+/* Botones primarios: forma de píldora, más presencia */
+.btn-primary{
+  border-radius:999px;
+  padding:10px 20px;
+  background:linear-gradient(135deg,var(--primary) 0%,var(--primary-2) 100%);
+}
+.btn-primary:hover{
+  background:linear-gradient(135deg,var(--primary-2) 0%,var(--primary) 100%);
+  transform:translateY(-1px);
+}
+.chip.active{border-radius:999px;}
+
+/* Sidebar: estado activo tipo "píldora" con degradado, en vez de solo la
+   barra roja delgada; separación entre ítems más generosa */
+.sidebar-nav{gap:4px;}
+.sidebar-nav button{padding:11px 13px;}
+.sidebar-nav button.active{
+  background:linear-gradient(90deg,var(--sidebar-active) 0%,rgba(23,51,94,.4) 100%);
+  box-shadow:inset 3px 0 0 var(--red);
+}
+.sidebar-nav .snav-ico{
+  width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.06);
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.sidebar-nav button.active .snav-ico{background:rgba(255,255,255,.16);}
+.sidebar-brand{background:rgba(255,255,255,.03);}
+
+/* KPIs: fondo de color suave según categoría, no solo una barrita lateral */
+.kpi-card{border:1px solid transparent;background:#fff;}
+.kpi-card:before{display:none;}
+.kpi-card.kpi-red{background:linear-gradient(180deg,#FDF0F0 0%,#fff 65%);border-color:#F6D8D8;}
+.kpi-card.kpi-green{background:linear-gradient(180deg,#EFF9F2 0%,#fff 65%);border-color:#D3EDDA;}
+.kpi-card.kpi-amber{background:linear-gradient(180deg,#FDF4E8 0%,#fff 65%);border-color:#F5E1BE;}
+.kpi-card.kpi-critical{background:linear-gradient(180deg,#FCE9E9 0%,#fff 60%);}
+.crm-kpi{background:#fff;border-width:1px;}
+.crm-kpi:nth-child(6n+1) .icon,.crm-kpi:nth-child(6n+2) .icon,.crm-kpi:nth-child(6n+3) .icon,
+.crm-kpi:nth-child(6n+4) .icon,.crm-kpi:nth-child(6n+5) .icon,.crm-kpi:nth-child(6n+6) .icon{
+  display:inline-flex;width:34px;height:34px;border-radius:10px;align-items:center;justify-content:center;
+  background:var(--primary-soft);
+}
+
+/* Tarjetas de orden: franja de color a la izquierda según su estado,
+   visible de un vistazo sin necesidad de abrir la tarjeta */
+details.card-collapse{border-left-width:4px;border-left-style:solid;border-left-color:var(--line);}
+details.card-collapse:has(.b-recibido){border-left-color:var(--amber);}
+details.card-collapse:has(.b-proceso){border-left-color:var(--primary);}
+details.card-collapse:has(.b-listo){border-left-color:var(--green);}
+details.card-collapse:has(.b-entregado){border-left-color:#94A3B8;}
+
+/* Radios más generosos en el resto de contenedores para un aire más suave */
+details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
+.cliente-detail-head,.crm-panel,.crm-kpi,.contact-list,.pipeline-col{border-radius:16px;}
+.modal{border-radius:22px;}
+
+/* Encabezado del "hero" del panel de control, más presencia de marca */
+.crm-hero{
+  background:linear-gradient(135deg,var(--primary) 0%,var(--primary-2) 55%,#2E6BB8 100%);
+  border-color:transparent;
+}
+.crm-hero h2,.crm-hero p{color:#fff;}
+.crm-hero p{color:rgba(255,255,255,.78);}
+
 </style>
 
 
