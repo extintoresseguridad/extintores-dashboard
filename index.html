@@ -5,25 +5,6 @@
 <div id="app-root"></div>
 <style>
   @font-face{ font-family:'sysfallback'; }
-  :root{
-    --ink:#171B22;
-    --paper:#EEF0F4;
-    --tag:#EEF1F6;
-    --red:#DC2626;
-    --red-dark:#B91C1C;
-    --brass:#5B6B82;
-    --green:#16A34A;
-    --amber:#D97706;
-    --line:#E1E4EA;
-    --primary:#1E2F4E;
-    --primary-2:#2F4874;
-    --primary-soft:#E8ECF3;
-    --sidebar-bg:#11161F;
-    --sidebar-bg-2:#161D29;
-    --sidebar-ink:#AEB8C6;
-    --sidebar-ink-dim:#6E7A8C;
-    --sidebar-active:#1E2F4E;
-  }
   *{box-sizing:border-box;}
   #app-root{
     font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
@@ -545,15 +526,9 @@
 /* =========================================================
      V2 — Capa visual moderna
      Mantiene la paleta original y mejora UX/UI.
+     (Sus variables --radius/--shadow-* quedan definidas en un
+     solo lugar: el bloque :root único, más abajo.)
      ========================================================= */
-  :root{
-    --radius:10px;
-    --radius-sm:7px;
-    --shadow-sm:0 2px 8px rgba(28,31,30,.06);
-    --shadow-md:0 8px 24px rgba(28,31,30,.10);
-    --shadow-lg:0 18px 50px rgba(28,31,30,.18);
-  }
-
   html{scroll-behavior:smooth;}
   body{margin:0;background:var(--paper);}
   @keyframes viewFadeIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:translateY(0);} }
@@ -588,7 +563,6 @@
   .user-box .btn-ghost{
     border-radius:8px;padding:8px 11px;
   }
-  .user-box .btn-ghost:hover{background:var(--paper);}
 
   .dash-toolbar{
     position:sticky;top:76px;z-index:20;
@@ -1037,7 +1011,9 @@
    ========================================================= */
 
 :root{
-  /* Paleta refinada — navy más profundo, grises fríos, rojo de marca intacto */
+  /* Único bloque :root del sistema (antes había 3 repartidos en el archivo,
+     cada uno redefiniendo variables del anterior; se consolidaron aquí sin
+     cambiar ningún valor final). Paleta navy profundo, grises fríos, rojo de marca. */
   --ink:#111827;
   --ink-soft:#5B6472;
   --paper:#F4F6FA;
@@ -1172,8 +1148,6 @@ label{color:var(--ink-soft);font-weight:600;}
 
 /* ---- Badges y píldoras de estado: mismo tratamiento tipográfico ---- */
 .badge,.etapa-badge,.etiqueta-badge,.pay-badge,.crm-pill{font-weight:700;}
-.b-recibido{background:var(--amber);}
-.b-proceso{background:var(--primary);}
 
 /* ---- KPIs ---- */
 .kpi-card{transition:box-shadow .18s,transform .18s,border-color .18s;}
@@ -2488,6 +2462,52 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     } else {
       render();
     }
+    iniciarRefrescoAutomatico();
+  }
+
+  // ---------- Refresco automático desde la nube ----------
+  //
+  // Antes, si dos personas tenían el sistema abierto a la vez, la única forma
+  // de ver lo que la otra había agregado (una venta, una tarjeta movida en el
+  // embudo) era recargar la página entera. Ahora, mientras nadie tiene un
+  // formulario/modal abierto, se revisa la nube cada cierto tiempo y, si algo
+  // cambió, se refresca la pantalla sola. No se usa mientras hay un modal
+  // abierto, para no interrumpir a alguien a mitad de un registro.
+  let refrescoAutomaticoActivo = false;
+
+  async function refrescarDesdeNube(){
+    if(document.querySelector('.overlay')) return; // no interrumpir una edición en curso
+    if(document.visibilityState !== 'visible') return;
+    let remotoJson = null;
+    try{ remotoJson = await firestoreGet(); }
+    catch(e){ return; }
+    if(!remotoJson) return;
+    let remoto = null;
+    try{ remoto = JSON.parse(remotoJson); }catch(e){ return; }
+    if(!remoto || typeof remoto !== 'object' || Array.isArray(remoto)) return;
+    const actual = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario });
+    if(remotoJson === actual) return; // nada cambió desde la última vez
+
+    records = remoto.records || [];
+    cajas = remoto.cajas || [];
+    papelera = remoto.papelera || [];
+    ventas = remoto.ventas || [];
+    oportunidades = remoto.oportunidades || [];
+    recordatorios = remoto.recordatorios || [];
+    clientesPerfil = remoto.clientesPerfil || [];
+    contratos = remoto.contratos || [];
+    inventario = remoto.inventario || [];
+    firebaseOK = true;
+    render();
+  }
+
+  function iniciarRefrescoAutomatico(){
+    if(refrescoAutomaticoActivo) return;
+    refrescoAutomaticoActivo = true;
+    setInterval(refrescarDesdeNube, 45000);
+    document.addEventListener('visibilitychange', () => {
+      if(document.visibilityState === 'visible') refrescarDesdeNube();
+    });
   }
 
   function limpiarPapeleraVieja(){
@@ -2533,7 +2553,68 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     });
   }
 
+  // ---------- Fusión con la nube (evita que dos dispositivos guardando casi
+  // al mismo tiempo se borren datos el uno al otro) ----------
+  //
+  // Antes, persist() escribía TODO el estado en memoria de esta pestaña,
+  // sobrescribiendo el documento completo en Firestore. Si otra persona había
+  // guardado algo nuevo (una venta, una oportunidad movida de etapa) después
+  // de que esta pestaña cargó sus datos, ese guardado lo borraba sin darse
+  // cuenta. Ahora, justo antes de guardar, traemos lo último de la nube y
+  // agregamos a nuestra copia local cualquier registro que exista allá pero
+  // no aquí — así nunca se pierde algo que alguien más acaba de agregar.
+  // La papelera actúa como lista de "esto se borró a propósito", para no
+  // resucitar algo que se eliminó intencionalmente en otro dispositivo.
+
+  function idsEnPapeleraPorTipo(tipo){
+    return new Set(papelera.filter(p => p.tipo === tipo && p.data && p.data.id).map(p => p.data.id));
+  }
+
+  function mergeArrayPorId(local, remoto, idsExcluidos){
+    if(!Array.isArray(remoto) || remoto.length === 0) return local;
+    const localIds = new Set(local.map(x => x && x.id));
+    const nuevosDeLaNube = remoto.filter(r => r && r.id && !localIds.has(r.id) && !idsExcluidos.has(r.id));
+    return nuevosDeLaNube.length ? [...nuevosDeLaNube, ...local] : local;
+  }
+
+  function mergeArrayConSubcoleccion(local, remoto, subcampo, idsExcluidosTop, idsExcluidosSub){
+    if(!Array.isArray(remoto) || remoto.length === 0) return local;
+    const remotoPorId = new Map(remoto.filter(x => x && x.id).map(x => [x.id, x]));
+    const localIds = new Set(local.map(x => x && x.id));
+    const fusionados = local.map(item => {
+      const r = remotoPorId.get(item.id);
+      if(!r) return item;
+      const subLocal = item[subcampo] || [];
+      const subLocalIds = new Set(subLocal.map(s => s && s.id));
+      const subNuevos = (r[subcampo] || []).filter(s => s && s.id && !subLocalIds.has(s.id) && !idsExcluidosSub.has(s.id));
+      return subNuevos.length ? { ...item, [subcampo]: [...subLocal, ...subNuevos] } : item;
+    });
+    const nuevosDeLaNube = remoto.filter(r => r && r.id && !localIds.has(r.id) && !idsExcluidosTop.has(r.id));
+    return nuevosDeLaNube.length ? [...nuevosDeLaNube, ...fusionados] : fusionados;
+  }
+
+  async function fusionarConNube(){
+    let remotoJson = null;
+    try{ remotoJson = await firestoreGet(); }
+    catch(e){ return; } // si no se pudo leer, seguimos con lo local — mejor eso que bloquear el guardado
+    if(!remotoJson) return;
+    let remoto = null;
+    try{ remoto = JSON.parse(remotoJson); }catch(e){ return; }
+    if(!remoto || typeof remoto !== 'object' || Array.isArray(remoto)) return;
+
+    records = mergeArrayPorId(records, remoto.records, idsEnPapeleraPorTipo('extintor'));
+    ventas = mergeArrayPorId(ventas, remoto.ventas, idsEnPapeleraPorTipo('venta'));
+    oportunidades = mergeArrayPorId(oportunidades, remoto.oportunidades, idsEnPapeleraPorTipo('oportunidad'));
+    recordatorios = mergeArrayPorId(recordatorios, remoto.recordatorios, idsEnPapeleraPorTipo('recordatorio'));
+    clientesPerfil = mergeArrayPorId(clientesPerfil, remoto.clientesPerfil, idsEnPapeleraPorTipo('perfil_cliente'));
+    contratos = mergeArrayPorId(contratos, remoto.contratos, idsEnPapeleraPorTipo('contrato'));
+    inventario = mergeArrayConSubcoleccion(inventario, remoto.inventario, 'movimientos', idsEnPapeleraPorTipo('producto_inventario'), new Set());
+    cajas = mergeArrayConSubcoleccion(cajas, remoto.cajas, 'movimientos', new Set(), idsEnPapeleraPorTipo('movimiento_caja'));
+    papelera = mergeArrayPorId(papelera, remoto.papelera, new Set());
+  }
+
   async function persist(){
+    await fusionarConNube();
     const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario });
 
     // El "pase" de acceso a Firebase (idToken) solo dura ~1 hora. Si el sistema se queda
@@ -2783,17 +2864,6 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     }
     showToast(editingVentaId ? 'Venta actualizada.' : 'Venta registrada.');
     closeVentaModal();
-    render();
-  }
-
-  async function removeVenta(id){
-    const v = ventas.find(x => x.id === id);
-    if(!v) return;
-    if(!confirm(`¿Eliminar la venta de ${v.cliente || 'este cliente'}? Podrás recuperarla desde la Papelera durante 30 días.`)) return;
-    ventas = ventas.filter(x => x.id !== id);
-    papelera.push({ id: uid(), tipo: 'venta', fechaEliminado: Date.now(), data: v });
-    await persist();
-    showToast('Venta movida a la papelera.');
     render();
   }
 
