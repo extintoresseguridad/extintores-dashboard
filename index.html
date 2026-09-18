@@ -230,6 +230,45 @@
     background:#d8e6dc;color:#264d33;
   }
 
+  /* ---- Pantalla de inicio de sesión / crear cuenta (propia, separada de error-box) ---- */
+  .auth-screen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    background:linear-gradient(160deg,var(--primary) 0%,var(--red-dark) 130%);
+  }
+  .auth-box{
+    max-width:380px;width:100%;text-align:left;background:#fff;
+    border-radius:var(--radius);padding:34px 30px;box-shadow:var(--shadow-lg);
+  }
+  .auth-brand{text-align:center;margin-bottom:22px;}
+  .auth-logo{
+    width:52px;height:52px;border-radius:50%;margin:0 auto 12px;
+    background:linear-gradient(135deg,var(--red) 0%,var(--red-dark) 100%);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;letter-spacing:.5px;
+    box-shadow:var(--shadow-sm);
+  }
+  .auth-brand h1{font-size:18px;font-weight:800;color:var(--ink);margin:0 0 3px;}
+  .auth-brand p{font-size:12px;color:var(--ink-soft,#6B7280);margin:0;}
+  .auth-tabs{
+    display:flex;background:var(--paper);border-radius:var(--radius-sm);padding:4px;margin-bottom:20px;
+  }
+  .auth-tab{
+    flex:1;text-align:center;padding:9px 0;border-radius:var(--radius-xs);
+    font-size:13px;font-weight:700;color:var(--ink-soft,#6B7280);cursor:pointer;border:none;background:none;
+    transition:background .15s,color .15s;
+  }
+  .auth-tab.active{background:#fff;color:var(--primary);box-shadow:var(--shadow-sm);}
+  .auth-error{
+    background:#FBE9E9;color:var(--red-dark);border:1px solid #F3B6B6;border-radius:var(--radius-xs);
+    padding:9px 12px;font-size:12.5px;font-weight:600;margin-bottom:14px;
+  }
+  .auth-password-wrap{position:relative;}
+  .auth-password-wrap input{padding-right:38px;}
+  .auth-toggle-pw{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;font-size:15px;color:var(--ink-soft,#6B7280);
+    padding:6px;line-height:1;
+  }
+
   /* ---- Panel de control (dashboard) ---- */
   .view-toggle{display:flex;gap:0;border:1px solid var(--line);border-radius:var(--radius-xs);overflow:hidden;}
   .view-toggle button{
@@ -2082,6 +2121,23 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     });
   }
 
+  // Elimina el PERFIL del usuario (su documento en users/, con su rol y acceso al sistema).
+  // Importante: esto NO borra la cuenta de acceso (correo/contraseña) de Firebase Authentication —
+  // esa parte vive en un sistema aparte que solo se puede administrar desde la consola de Firebase
+  // (Authentication > Users). Si esa persona vuelve a iniciar sesión después de esto, va a
+  // reaparecer en la lista como "pendiente", igual que un usuario nuevo.
+  async function eliminarUsuarioAdmin(uid, email){
+    if(authUser && uid === authUser.uid){
+      showToast('No podés eliminar tu propia cuenta desde aquí.');
+      return;
+    }
+    if(!confirm(`¿Eliminar el perfil de ${email || 'este usuario'}?\n\nPierde su rol y su acceso a los datos del sistema de inmediato. Si esa persona vuelve a iniciar sesión, va a aparecer de nuevo como "pendiente" — para bloquearle el correo por completo hay que borrar su cuenta desde la consola de Firebase (Authentication > Users).`)) return;
+    await refreshIdTokenIfNeeded();
+    const url = `${FIRESTORE_BASE}/users/${uid}?key=${FIREBASE_API_KEY}`;
+    await fetchConTimeout(url, { method: 'DELETE', headers: authHeaders() });
+    showToast('Perfil de usuario eliminado.');
+  }
+
   function esAdmin(){ return userRole === 'admin'; }
 
   async function soloAdmin(accion){
@@ -2203,19 +2259,29 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
 
   function renderAuth(){
     root.innerHTML = `
-      <div class="error-screen">
-        <div class="error-box" style="max-width:380px;text-align:left;">
-          <h2 style="text-align:center;">${authView==='login' ? 'Iniciar sesión' : 'Crear cuenta'}</h2>
-          <p style="text-align:center;color:#6B7280;margin-top:-6px;">Control de Mantenimiento de Extintores</p>
-          ${authError ? `<p style="color:var(--red);font-weight:600;font-size:12.5px;">${esc(authError)}</p>` : ''}
+      <div class="auth-screen">
+        <div class="auth-box">
+          <div class="auth-brand">
+            <div class="auth-logo">ES</div>
+            <h1>Extintores Seguridad</h1>
+            <p>Control de mantenimiento de extintores</p>
+          </div>
+          <div class="auth-tabs">
+            <button type="button" class="auth-tab ${authView==='login'?'active':''}" id="auth-tab-login">Iniciar sesión</button>
+            <button type="button" class="auth-tab ${authView==='signup'?'active':''}" id="auth-tab-signup">Crear cuenta</button>
+          </div>
+          ${authError ? `<div class="auth-error">${esc(authError)}</div>` : ''}
           <div class="form-row full"><div><label>Correo</label><input type="email" id="auth-email" placeholder="tu@correo.com"/></div></div>
-          <div class="form-row full"><div><label>Contraseña</label><input type="password" id="auth-password" placeholder="••••••••"/></div></div>
+          <div class="form-row full">
+            <div>
+              <label>Contraseña</label>
+              <div class="auth-password-wrap">
+                <input type="password" id="auth-password" placeholder="••••••••"/>
+                <button type="button" class="auth-toggle-pw" id="auth-toggle-pw" aria-label="Mostrar contraseña">👁</button>
+              </div>
+            </div>
+          </div>
           <button class="btn-primary" id="auth-submit" style="width:100%;margin-top:6px;" ${authBusy?'disabled':''}>${authBusy ? 'Un momento...' : (authView==='login' ? 'Entrar' : 'Crear cuenta')}</button>
-          <p style="text-align:center;margin-top:14px;font-size:12.5px;">
-            ${authView==='login'
-              ? `¿No tienes cuenta? <a href="#" id="auth-toggle">Crear una</a>`
-              : `¿Ya tienes cuenta? <a href="#" id="auth-toggle">Iniciar sesión</a>`}
-          </p>
         </div>
       </div>
     `;
@@ -2227,11 +2293,21 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     };
     document.getElementById('auth-submit').addEventListener('click', submit);
     document.getElementById('auth-password').addEventListener('keydown', (e)=>{ if(e.key==='Enter') submit(); });
-    document.getElementById('auth-toggle').addEventListener('click', (e)=>{
-      e.preventDefault();
-      authView = authView === 'login' ? 'signup' : 'login';
-      authError = '';
-      renderAuth();
+    document.getElementById('auth-tab-login').addEventListener('click', ()=>{
+      if(authView === 'login') return;
+      authView = 'login'; authError = ''; renderAuth();
+    });
+    document.getElementById('auth-tab-signup').addEventListener('click', ()=>{
+      if(authView === 'signup') return;
+      authView = 'signup'; authError = ''; renderAuth();
+    });
+    document.getElementById('auth-toggle-pw').addEventListener('click', ()=>{
+      const inp = document.getElementById('auth-password');
+      const btn = document.getElementById('auth-toggle-pw');
+      const oculto = inp.type === 'password';
+      inp.type = oculto ? 'text' : 'password';
+      btn.textContent = oculto ? '🙈' : '👁';
+      btn.setAttribute('aria-label', oculto ? 'Ocultar contraseña' : 'Mostrar contraseña');
     });
   }
 
@@ -2387,6 +2463,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
                 ${u.role !== 'tecnico' ? `<button data-role="tecnico" data-uid="${u.uid}">Hacer técnico</button>` : ''}
                 ${u.role !== 'admin' ? `<button data-role="admin" data-uid="${u.uid}">Hacer admin</button>` : ''}
                 ${u.role !== 'pending' ? `<button class="danger" data-role="pending" data-uid="${u.uid}">Revocar</button>` : ''}
+                ${(!authUser || u.uid !== authUser.uid) ? `<button class="danger" data-eliminar-usuario="${u.uid}" data-email="${esc(u.email)}">Eliminar cuenta</button>` : ''}
               </div>
             </div>
           `).join('')}
@@ -2402,6 +2479,15 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         const role = b.getAttribute('data-role');
         await setUserRole(uid, role);
         if(uid === authUser.uid) userRole = role;
+        usersList = await fetchAllUsers();
+        renderAdminModal();
+      });
+    });
+    overlay.querySelectorAll('[data-eliminar-usuario]').forEach(b=>{
+      b.addEventListener('click', async ()=>{
+        const uid = b.getAttribute('data-eliminar-usuario');
+        const email = b.getAttribute('data-email');
+        await eliminarUsuarioAdmin(uid, email);
         usersList = await fetchAllUsers();
         renderAdminModal();
       });
