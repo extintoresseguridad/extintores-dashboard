@@ -1410,6 +1410,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   let authView = 'login';  // 'login' | 'signup'
   let authError = '';
   let authBusy = false;
+  let ultimaActualizacion = null; // Date del último momento en que los datos en pantalla quedaron al día con la nube (carga inicial, guardado, o refresco automático).
   let usersList = [];      // solo se llena si es admin
   let showAdminPanel = false;
 
@@ -1916,6 +1917,15 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
 
   function uid(){ return 'ext_' + Date.now() + '_' + Math.floor(Math.random()*10000); }
   function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+  function textoUltimaActualizacion(){
+    if(!ultimaActualizacion) return 'aún sin sincronizar';
+    const ahora = new Date();
+    const hora = ultimaActualizacion.toLocaleTimeString('es-CR', {hour:'2-digit', minute:'2-digit'});
+    if(ultimaActualizacion.toDateString() === ahora.toDateString()) return `hoy a las ${hora}`;
+    const fecha = ultimaActualizacion.toLocaleDateString('es-CR', {day:'2-digit', month:'2-digit', year:'numeric'});
+    return `el ${fecha} a las ${hora}`;
+  }
   function addMonths(dateStr, months){
     const d = new Date(dateStr + 'T00:00:00');
     if(isNaN(d)) return '';
@@ -2566,6 +2576,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     migrarServicioCombinado();
     limpiarTarjetasObsoletas();
     limpiarPapeleraVieja();
+    ultimaActualizacion = new Date();
     const nuevasOportunidades = generarOportunidadesRenovacion();
     if(nuevasOportunidades > 0){
       await persist(); // persist() ya llama a render() al final
@@ -2595,8 +2606,9 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     let remoto = null;
     try{ remoto = JSON.parse(remotoJson); }catch(e){ return; }
     if(!remoto || typeof remoto !== 'object' || Array.isArray(remoto)) return;
+    ultimaActualizacion = new Date(); // se confirmó contacto con la nube, aunque no haya cambios
     const actual = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario });
-    if(remotoJson === actual) return; // nada cambió desde la última vez
+    if(remotoJson === actual){ render(); return; } // nada cambió, pero refrescamos la hora mostrada
 
     records = remoto.records || [];
     cajas = remoto.cajas || [];
@@ -2744,6 +2756,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       }, 3);
       firebaseSaved = true;
       firebaseOK = true;
+      ultimaActualizacion = new Date();
     }catch(e){
       firebaseSaved = false;
       // No apagamos firebaseOK aquí: el próximo guardado vuelve a intentar desde cero.
@@ -5839,7 +5852,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           </div>
         </div>
 
-        <div class="crm-section-title"><h3>Indicadores de operación</h3><span>${todayISO()} · actualización en tiempo real de los datos cargados</span></div>
+        <div class="crm-section-title"><h3>Indicadores de operación</h3><span>Actualizado ${textoUltimaActualizacion()}</span></div>
         <div class="crm-kpis-industrial">
           <div class="crm-kpi" data-ind-view="listado"><div class="icon">🧯</div><div class="value">${records.length}</div><div class="label">Activos registrados</div><div class="hint">${taller.length} en taller</div></div>
           <div class="crm-kpi ${vencidos.length?'critical':''}" data-ind-view="listado"><div class="icon">⚠️</div><div class="value">${vencidos.length}</div><div class="label">Recargas vencidas</div><div class="hint">${en30.length} vencen en 30 días</div></div>
