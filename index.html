@@ -1411,6 +1411,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   let authError = '';
   let authBusy = false;
   let ultimaActualizacion = null; // Date del último momento en que los datos en pantalla quedaron al día con la nube (carga inicial, guardado, o refresco automático).
+  let papeleraEliminadosRecientes = new Set(); // ids de la papelera que se acaban de borrar definitivamente en esta sesión, para que fusionarConNube() no los traiga de vuelta.
   let usersList = [];      // solo se llena si es admin
   let showAdminPanel = false;
 
@@ -2637,6 +2638,9 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     const LIMITE_DIAS = 30;
     const ahora = Date.now();
     const antes = papelera.length;
+    papelera.forEach(p => {
+      if((ahora - p.fechaEliminado) >= LIMITE_DIAS * 24 * 60 * 60 * 1000) papeleraEliminadosRecientes.add(p.id);
+    });
     papelera = papelera.filter(p => (ahora - p.fechaEliminado) < LIMITE_DIAS * 24 * 60 * 60 * 1000);
     return papelera.length !== antes; // true si se quitó algo
   }
@@ -2732,7 +2736,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     contratos = mergeArrayPorId(contratos, remoto.contratos, idsEnPapeleraPorTipo('contrato'));
     inventario = mergeArrayConSubcoleccion(inventario, remoto.inventario, 'movimientos', idsEnPapeleraPorTipo('producto_inventario'), new Set());
     cajas = mergeArrayConSubcoleccion(cajas, remoto.cajas, 'movimientos', new Set(), idsEnPapeleraPorTipo('movimiento_caja'));
-    papelera = mergeArrayPorId(papelera, remoto.papelera, new Set());
+    papelera = mergeArrayPorId(papelera, remoto.papelera, papeleraEliminadosRecientes);
   }
 
   async function persist(){
@@ -3818,6 +3822,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
 
   async function eliminarDefinitivo(papeleraId){
     if(!confirm('¿Eliminar definitivamente? Esto ya no se puede deshacer.')) return;
+    papeleraEliminadosRecientes.add(papeleraId);
     papelera = papelera.filter(p => p.id !== papeleraId);
     await persist();
     showToast('Eliminado definitivamente.');
@@ -3827,6 +3832,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   async function vaciarPapelera(){
     if(papelera.length === 0) return;
     if(!confirm(`¿Vaciar toda la papelera? Se eliminarán definitivamente ${papelera.length} elemento(s). Esto no se puede deshacer.`)) return;
+    papelera.forEach(p => papeleraEliminadosRecientes.add(p.id));
     papelera = [];
     await persist();
     showToast('Papelera vaciada.');
