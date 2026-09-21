@@ -1335,6 +1335,66 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
 .crm-hero h2,.crm-hero p{color:#fff;}
 .crm-hero p{color:rgba(255,255,255,.78);}
 
+/* =========================================================
+   V8 — Panel de administración rediseñado
+   ========================================================= */
+.admin-summary{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(85px,1fr));gap:8px;
+  margin-bottom:16px;
+}
+.admin-stat{
+  background:#fff;border:1px solid var(--line);border-radius:10px;
+  padding:10px 8px;text-align:center;
+}
+.admin-stat b{display:block;font-size:19px;font-family:'Inter',-apple-system,sans-serif;font-weight:800;color:var(--ink);}
+.admin-stat small{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#6B7280;font-weight:700;}
+.admin-stat.pend{background:linear-gradient(180deg,#FDF4E8 0%,#fff 70%);border-color:#F5E1BE;}
+.admin-stat.pend b{color:var(--amber);}
+.admin-search{margin-bottom:14px;border-radius:8px;}
+.admin-group-title{
+  font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:#6B7280;font-weight:800;
+  margin:16px 0 8px;
+}
+.admin-group-title:first-of-type{margin-top:0;}
+.admin-user-row{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:8px;
+  box-shadow:var(--shadow-sm);flex-wrap:wrap;
+}
+.admin-user-row.pend{border-color:#F5E1BE;background:linear-gradient(180deg,#FFFBF2 0%,#fff 70%);}
+.admin-avatar{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:13px;color:#fff;background:var(--primary);
+}
+.admin-avatar.pend{background:var(--amber);}
+.admin-avatar.admin-role{background:var(--red);}
+.admin-avatar.tecnico-role{background:var(--brass);}
+.admin-user-info{flex:1;min-width:150px;}
+.admin-user-info .email{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.admin-user-info .meta{font-size:11px;color:#6B7280;margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.admin-role-badge{
+  font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;
+  padding:2px 8px;border-radius:999px;color:#fff;
+}
+.admin-role-badge.admin{background:var(--red);}
+.admin-role-badge.approved{background:var(--green);}
+.admin-role-badge.tecnico{background:var(--brass);}
+.admin-role-badge.pending{background:var(--amber);}
+.admin-user-actions{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;margin-left:auto;}
+.admin-user-actions button{
+  padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:#fff;
+  font-size:10.5px;font-weight:700;cursor:pointer;white-space:nowrap;
+}
+.admin-user-actions button:hover{background:var(--paper);}
+.admin-user-actions button.primary{background:var(--primary);color:#fff;border-color:var(--primary);}
+.admin-user-actions button.danger{color:var(--red);border-color:var(--red);}
+.admin-empty-state{text-align:center;padding:26px 10px;color:#6B7280;font-size:12.5px;}
+@media(max-width:520px){
+  .admin-user-row{flex-wrap:wrap;}
+  .admin-user-actions{width:100%;justify-content:flex-start;margin-left:0;}
+}
+
 </style>
 
 
@@ -1414,6 +1474,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   let papeleraEliminadosRecientes = new Set(); // ids de la papelera que se acaban de borrar definitivamente en esta sesión, para que fusionarConNube() no los traiga de vuelta.
   let usersList = [];      // solo se llena si es admin
   let showAdminPanel = false;
+  let adminSearchQuery = '';
 
   const root = document.getElementById('app-root');
 
@@ -2175,8 +2236,23 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         uid: parts[parts.length-1],
         email: d.fields && d.fields.email ? d.fields.email.stringValue : '',
         role: d.fields && d.fields.role ? d.fields.role.stringValue : 'pending',
+        createdAt: d.fields && d.fields.createdAt ? d.fields.createdAt.stringValue : '',
       };
     });
+  }
+
+  function inicialDe(email){
+    const c = (email||'?').trim().charAt(0);
+    return c ? c.toUpperCase() : '?';
+  }
+  function formatFechaAlta(iso){
+    if(!iso) return 'fecha de alta desconocida';
+    const d = new Date(iso);
+    if(isNaN(d)) return 'fecha de alta desconocida';
+    return 'en el sistema desde el ' + d.toLocaleDateString('es-CR', {day:'2-digit', month:'short', year:'numeric'});
+  }
+  function etiquetaRol(role){
+    return { admin:'Admin', approved:'Aprobado', tecnico:'Técnico', pending:'Pendiente' }[role] || role;
   }
 
   async function doSignUp(email, password){
@@ -2439,6 +2515,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   function openAdminPanel(){
     showAdminPanel = true;
     usersList = [];
+    adminSearchQuery = '';
     renderAdminModal();
     fetchAllUsers().then(list => { usersList = list; renderAdminModal(); });
   }
@@ -2449,41 +2526,86 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     if(overlay) overlay.remove();
   }
 
+  function renderAdminUserRow(u, opts){
+    opts = opts || {};
+    const esSuPropiaCuenta = authUser && u.uid === authUser.uid;
+    const avatarClase = u.role === 'pending' ? 'pend' : (u.role === 'admin' ? 'admin-role' : (u.role === 'tecnico' ? 'tecnico-role' : ''));
+    return `
+      <div class="admin-user-row ${u.role === 'pending' ? 'pend' : ''}">
+        <div class="admin-avatar ${avatarClase}">${esc(inicialDe(u.email))}</div>
+        <div class="admin-user-info">
+          <div class="email">${esc(u.email)}${esSuPropiaCuenta ? ' <span style="font-weight:500;color:#6B7280;">(tú)</span>' : ''}</div>
+          <div class="meta">
+            <span class="admin-role-badge ${u.role}">${esc(etiquetaRol(u.role))}</span>
+            <span>${esc(formatFechaAlta(u.createdAt))}</span>
+          </div>
+        </div>
+        <div class="admin-user-actions">
+          ${u.role !== 'approved' ? `<button data-role="approved" data-uid="${u.uid}" class="${opts.destacarAprobar ? 'primary' : ''}">Aprobar</button>` : ''}
+          ${u.role !== 'tecnico' ? `<button data-role="tecnico" data-uid="${u.uid}">Hacer técnico</button>` : ''}
+          ${u.role !== 'admin' ? `<button data-role="admin" data-uid="${u.uid}">Hacer admin</button>` : ''}
+          ${u.role !== 'pending' ? `<button class="danger" data-role="pending" data-uid="${u.uid}">Revocar</button>` : ''}
+          ${!esSuPropiaCuenta ? `<button class="danger" data-eliminar-usuario="${u.uid}" data-email="${esc(u.email)}">Eliminar cuenta</button>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
   function renderAdminModal(){
     let overlay = document.querySelector('.admin-overlay');
     if(overlay) overlay.remove();
     if(!showAdminPanel) return;
     overlay = document.createElement('div');
     overlay.className = 'overlay admin-overlay';
+
+    const q = adminSearchQuery.trim().toLowerCase();
+    const filtrados = q ? usersList.filter(u => (u.email||'').toLowerCase().includes(q)) : usersList;
+    const pendientes = filtrados.filter(u => u.role === 'pending');
+    const ordenRol = { admin:0, approved:1, tecnico:2 };
+    const equipo = filtrados.filter(u => u.role !== 'pending')
+      .sort((a,b) => (ordenRol[a.role] ?? 9) - (ordenRol[b.role] ?? 9) || (a.email||'').localeCompare(b.email||''));
+
+    const totalAdmin = usersList.filter(u=>u.role==='admin').length;
+    const totalApproved = usersList.filter(u=>u.role==='approved').length;
+    const totalTecnico = usersList.filter(u=>u.role==='tecnico').length;
+    const totalPending = usersList.filter(u=>u.role==='pending').length;
+
     overlay.innerHTML = `
-      <div class="modal" style="max-width:520px;">
+      <div class="modal" style="max-width:560px;">
         <div class="modal-head">
           <h2>Panel de administración</h2>
           <button id="admin-close">×</button>
         </div>
         <div class="modal-body">
-          <p style="font-size:12.5px;color:#6B7280;margin-top:0;">Aprueba nuevas cuentas o cambia el rol de un usuario.</p>
-          ${usersList.length === 0 ? '<p>Cargando usuarios...</p>' : usersList.map(u => `
-            <div class="user-row">
-              <div>
-                <div style="font-weight:600;">${esc(u.email)}</div>
-                <div style="font-size:11px;color:#6B7280;text-transform:uppercase;">${esc(u.role)}</div>
-              </div>
-              <div class="user-row-actions">
-                ${u.role !== 'approved' ? `<button data-role="approved" data-uid="${u.uid}">Aprobar</button>` : ''}
-                ${u.role !== 'tecnico' ? `<button data-role="tecnico" data-uid="${u.uid}">Hacer técnico</button>` : ''}
-                ${u.role !== 'admin' ? `<button data-role="admin" data-uid="${u.uid}">Hacer admin</button>` : ''}
-                ${u.role !== 'pending' ? `<button class="danger" data-role="pending" data-uid="${u.uid}">Revocar</button>` : ''}
-                ${(!authUser || u.uid !== authUser.uid) ? `<button class="danger" data-eliminar-usuario="${u.uid}" data-email="${esc(u.email)}">Eliminar cuenta</button>` : ''}
-              </div>
+          ${usersList.length === 0 ? '<p style="color:#6B7280;font-size:13px;">Cargando usuarios...</p>' : `
+            <div class="admin-summary">
+              <div class="admin-stat"><b>${usersList.length}</b><small>Total</small></div>
+              <div class="admin-stat ${totalPending ? 'pend' : ''}"><b>${totalPending}</b><small>Pendientes</small></div>
+              <div class="admin-stat"><b>${totalAdmin}</b><small>Admins</small></div>
+              <div class="admin-stat"><b>${totalApproved}</b><small>Aprobados</small></div>
+              <div class="admin-stat"><b>${totalTecnico}</b><small>Técnicos</small></div>
             </div>
-          `).join('')}
+            <input type="text" id="admin-search-input" class="admin-search" placeholder="Buscar por correo..." value="${esc(adminSearchQuery)}"/>
+            ${pendientes.length ? `
+              <div class="admin-group-title">⏳ Pendientes de aprobación (${pendientes.length})</div>
+              ${pendientes.map(u => renderAdminUserRow(u, {destacarAprobar:true})).join('')}
+            ` : ''}
+            <div class="admin-group-title">Equipo (${equipo.length})</div>
+            ${equipo.length ? equipo.map(u => renderAdminUserRow(u)).join('') : '<div class="admin-empty-state">No hay nadie más que coincida con la búsqueda.</div>'}
+            ${(!pendientes.length && !equipo.length) ? '<div class="admin-empty-state">No se encontró ningún usuario con ese correo.</div>' : ''}
+          `}
         </div>
       </div>
     `;
     document.body.appendChild(overlay);
     overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeAdminPanel(); });
     document.getElementById('admin-close').addEventListener('click', closeAdminPanel);
+    const searchInput = document.getElementById('admin-search-input');
+    if(searchInput){
+      searchInput.focus();
+      searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+      searchInput.addEventListener('input', (e)=>{ adminSearchQuery = e.target.value; renderAdminModal(); });
+    }
     overlay.querySelectorAll('[data-role]').forEach(b=>{
       b.addEventListener('click', async ()=>{
         const uid = b.getAttribute('data-uid');
