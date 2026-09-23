@@ -1395,6 +1395,35 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   .admin-user-actions{width:100%;justify-content:flex-start;margin-left:0;}
 }
 
+/* Pestañas y secciones nuevas del Panel de control de superadministrador */
+.admin-tabs{
+  display:flex;gap:4px;overflow-x:auto;margin:-4px 0 18px;
+  border-bottom:1px solid var(--line);
+}
+.admin-tab-btn{
+  padding:9px 14px;border:none;background:transparent;font-size:12.5px;font-weight:700;
+  color:#6B7280;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;
+  font-family:inherit;
+}
+.admin-tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
+.admin-tab-btn:hover{color:var(--ink);}
+.admin-section-desc{font-size:12px;color:#6B7280;margin:0 0 16px;}
+.admin-health-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:16px;}
+.admin-health-item{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;}
+.admin-health-item .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#6B7280;font-weight:700;margin-bottom:4px;}
+.admin-health-item .val{font-size:14px;font-weight:700;}
+.admin-health-item .val.ok{color:var(--green);}
+.admin-health-item .val.bad{color:var(--red);}
+.admin-servicio-extra-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
+.admin-servicio-extra-row input{flex:1;}
+.admin-danger-card{border:1.5px solid #F6D8D8;background:#FFF8F8;border-radius:12px;padding:16px;margin-bottom:14px;}
+.admin-danger-card h4{margin:0 0 6px;font-size:13px;color:var(--red-dark);}
+.admin-danger-card p{margin:0 0 12px;font-size:12px;color:#6B7280;line-height:1.5;}
+@media(max-width:640px){
+  .admin-tabs{margin-bottom:14px;}
+  .admin-tab-btn{padding:8px 10px;font-size:11.5px;}
+}
+
 </style>
 
 
@@ -1414,6 +1443,14 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   const OWNER_EMAIL = 'extintoresseguridad.cr@gmail.com';
   const EMPRESA_TELEFONO = '2101-4399 / 8839-9134';
   const EMPRESA_CORREO = 'extintoresseguridad.cr@gmail.com';
+  const DEFAULT_CONFIGURACION = {
+    telefono: EMPRESA_TELEFONO,
+    correo: EMPRESA_CORREO,
+    horario: 'Lunes a viernes: 8:00 a. m. – 5:00 p. m. · Sábados: 8:00 a. m. – 12:00 md',
+    ivaPorcentaje: 13,
+    serviciosExtra: [],
+  };
+  let configuracion = Object.assign({}, DEFAULT_CONFIGURACION);
   const EMPRESA_CEDULA_JURIDICA = '104830006';
   const EMPRESA_REPRESENTANTE = 'Álvaro Sandi Chaves';
   const AUTH_SESSION_KEY = 'extintores:session';
@@ -1475,6 +1512,9 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   let usersList = [];      // solo se llena si es admin
   let showAdminPanel = false;
   let adminSearchQuery = '';
+  let adminTab = 'usuarios'; // 'usuarios' | 'configuracion' | 'salud' | 'estadisticas' | 'riesgo'
+  let adminServiciosExtraTemp = null; // lista editable de servicios extra mientras se edita la pestaña Configuración
+  let adminHealthCheckMsg = ''; // resultado de la última prueba manual de conexión
 
   const root = document.getElementById('app-root');
 
@@ -1714,15 +1754,15 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     const subtotal = itemsValidos.length ? montoItems : (parseFloat(o.montoEstimado) || 0);
     const descuento = Math.min(parseFloat(o.descuento) || 0, subtotal);
     const total = subtotal - descuento; // precio final que paga el cliente (IVA incluido)
-    const baseImponible = total / 1.13;
+    const baseImponible = total / (1 + (configuracion.ivaPorcentaje||13)/100);
     const iva = total - baseImponible;
     const body = `
       <div class="cot-head">
         <img src="${LOGO_DATA_URL}" alt="Extintores Seguridad" class="cot-logo"/>
         <div class="cot-empresa">
           <b>Extintores Seguridad</b>
-          Tel: ${EMPRESA_TELEFONO}<br/>
-          ${EMPRESA_CORREO}
+          Tel: ${esc(configuracion.telefono)}<br/>
+          ${esc(configuracion.correo)}
         </div>
       </div>
       <div class="cot-titulo">
@@ -1756,7 +1796,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         <tr><td>Subtotal</td><td>₡${subtotal.toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>
         ${descuento>0 ? `<tr class="cot-desc-row"><td>Descuento</td><td>− ₡${descuento.toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>` : ''}
         <tr><td>Base imponible</td><td>₡${baseImponible.toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>
-        <tr><td>IVA (13%, incluido)</td><td>₡${iva.toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>
+        <tr><td>IVA (${configuracion.ivaPorcentaje}%, incluido)</td><td>₡${iva.toLocaleString('es-CR',{maximumFractionDigits:0})}</td></tr>
       </table>
       <div class="cot-total-box">
         <span class="lbl">Monto total</span>
@@ -1767,7 +1807,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         <div class="cot-firma"><div class="linea">Por Extintores Seguridad</div></div>
         <div class="cot-firma"><div class="linea">Aceptado por el cliente</div></div>
       </div>
-      <div class="cot-foot">Extintores Seguridad · ${EMPRESA_TELEFONO} · ${EMPRESA_CORREO}</div>
+      <div class="cot-foot">Extintores Seguridad · ${esc(configuracion.telefono)} · ${esc(configuracion.correo)}</div>
     `;
     const safeName = (o.cliente||'cotizacion').toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,30);
     downloadPrintable(body, `cotizacion_${safeName}.html`, 'Cotización — ' + o.cliente, COTIZACION_CSS);
@@ -1803,8 +1843,8 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         <div class="mem-empresa">
           <b>Extintores Seguridad</b>
           Cédula jurídica: ${EMPRESA_CEDULA_JURIDICA}<br/>
-          Tel: ${EMPRESA_TELEFONO}<br/>
-          ${EMPRESA_CORREO}
+          Tel: ${esc(configuracion.telefono)}<br/>
+          ${esc(configuracion.correo)}
         </div>
       </div>
       <div class="mem-titulo">
@@ -1906,7 +1946,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         </div>
       </div>
 
-      <div class="mem-foot">Extintores Seguridad · Protección, mantenimiento y seguimiento para su tranquilidad.<br/>${EMPRESA_TELEFONO} · ${EMPRESA_CORREO}</div>
+      <div class="mem-foot">Extintores Seguridad · Protección, mantenimiento y seguimiento para su tranquilidad.<br/>${esc(configuracion.telefono)} · ${esc(configuracion.correo)}</div>
     `;
     const safeName = (c.cliente||'membresia').toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,30);
     downloadPrintable(body, `membresia_${safeName}.html`, 'Membresía — ' + c.cliente, MEMBRESIA_CSS);
@@ -2516,12 +2556,16 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     showAdminPanel = true;
     usersList = [];
     adminSearchQuery = '';
+    adminTab = 'usuarios';
+    adminServiciosExtraTemp = null;
+    adminHealthCheckMsg = '';
     renderAdminModal();
     fetchAllUsers().then(list => { usersList = list; renderAdminModal(); });
   }
 
   function closeAdminPanel(){
     showAdminPanel = false;
+    adminServiciosExtraTemp = null;
     const overlay = document.querySelector('.admin-overlay');
     if(overlay) overlay.remove();
   }
@@ -2551,13 +2595,8 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     `;
   }
 
-  function renderAdminModal(){
-    let overlay = document.querySelector('.admin-overlay');
-    if(overlay) overlay.remove();
-    if(!showAdminPanel) return;
-    overlay = document.createElement('div');
-    overlay.className = 'overlay admin-overlay';
-
+  function renderAdminTabUsuarios(){
+    if(usersList.length === 0) return '<p style="color:#6B7280;font-size:13px;">Cargando usuarios...</p>';
     const q = adminSearchQuery.trim().toLowerCase();
     const filtrados = q ? usersList.filter(u => (u.email||'').toLowerCase().includes(q)) : usersList;
     const pendientes = filtrados.filter(u => u.role === 'pending');
@@ -2570,36 +2609,26 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     const totalTecnico = usersList.filter(u=>u.role==='tecnico').length;
     const totalPending = usersList.filter(u=>u.role==='pending').length;
 
-    overlay.innerHTML = `
-      <div class="modal" style="max-width:560px;">
-        <div class="modal-head">
-          <h2>Panel de administración</h2>
-          <button id="admin-close">×</button>
-        </div>
-        <div class="modal-body">
-          ${usersList.length === 0 ? '<p style="color:#6B7280;font-size:13px;">Cargando usuarios...</p>' : `
-            <div class="admin-summary">
-              <div class="admin-stat"><b>${usersList.length}</b><small>Total</small></div>
-              <div class="admin-stat ${totalPending ? 'pend' : ''}"><b>${totalPending}</b><small>Pendientes</small></div>
-              <div class="admin-stat"><b>${totalAdmin}</b><small>Admins</small></div>
-              <div class="admin-stat"><b>${totalApproved}</b><small>Aprobados</small></div>
-              <div class="admin-stat"><b>${totalTecnico}</b><small>Técnicos</small></div>
-            </div>
-            <input type="text" id="admin-search-input" class="admin-search" placeholder="Buscar por correo..." value="${esc(adminSearchQuery)}"/>
-            ${pendientes.length ? `
-              <div class="admin-group-title">⏳ Pendientes de aprobación (${pendientes.length})</div>
-              ${pendientes.map(u => renderAdminUserRow(u, {destacarAprobar:true})).join('')}
-            ` : ''}
-            <div class="admin-group-title">Equipo (${equipo.length})</div>
-            ${equipo.length ? equipo.map(u => renderAdminUserRow(u)).join('') : '<div class="admin-empty-state">No hay nadie más que coincida con la búsqueda.</div>'}
-            ${(!pendientes.length && !equipo.length) ? '<div class="admin-empty-state">No se encontró ningún usuario con ese correo.</div>' : ''}
-          `}
-        </div>
+    return `
+      <div class="admin-summary">
+        <div class="admin-stat"><b>${usersList.length}</b><small>Total</small></div>
+        <div class="admin-stat ${totalPending ? 'pend' : ''}"><b>${totalPending}</b><small>Pendientes</small></div>
+        <div class="admin-stat"><b>${totalAdmin}</b><small>Admins</small></div>
+        <div class="admin-stat"><b>${totalApproved}</b><small>Aprobados</small></div>
+        <div class="admin-stat"><b>${totalTecnico}</b><small>Técnicos</small></div>
       </div>
+      <input type="text" id="admin-search-input" class="admin-search" placeholder="Buscar por correo..." value="${esc(adminSearchQuery)}"/>
+      ${pendientes.length ? `
+        <div class="admin-group-title">⏳ Pendientes de aprobación (${pendientes.length})</div>
+        ${pendientes.map(u => renderAdminUserRow(u, {destacarAprobar:true})).join('')}
+      ` : ''}
+      <div class="admin-group-title">Equipo (${equipo.length})</div>
+      ${equipo.length ? equipo.map(u => renderAdminUserRow(u)).join('') : '<div class="admin-empty-state">No hay nadie más que coincida con la búsqueda.</div>'}
+      ${(!pendientes.length && !equipo.length) ? '<div class="admin-empty-state">No se encontró ningún usuario con ese correo.</div>' : ''}
     `;
-    document.body.appendChild(overlay);
-    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeAdminPanel(); });
-    document.getElementById('admin-close').addEventListener('click', closeAdminPanel);
+  }
+
+  function wireAdminTabUsuarios(overlay){
     const searchInput = document.getElementById('admin-search-input');
     if(searchInput){
       searchInput.focus();
@@ -2625,6 +2654,306 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         renderAdminModal();
       });
     });
+  }
+
+  function capturarServiciosExtraDesdeDOM(){
+    if(!adminServiciosExtraTemp) return;
+    document.querySelectorAll('[data-servicio-extra-idx]').forEach(inp=>{
+      const idx = parseInt(inp.getAttribute('data-servicio-extra-idx'), 10);
+      adminServiciosExtraTemp[idx] = inp.value;
+    });
+  }
+
+  function renderAdminTabConfiguracion(){
+    if(adminServiciosExtraTemp === null){
+      adminServiciosExtraTemp = (configuracion.serviciosExtra || []).slice();
+    }
+    return `
+      <p class="admin-section-desc">Estos datos se usan en las cotizaciones, membresías y boletas impresas, y en el cálculo del IVA. No hace falta tocar el código para cambiarlos.</p>
+      <div class="form-row">
+        <div>
+          <label>Teléfono de contacto</label>
+          <input type="text" id="cfg-telefono" value="${esc(configuracion.telefono||'')}"/>
+        </div>
+        <div>
+          <label>Correo de contacto</label>
+          <input type="text" id="cfg-correo" value="${esc(configuracion.correo||'')}"/>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div>
+          <label>Horario de atención</label>
+          <textarea id="cfg-horario" rows="2">${esc(configuracion.horario||'')}</textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>IVA (%)</label>
+          <input type="number" id="cfg-iva" min="0" max="100" step="0.5" value="${esc(String(configuracion.ivaPorcentaje != null ? configuracion.ivaPorcentaje : 13))}"/>
+        </div>
+      </div>
+      <label style="margin-top:6px;display:block;">Servicios extra (además de los fijos del sistema)</label>
+      <div id="cfg-servicios-extra-list">
+        ${adminServiciosExtraTemp.length ? adminServiciosExtraTemp.map((s,i) => `
+          <div class="admin-servicio-extra-row">
+            <input type="text" data-servicio-extra-idx="${i}" value="${esc(s)}" placeholder="Nombre del servicio"/>
+            <button type="button" class="btn-ghost" data-quitar-servicio-extra="${i}">Quitar</button>
+          </div>
+        `).join('') : '<p style="font-size:12px;color:#6B7280;">No hay servicios extra agregados.</p>'}
+      </div>
+      <button type="button" class="btn-add-linea" id="cfg-agregar-servicio-extra">+ Agregar servicio extra</button>
+      <div style="margin-top:12px;">
+        <button class="btn-primary" id="cfg-guardar">Guardar configuración</button>
+      </div>
+    `;
+  }
+
+  function wireAdminTabConfiguracion(overlay){
+    const btnAgregar = document.getElementById('cfg-agregar-servicio-extra');
+    if(btnAgregar) btnAgregar.addEventListener('click', ()=>{
+      capturarServiciosExtraDesdeDOM();
+      adminServiciosExtraTemp.push('');
+      renderAdminModal();
+    });
+    overlay.querySelectorAll('[data-quitar-servicio-extra]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        capturarServiciosExtraDesdeDOM();
+        const idx = parseInt(b.getAttribute('data-quitar-servicio-extra'), 10);
+        adminServiciosExtraTemp.splice(idx, 1);
+        renderAdminModal();
+      });
+    });
+    const btnGuardar = document.getElementById('cfg-guardar');
+    if(btnGuardar) btnGuardar.addEventListener('click', async ()=>{
+      capturarServiciosExtraDesdeDOM();
+      configuracion = {
+        telefono: document.getElementById('cfg-telefono').value.trim(),
+        correo: document.getElementById('cfg-correo').value.trim(),
+        horario: document.getElementById('cfg-horario').value.trim(),
+        ivaPorcentaje: parseFloat(document.getElementById('cfg-iva').value) || 0,
+        serviciosExtra: adminServiciosExtraTemp.map(s=>s.trim()).filter(Boolean),
+      };
+      await persist();
+      showToast('Configuración guardada.');
+      render();
+      renderAdminModal();
+    });
+  }
+
+  function tamanoDatosKB(){
+    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario, configuracion });
+    try{ return (new Blob([json]).size / 1024).toFixed(1); }
+    catch(e){ return (json.length / 1024).toFixed(1); }
+  }
+
+  async function probarConexionFirebase(){
+    adminHealthCheckMsg = 'Probando conexión...';
+    renderAdminModal();
+    const inicio = Date.now();
+    try{
+      await firestoreGet();
+      const ms = Date.now() - inicio;
+      firebaseOK = true;
+      adminHealthCheckMsg = `✅ Conexión exitosa (${ms} ms) — ${new Date().toLocaleTimeString('es-CR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+    }catch(e){
+      adminHealthCheckMsg = `❌ No se pudo conectar — ${new Date().toLocaleTimeString('es-CR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+    }
+    renderAdminModal();
+  }
+
+  function renderAdminTabSalud(){
+    return `
+      <p class="admin-section-desc">Estado técnico del sistema: si los datos se están guardando de verdad en la nube compartida.</p>
+      <div class="admin-health-grid">
+        <div class="admin-health-item"><div class="lbl">Conexión a Firebase</div><div class="val ${firebaseOK?'ok':'bad'}">${firebaseOK?'🟢 Conectado':'🔴 Sin conexión'}</div></div>
+        <div class="admin-health-item"><div class="lbl">Último guardado</div><div class="val ${lastSaveFailedToCloud?'bad':'ok'}">${lastSaveFailedToCloud?'⚠ No llegó a la nube':'✅ En la nube'}</div></div>
+        <div class="admin-health-item"><div class="lbl">Última sincronización</div><div class="val" style="font-size:12.5px;">${esc(textoUltimaActualizacion())}</div></div>
+        <div class="admin-health-item"><div class="lbl">Respaldo en este navegador</div><div class="val ${localBackupOK?'ok':'bad'}">${localBackupOK?'Disponible':'No disponible'}</div></div>
+        <div class="admin-health-item"><div class="lbl">Tamaño de los datos</div><div class="val">${tamanoDatosKB()} KB</div></div>
+        <div class="admin-health-item"><div class="lbl">Elementos en papelera</div><div class="val">${papelera.length}</div></div>
+      </div>
+      <button class="btn-ghost" id="salud-probar-conexion">Probar conexión ahora</button>
+      ${adminHealthCheckMsg ? `<p style="font-size:12px;margin-top:10px;color:#6B7280;">${esc(adminHealthCheckMsg)}</p>` : ''}
+      <div class="admin-group-title" style="margin-top:20px;">Cantidad de registros por tipo</div>
+      <div class="admin-health-grid">
+        <div class="admin-health-item"><div class="lbl">Extintores / órdenes</div><div class="val">${records.length}</div></div>
+        <div class="admin-health-item"><div class="lbl">Ventas de equipo</div><div class="val">${ventas.length}</div></div>
+        <div class="admin-health-item"><div class="lbl">Cajas registradas</div><div class="val">${cajas.length}</div></div>
+        <div class="admin-health-item"><div class="lbl">Oportunidades</div><div class="val">${oportunidades.length}</div></div>
+        <div class="admin-health-item"><div class="lbl">Membresías</div><div class="val">${contratos.length}</div></div>
+        <div class="admin-health-item"><div class="lbl">Productos en inventario</div><div class="val">${inventario.length}</div></div>
+      </div>
+    `;
+  }
+
+  function wireAdminTabSalud(overlay){
+    const btn = document.getElementById('salud-probar-conexion');
+    if(btn) btn.addEventListener('click', probarConexionFirebase);
+  }
+
+  function calcularEstadisticasHistoricas(){
+    const ingresosCaja = cajas.reduce((sum,c) => sum + (c.movimientos||[]).filter(m=>m.tipo==='entrada').reduce((s,m)=>s+(parseFloat(m.monto)||0),0), 0);
+    const ingresosVentas = ventas.reduce((s,v)=> s + (parseFloat(v.precio)||0) * (parseFloat(v.cantidad)||1), 0);
+    const totalExtintoresVendidos = ventas.reduce((s,v)=> s + (parseFloat(v.cantidad)||1), 0);
+    const clientesUnicos = new Set(
+      records.map(r=>(r.cliente||'').trim().toLowerCase())
+        .concat(ventas.map(v=>(v.cliente||'').trim().toLowerCase()))
+        .filter(Boolean)
+    ).size;
+    const cotizacionesGanadas = oportunidades.filter(o=>o.etapa==='ganado').length;
+    const membresiasActivas = contratos.filter(c=>c.estado==='activo').length;
+    const porAnio = {};
+    cajas.forEach(c=>{
+      const anio = (c.fecha||'').slice(0,4);
+      if(!anio) return;
+      const total = (c.movimientos||[]).filter(m=>m.tipo==='entrada').reduce((s,m)=>s+(parseFloat(m.monto)||0),0);
+      porAnio[anio] = (porAnio[anio]||0) + total;
+    });
+    return { ingresosCaja, ingresosVentas, totalOrdenes: records.length, totalExtintoresVendidos, clientesUnicos, cotizacionesGanadas, membresiasActivas, porAnio };
+  }
+
+  function renderAdminTabEstadisticas(){
+    const st = calcularEstadisticasHistoricas();
+    const anios = Object.keys(st.porAnio).sort();
+    const maxAnio = Math.max(1, ...anios.map(a=>st.porAnio[a]));
+    return `
+      <p class="admin-section-desc">Totales de todo el tiempo que tiene el negocio registrado, no solo del mes actual.</p>
+      <div class="admin-summary" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));">
+        <div class="admin-stat"><b>₡${Math.round(st.ingresosCaja).toLocaleString('es-CR')}</b><small>Ingresos en caja (histórico)</small></div>
+        <div class="admin-stat"><b>₡${Math.round(st.ingresosVentas).toLocaleString('es-CR')}</b><small>Ventas de equipo (histórico)</small></div>
+        <div class="admin-stat"><b>${st.totalOrdenes}</b><small>Órdenes de mantenimiento</small></div>
+        <div class="admin-stat"><b>${st.totalExtintoresVendidos}</b><small>Extintores vendidos</small></div>
+        <div class="admin-stat"><b>${st.clientesUnicos}</b><small>Clientes únicos</small></div>
+        <div class="admin-stat"><b>${st.cotizacionesGanadas}</b><small>Cotizaciones ganadas</small></div>
+        <div class="admin-stat"><b>${st.membresiasActivas}</b><small>Membresías activas</small></div>
+      </div>
+      ${anios.length ? `
+        <div class="admin-group-title">Ingresos de caja por año</div>
+        <div class="month-chart" style="height:140px;">
+          ${anios.map(a => `
+            <div class="month-col">
+              <div class="month-bar-value">₡${Math.round(st.porAnio[a]).toLocaleString('es-CR')}</div>
+              <div class="month-bar" style="height:${Math.max(4, (st.porAnio[a]/maxAnio)*100)}%;"></div>
+              <div class="month-bar-label">${esc(a)}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : '<div class="admin-empty-state">Todavía no hay suficientes datos de caja para mostrar un histórico por año.</div>'}
+    `;
+  }
+
+  function renderAdminTabRiesgo(){
+    return `
+      <p class="admin-section-desc">Acciones delicadas — algunas no se pueden deshacer. Úsalas con cuidado.</p>
+      <div class="admin-danger-card">
+        <h4>📦 Exportar respaldo completo</h4>
+        <p>Descarga un archivo con todos los datos del sistema (órdenes, ventas, caja, clientes, configuración) tal como están ahora mismo.</p>
+        <button class="btn-ghost" id="riesgo-exportar">Exportar respaldo</button>
+      </div>
+      <div class="admin-danger-card">
+        <h4>🗑️ Vaciar papelera</h4>
+        <p>Elimina definitivamente los ${papelera.length} elemento(s) que están en la papelera. No se pueden recuperar después de esto.</p>
+        <button class="btn-ghost" ${papelera.length===0?'disabled':''} id="riesgo-vaciar-papelera">Vaciar papelera (${papelera.length})</button>
+      </div>
+      <div class="admin-danger-card">
+        <h4>♻️ Restaurar desde un respaldo</h4>
+        <p><b>Esto reemplaza TODOS los datos actuales</b> por los del archivo que subas. Lo que haya guardado ahora mismo se pierde si no lo respaldaste antes. Úsalo solo para recuperarte de un problema grave.</p>
+        <input type="file" id="riesgo-restaurar-file" accept=".json"/>
+      </div>
+    `;
+  }
+
+  function wireAdminTabRiesgo(overlay){
+    const btnExportar = document.getElementById('riesgo-exportar');
+    if(btnExportar) btnExportar.addEventListener('click', exportarRespaldoIndustrial);
+    const btnVaciar = document.getElementById('riesgo-vaciar-papelera');
+    if(btnVaciar) btnVaciar.addEventListener('click', async ()=>{
+      await soloAdmin(vaciarPapelera);
+      renderAdminModal();
+    });
+    const fileInput = document.getElementById('riesgo-restaurar-file');
+    if(fileInput) fileInput.addEventListener('change', (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev)=>{
+        let parsed;
+        try{ parsed = JSON.parse(ev.target.result); }
+        catch(err){ showToast('Ese archivo no es un respaldo válido (JSON inválido).'); fileInput.value=''; return; }
+        if(!parsed || !Array.isArray(parsed.records)){
+          showToast('Ese archivo no tiene el formato de un respaldo de este sistema.');
+          fileInput.value=''; return;
+        }
+        const fechaTexto = parsed.exportedAt ? new Date(parsed.exportedAt).toLocaleString('es-CR') : 'fecha desconocida';
+        const resumen = `${(parsed.records||[]).length} extintores/órdenes, ${(parsed.ventas||[]).length} ventas, ${(parsed.oportunidades||[]).length} oportunidades, ${(parsed.clientesPerfil||[]).length} perfiles de cliente`;
+        const confirmacion = prompt(`Vas a REEMPLAZAR todos los datos actuales —compartidos con todo el equipo— por este respaldo del ${fechaTexto}.\n\nContiene: ${resumen}.\n\nLo que haya guardado ahora mismo se pierde si no lo respaldaste antes. Esto no se puede deshacer.\n\nEscribe RESTAURAR (en mayúsculas) para confirmar.`);
+        if(confirmacion !== 'RESTAURAR'){ showToast('Restauración cancelada.'); fileInput.value=''; return; }
+        records = parsed.records || [];
+        cajas = parsed.cajas || [];
+        papelera = parsed.papelera || [];
+        ventas = parsed.ventas || [];
+        oportunidades = parsed.oportunidades || [];
+        recordatorios = parsed.recordatorios || [];
+        clientesPerfil = parsed.clientesPerfil || [];
+        contratos = parsed.contratos || [];
+        inventario = parsed.inventario || [];
+        configuracion = Object.assign({}, DEFAULT_CONFIGURACION, parsed.configuracion || {});
+        await persist({ fusionar:false });
+        showToast('Datos restaurados desde el respaldo.');
+        fileInput.value='';
+        render();
+        renderAdminModal();
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  function renderAdminModal(){
+    let overlay = document.querySelector('.admin-overlay');
+    if(overlay) overlay.remove();
+    if(!showAdminPanel) return;
+    overlay = document.createElement('div');
+    overlay.className = 'overlay admin-overlay';
+
+    const TABS = [
+      { id:'usuarios', label:'Usuarios' },
+      { id:'configuracion', label:'Configuración' },
+      { id:'salud', label:'Salud del sistema' },
+      { id:'estadisticas', label:'Estadísticas' },
+      { id:'riesgo', label:'Zona de riesgo' },
+    ];
+    let bodyHTML = '';
+    if(adminTab === 'usuarios') bodyHTML = renderAdminTabUsuarios();
+    else if(adminTab === 'configuracion') bodyHTML = renderAdminTabConfiguracion();
+    else if(adminTab === 'salud') bodyHTML = renderAdminTabSalud();
+    else if(adminTab === 'estadisticas') bodyHTML = renderAdminTabEstadisticas();
+    else if(adminTab === 'riesgo') bodyHTML = renderAdminTabRiesgo();
+
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:760px;">
+        <div class="modal-head">
+          <h2>Panel de control de superadministrador</h2>
+          <button id="admin-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="admin-tabs">
+            ${TABS.map(t => `<button type="button" class="admin-tab-btn ${adminTab===t.id?'active':''}" data-admin-tab="${t.id}">${esc(t.label)}</button>`).join('')}
+          </div>
+          ${bodyHTML}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeAdminPanel(); });
+    document.getElementById('admin-close').addEventListener('click', closeAdminPanel);
+    overlay.querySelectorAll('[data-admin-tab]').forEach(b=>{
+      b.addEventListener('click', ()=>{ adminTab = b.getAttribute('data-admin-tab'); renderAdminModal(); });
+    });
+
+    if(adminTab === 'usuarios') wireAdminTabUsuarios(overlay);
+    else if(adminTab === 'configuracion') wireAdminTabConfiguracion(overlay);
+    else if(adminTab === 'salud') wireAdminTabSalud(overlay);
+    else if(adminTab === 'riesgo') wireAdminTabRiesgo(overlay);
   }
 
   async function load(){
@@ -2685,6 +3014,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       clientesPerfil = parsed.clientesPerfil || [];
       contratos = parsed.contratos || [];
       inventario = parsed.inventario || [];
+      configuracion = Object.assign({}, DEFAULT_CONFIGURACION, parsed.configuracion || {});
     } else {
       records = [];
       cajas = [];
@@ -2730,7 +3060,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     try{ remoto = JSON.parse(remotoJson); }catch(e){ return; }
     if(!remoto || typeof remoto !== 'object' || Array.isArray(remoto)) return;
     ultimaActualizacion = new Date(); // se confirmó contacto con la nube, aunque no haya cambios
-    const actual = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario });
+    const actual = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario, configuracion });
     if(remotoJson === actual){ render(); return; } // nada cambió, pero refrescamos la hora mostrada
 
     records = remoto.records || [];
@@ -2742,6 +3072,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     clientesPerfil = remoto.clientesPerfil || [];
     contratos = remoto.contratos || [];
     inventario = remoto.inventario || [];
+    configuracion = Object.assign({}, DEFAULT_CONFIGURACION, remoto.configuracion || {});
     firebaseOK = true;
     render();
   }
@@ -2861,9 +3192,10 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     papelera = mergeArrayPorId(papelera, remoto.papelera, papeleraEliminadosRecientes);
   }
 
-  async function persist(){
-    await fusionarConNube();
-    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario });
+  async function persist(opts){
+    opts = opts || {};
+    if(opts.fusionar !== false) await fusionarConNube();
+    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario, configuracion });
 
     // El "pase" de acceso a Firebase (idToken) solo dura ~1 hora. Si el sistema se queda
     // abierto más tiempo sin recargar la página, ese pase vence y Firebase empieza a rechazar
@@ -3295,13 +3627,13 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     const descuento = Math.min(parseFloat(descEl.value) || 0, subtotal);
     // Los precios ya incluyen el IVA (igual que en el facturador): se desglosa hacia atrás, no se suma encima.
     const total = subtotal - descuento;
-    const baseImponible = total / 1.13;
+    const baseImponible = total / (1 + (configuracion.ivaPorcentaje||13)/100);
     const iva = total - baseImponible;
     cont.innerHTML = `
       <div class="of-totales-row"><span>Subtotal</span><b>₡${subtotal.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>
       ${descuento>0 ? `<div class="of-totales-row of-desc"><span>Descuento</span><b>− ₡${descuento.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>` : ''}
       <div class="of-totales-row"><span>Base imponible</span><b>₡${baseImponible.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>
-      <div class="of-totales-row"><span>IVA (13%, incluido)</span><b>₡${iva.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>
+      <div class="of-totales-row"><span>IVA (${configuracion.ivaPorcentaje}%, incluido)</span><b>₡${iva.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>
       <div class="of-totales-row of-total"><span>Total</span><b>₡${total.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div>
     `;
   }
@@ -5923,7 +6255,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     const payload = {
       version:'CRM Industrial Extintores Seguridad 3.0',
       exportedAt:new Date().toISOString(),
-      records,cajas,papelera,ventas,oportunidades,recordatorios,clientesPerfil,contratos,inventario
+      records,cajas,papelera,ventas,oportunidades,recordatorios,clientesPerfil,contratos,inventario,configuracion
     };
     const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
     const url = URL.createObjectURL(blob);
@@ -5933,6 +6265,10 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     showToast('Respaldo descargado.');
   }
+
+  // Nota: la restauración desde archivo vive en el Panel de control de superadministrador
+  // (pestaña "Zona de riesgo" → wireAdminTabRiesgo), que pide escribir "RESTAURAR" como
+  // confirmación antes de reemplazar los datos. No duplicar esa lógica aquí.
 
   function irVistaIndustrial(v){
     setView(v);
@@ -6143,7 +6479,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         <div class="sidebar-foot">
           <div class="sidebar-user" title="${esc(authUser ? authUser.email : '')}">${esc(authUser ? authUser.email : '')}</div>
           <button class="sidebar-foot-btn" id="btn-papelera">Papelera${papelera.length ? ` (${papelera.length})` : ''}</button>
-          ${userRole === 'admin' ? `<button class="sidebar-foot-btn" id="btn-admin-panel">Panel de administración</button>` : ''}
+          ${userRole === 'admin' ? `<button class="sidebar-foot-btn" id="btn-admin-panel">Panel de superadmin</button>` : ''}
           <button class="sidebar-foot-btn" id="btn-logout">Cerrar sesión</button>
         </div>
       </aside>
@@ -6500,20 +6836,25 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     'Reemplazo de unidad': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0 1 14-4M20 15a8 8 0 0 1-14 4"/></svg>',
   };
 
+  function gruposServicioActuales(){
+    const extra = (configuracion.serviciosExtra || []).filter(Boolean);
+    return extra.length ? SERVICIO_GRUPOS.concat([{ titulo: 'Otros servicios', items: extra }]) : SERVICIO_GRUPOS;
+  }
+
   function serviciosChecksHTML(idSuf, seleccionados, precios, checkClass){
     precios = precios || {};
-    return SERVICIO_GRUPOS.map((grupo, gi) => {
+    return gruposServicioActuales().map((grupo, gi) => {
       const itemsHTML = grupo.items.map(s => {
         const checked = (seleccionados||[]).includes(s);
         return `
         <label class="service-check service-check-priced">
           <input type="checkbox" class="${checkClass}" data-servicio-check="${idSuf}" value="${esc(s)}" ${checked ? 'checked':''}/>
           <span class="servicio-icon">${ICONOS_SERVICIO[s]||''}</span>
-          <span>${s}</span>
+          <span>${esc(s)}</span>
           <input type="number" class="servicio-precio-input" data-servicio-precio="${idSuf}" data-servicio-nombre="${esc(s)}" min="0" step="0.01" placeholder="₡0" value="${precios[s] || ''}" style="${checked?'':'display:none;'}"/>
         </label>`;
       }).join('');
-      return `<div class="service-group-title"${gi===0?' style="margin-top:0;padding-top:0;border-top:none;"':''}>${grupo.titulo}</div>${itemsHTML}`;
+      return `<div class="service-group-title"${gi===0?' style="margin-top:0;padding-top:0;border-top:none;"':''}>${esc(grupo.titulo)}</div>${itemsHTML}`;
     }).join('');
   }
 
