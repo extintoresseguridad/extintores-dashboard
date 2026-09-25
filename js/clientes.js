@@ -25,13 +25,14 @@
   }
 
   function extintorVacio(uid){ return { id: uid(), serie:'', tipo:'PQS ABC', capacidad:'', ubicacion:'', estado:'Activo', ultimoMantenimiento:'', proximoMantenimiento:'', trabajoRealizado:'', observaciones:'' }; }
-  function extintoresPerfilHTML(lista, esc){
+  function extintoresPerfilHTML(lista, esc, tipos){
+    tipos = Array.isArray(tipos) && tipos.length ? tipos : ['PQS ABC','CO2','Agua','Espuma','Otro'];
     const items=lista||[];
     if(!items.length) return '<div class="caja-hint" style="margin:0;">No hay extintores individuales registrados todavía.</div>';
     return items.map((e,i)=>`
       <div class="perfil-extintor" data-extintor-id="${esc(e.id)}">
         <div class="linea-head"><b>Extintor ${i+1}</b><button type="button" class="linea-remove" data-quitar-extintor="${esc(e.id)}">Quitar</button></div>
-        <div class="form-row"><div><label>ID / Serie</label><input class="pf-ext-serie" value="${esc(e.serie||'')}" placeholder="Ej. EXT-001"/></div><div><label>Tipo</label><select class="pf-ext-tipo">${TIPOS.map(t=>`<option ${t===e.tipo?'selected':''}>${t}</option>`).join('')}</select></div></div>
+        <div class="form-row"><div><label>ID / Serie</label><input class="pf-ext-serie" value="${esc(e.serie||'')}" placeholder="Ej. EXT-001"/></div><div><label>Tipo</label><select class="pf-ext-tipo">${tipos.map(t=>`<option ${t===e.tipo?'selected':''}>${t}</option>`).join('')}</select></div></div>
         <div class="form-row"><div><label>Capacidad</label><input class="pf-ext-capacidad" value="${esc(e.capacidad||'')}" placeholder="Ej. 10 lb"/></div><div><label>Ubicación</label><input class="pf-ext-ubicacion" value="${esc(e.ubicacion||'')}" placeholder="Recepción, cocina, bodega..."/></div></div>
         <div class="form-row"><div><label>Estado</label><select class="pf-ext-estado">${['Activo','En mantenimiento','Fuera de servicio','Reemplazado'].map(x=>`<option ${x===e.estado?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Último mantenimiento</label><input type="date" class="pf-ext-ultimo" value="${esc(e.ultimoMantenimiento||'')}"/></div></div>
         <div class="form-row"><div><label>Próximo mantenimiento</label><input type="date" class="pf-ext-proximo" value="${esc(e.proximoMantenimiento||'')}"/></div><div><label>Trabajo realizado</label><input class="pf-ext-trabajo" value="${esc(e.trabajoRealizado||'')}" placeholder="Recarga, prueba, repintado..."/></div></div>
