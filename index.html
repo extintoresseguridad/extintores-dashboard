@@ -5175,15 +5175,16 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
             <div><label>Dirección</label><input id="ct-direccion" value="${esc(contratoForm.direccion)}" placeholder="Dirección exacta"/></div>
           </div>
           <div class="form-row">
-            <div><label>Tipo de membresía</label>
-              <select id="ct-tipoMembresia">
+            <div><label>Tipo de membresía <span style="color:#6B7280;font-size:9px;">(selección automática)</span></label>
+              <select id="ct-tipoMembresia" ${['cliente_seguro','cliente_seguro_plus','cliente_seguro_empresa'].includes(contratoForm.tipoMembresia) ? 'disabled' : ''}>
                 <option value="cliente_seguro" ${contratoForm.tipoMembresia==='cliente_seguro'?'selected':''}>Cliente Seguro · 1–5 · ₡15.000/año</option>
                 <option value="cliente_seguro_plus" ${contratoForm.tipoMembresia==='cliente_seguro_plus'?'selected':''}>Cliente Seguro Plus · 6–15 · ₡25.000/año</option>
-                <option value="cliente_seguro_empresa" ${contratoForm.tipoMembresia==='cliente_seguro_empresa'?'selected':''}>Cliente Seguro Empresa · 16+ · desde ₡40.000/año</option>
+                <option value="cliente_seguro_empresa" ${contratoForm.tipoMembresia==='cliente_seguro_empresa'?'selected':''}>Cliente Seguro Empresa · 16+ · ₡40.000/año</option>
                 <option value="seguridad" ${contratoForm.tipoMembresia==='seguridad'?'selected':''}>Seguridad (legacy)</option>
                 <option value="seguridad_pro" ${contratoForm.tipoMembresia==='seguridad_pro'?'selected':''}>Seguridad Pro (legacy)</option>
                 <option value="seguridad_corporativa" ${contratoForm.tipoMembresia==='seguridad_corporativa'?'selected':''}>Seguridad Corporativa (legacy)</option>
               </select>
+              <small class="field-hint">El plan se determina automáticamente según la cantidad de extintores.</small>
             </div>
             <div><label>Estado</label>
               <select id="ct-estado">
@@ -5193,8 +5194,8 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
             </div>
           </div>
           <div class="form-row">
-            <div><label>Cantidad de extintores cubiertos</label><input type="number" id="ct-cantidad" min="1" step="1" value="${esc(contratoForm.cantidadExtintores)}" placeholder="ej. 25"/></div>
-            <div><label>Valor anual de la membresía</label><input type="number" id="ct-valorAnual" min="0" step="0.01" value="${esc(contratoForm.valorAnual)}" placeholder="0.00"/></div>
+            <div><label>Cantidad de extintores cubiertos *</label><input type="number" id="ct-cantidad" min="1" step="1" value="${esc(contratoForm.cantidadExtintores)}" placeholder="ej. 5"/><small class="field-hint">1–5 = ₡15.000 · 6–15 = ₡25.000 · 16+ = ₡40.000</small></div>
+            <div><label>Valor anual de la membresía</label><input type="number" id="ct-valorAnual" min="0" step="5000" value="${esc(contratoForm.valorAnual)}" placeholder="₡15.000" readonly style="background:var(--paper);font-weight:700;"/></div>
           </div>
           <div class="form-row">
             <div><label>Fecha de inicio</label><input type="date" id="ct-fechaInicio" value="${esc(contratoForm.fechaInicio)}"/></div>
@@ -5219,6 +5220,34 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     document.getElementById('contrato-modal-close').addEventListener('click', closeContratoModal);
     document.getElementById('contrato-modal-cancel').addEventListener('click', closeContratoModal);
     document.getElementById('contrato-modal-save').addEventListener('click', saveContrato);
+
+    // Cliente Seguro: el plan y el precio se calculan automáticamente por cantidad.
+    const cantidadInput = document.getElementById('ct-cantidad');
+    const planInput = document.getElementById('ct-tipoMembresia');
+    const valorInput = document.getElementById('ct-valorAnual');
+    const actualizarPlanClienteSeguro = () => {
+      if(!cantidadInput || !planInput || !valorInput) return;
+      const cantidad = parseInt(cantidadInput.value, 10) || 0;
+      if(cantidad <= 0) {
+        valorInput.value = '';
+        return;
+      }
+      let plan = 'cliente_seguro';
+      let precio = 15000;
+      if(cantidad >= 16){ plan = 'cliente_seguro_empresa'; precio = 40000; }
+      else if(cantidad >= 6){ plan = 'cliente_seguro_plus'; precio = 25000; }
+      planInput.value = plan;
+      planInput.disabled = true;
+      valorInput.value = precio;
+      contratoForm.tipoMembresia = plan;
+      contratoForm.valorAnual = String(precio);
+      contratoForm.cantidadExtintores = String(cantidad);
+    };
+    if(cantidadInput) {
+      cantidadInput.addEventListener('input', actualizarPlanClienteSeguro);
+      cantidadInput.addEventListener('change', actualizarPlanClienteSeguro);
+      actualizarPlanClienteSeguro();
+    }
   }
 
   function contratoCardHTML(c){
