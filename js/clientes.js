@@ -31,6 +31,11 @@
   }
 
 
+  window.clienteKey = clienteKey;
+  window.inicialesDe = inicialesDe;
+  window.telefonosTexto = telefonosTexto;
+  window.emptyPerfilCliente = emptyPerfilCliente;
+  window.ETIQUETAS_CLIENTE = ETIQUETAS_CLIENTE;
   window.CRMClientes = {
     clienteKey,
     inicialesDe,
