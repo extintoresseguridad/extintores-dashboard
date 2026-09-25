@@ -8,8 +8,9 @@
     cliente_seguro_empresa:{nombre:'Cliente Seguro Empresa',equipos:'16+ equipos',precio:40000,beneficios:['Todo lo anterior.','Control individual de cada equipo.','Reporte de mantenimiento.','Programación anual.','Recolección y entrega según condiciones del servicio.','Cotización especial para empresas con volumen.']}
   };
   function planClienteSeguro(tipo){return CLIENTE_SEGURO_PLANES[tipo]||CLIENTE_SEGURO_PLANES.cliente_seguro;}
-  function renderClienteSeguro(){
-    const activos=contratos.filter(c=>c.estado==='activo');
+  function renderClienteSeguro(contratos, esc){
+    const listaContratos=Array.isArray(contratos)?contratos:[];
+    const activos=listaContratos.filter(c=>c.estado==='activo');
     const diasRenovacion = (fecha)=>{
       if(!fecha) return null;
       const d=new Date(fecha+'T00:00:00');
