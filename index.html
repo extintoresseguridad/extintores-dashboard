@@ -997,8 +997,7 @@
   }
   .sidebar-brand{border-bottom:none;border-right:1px solid rgba(255,255,255,.07);flex-shrink:0;}
   .sidebar-nav{flex-direction:row;padding:10px 10px;overflow-x:auto;flex:none;}
-  .sidebar-nav button{flex-direction:column;gap:3px;white-space:nowrap;padding:8px 12px;font-size:10.5px;}
-  .sidebar-nav button.active{box-shadow:inset 0 -3px 0 var(--red);}
+  .sidebar-nav button{flex-direction:column;gap:3px;white-space:nowrap;padding:8px 12px;font-size:10.5px;}  .sidebar-nav button.active{box-shadow:inset 0 -3px 0 var(--red);}
   .sidebar-foot{flex-direction:row;align-items:center;border-top:none;border-left:1px solid rgba(255,255,255,.07);flex-shrink:0;}
   .sidebar-user{display:none;}
   .main-area .topbar{position:relative;padding:12px 18px;}
@@ -1424,6 +1423,19 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   .admin-tab-btn{padding:8px 10px;font-size:11.5px;}
 }
 
+
+  /* =========================================================
+     PROGRAMA CLIENTE SEGURO
+     ========================================================= */
+  .cliente-seguro-view{max-width:1450px;margin:0 auto;padding:24px 28px 70px;}
+  .cs-hero{background:linear-gradient(135deg,#17243a 0%,#243b63 65%,#8b8168 140%);color:#fff;border-radius:18px;padding:28px;display:flex;justify-content:space-between;gap:22px;align-items:center;box-shadow:var(--shadow-md);margin-bottom:18px;}
+  .cs-hero h2{margin:0 0 7px;font-size:29px;letter-spacing:-.03em}.cs-hero p{margin:0;max-width:720px;color:rgba(255,255,255,.82);font-size:13px;line-height:1.55}.cs-hero .quote{margin-top:13px;font-size:12px;font-weight:700;color:#fff}.cs-hero-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .cs-section{margin:22px 0 10px;display:flex;justify-content:space-between;align-items:end;gap:10px}.cs-section h3{margin:0;font-size:15px;text-transform:uppercase;letter-spacing:.06em}.cs-section span{font-size:11px;color:#6B7280}
+  .cs-plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.cs-plan{background:#fff;border:1px solid var(--line);border-radius:14px;padding:19px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}.cs-plan.featured{border-color:var(--brass);box-shadow:0 8px 24px rgba(139,129,104,.16)}.cs-plan .cs-ribbon{position:absolute;right:12px;top:12px;background:var(--primary);color:#fff;padding:4px 8px;border-radius:999px;font-size:9px;font-weight:800;text-transform:uppercase}.cs-plan h4{margin:0 0 5px;font-size:17px}.cs-plan .equipos{font-size:11px;color:#6B7280;margin-bottom:13px}.cs-price{font-size:25px;font-weight:800;letter-spacing:-.03em;margin-bottom:13px}.cs-price small{font-size:10px;color:#6B7280;font-weight:600}.cs-plan ul{margin:0;padding-left:18px;font-size:11.5px;line-height:1.75;color:#374151}.cs-note{margin-top:14px;padding:12px 14px;background:#fff8e8;border:1px solid #ead9aa;border-radius:10px;font-size:11.5px;color:#5f4d1e;line-height:1.5}
+  .cs-two{display:grid;grid-template-columns:1fr 1fr;gap:15px}.cs-panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:19px;box-shadow:var(--shadow-sm)}.cs-panel h4{margin:0 0 12px;font-size:14px}.cs-benefit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cs-benefit{padding:10px 11px;border:1px solid #EEF0F2;border-radius:9px;background:#F9FAFB;font-size:11.5px}.cs-referral{background:linear-gradient(135deg,#fff,#f8fafc);border-left:4px solid var(--red)}.cs-referral strong{font-size:16px}.cs-referral .credit{font-size:26px;font-weight:800;margin:8px 0;color:var(--red)}
+  .cs-active-list{display:flex;flex-direction:column}.cs-active-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #EEF0F2;font-size:12px}.cs-active-row:last-child{border-bottom:none}.cs-active-main{min-width:0;flex:1}.cs-active-main b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cs-active-main span{display:block;color:#6B7280;font-size:10.5px;margin-top:2px}.cs-status{font-size:9px;font-weight:800;text-transform:uppercase;padding:4px 8px;border-radius:999px;background:#eaf7ee;color:#166534}
+  @media(max-width:900px){.cs-plan-grid,.cs-two{grid-template-columns:1fr}.cs-hero{display:block}.cs-hero-actions{justify-content:flex-start;margin-top:15px}}@media(max-width:600px){.cliente-seguro-view{padding:16px 14px 50px}.cs-benefit-grid{grid-template-columns:1fr}.cs-hero h2{font-size:24px}}
+
 </style>
 
 
@@ -1478,7 +1490,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   let venceFilter = 'todos';
   let query = '';
   let editingId = null;
-  let view = 'industrial'; // 'industrial' | 'listado' | 'panel' | 'clientes' | 'caja' | 'crm' | 'inventario'
+  let view = 'industrial'; // 'industrial' | 'listado' | 'panel' | 'clientes' | 'caja' | 'crm' | 'inventario' | 'cliente-seguro'
   let crmSubvista = 'pipeline'; // 'pipeline' | 'recordatorios' | 'contratos'
   let pipelineQuery = '';
   let oportunidadSeleccionada = null;
@@ -1848,7 +1860,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         </div>
       </div>
       <div class="mem-titulo">
-        <h1>Contrato de Adhesión — Membresía Seguridad</h1>
+        <h1>Programa Cliente Seguro — Acuerdo de Membresía</h1>
       </div>
 
       <div class="mem-clause" style="text-align:right;">Fecha: ${fechaDMA(todayISO())}</div>
@@ -1873,8 +1885,8 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       <div class="mem-field"><span class="fl">Fecha de renovación</span>${fechaDMA(c.fechaRenovacion)}</div>
 
       <div class="mem-section-title">3. Objeto de la membresía</div>
-      <div class="mem-clause">Por medio del presente documento, el cliente solicita su incorporación al programa Membresía Seguridad de Extintores Seguridad, cuyo objetivo es facilitar el seguimiento, mantenimiento y atención de los equipos contra incendios registrados.</div>
-      <div class="mem-clause">La membresía permite al cliente acceder a beneficios comerciales y de servicio de acuerdo con el nivel contratado y las condiciones establecidas por Extintores Seguridad.</div>
+      <div class="mem-clause">Por medio del presente documento, el cliente acepta formar parte del Programa Cliente Seguro de Extintores Seguridad, cuyo objetivo es brindar seguimiento y beneficios especiales relacionados con el mantenimiento de sus equipos de protección contra incendios.</div>
+      <div class="mem-clause">La membresía tiene una vigencia de 12 meses a partir de la fecha de contratación y permite acceder a los beneficios correspondientes al plan contratado.</div>
 
       <div class="mem-section-title">4. Beneficios</div>
       <div class="mem-clause">De acuerdo con el nivel de membresía asignado, el cliente podrá recibir:</div>
@@ -1926,7 +1938,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
 
       <div class="mem-no-break">
         <div class="mem-section-title">10. Aceptación</div>
-        <div class="mem-clause">El cliente manifiesta que ha leído y comprendido las condiciones de la Membresía Seguridad, acepta sus términos y solicita voluntariamente su incorporación al programa.</div>
+        <div class="mem-clause">El cliente manifiesta que ha leído y comprendido las condiciones del Programa Cliente Seguro, acepta sus términos y solicita voluntariamente su incorporación al programa.</div>
 
         <div class="mem-parties" style="margin-top:14px;">
           <div class="mem-party">
@@ -1984,8 +1996,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       <div class="ticket">
         <div class="t-center"><img src="${LOGO_DATA_URL}" alt="Extintores Seguridad" class="t-logo"/></div>
         <div class="t-center t-bold t-big">CONTROL DE MANTENIMIENTO</div>
-        <div class="t-center">Comprobante de ingreso</div>
-        <div class="t-line"></div>
+        <div class="t-center">Comprobante de ingreso</div>        <div class="t-line"></div>
         <div class="t-row"><span>Orden</span><span>${rec.orden ? '#'+esc(rec.orden) : '—'}</span></div>
         <div class="t-row"><span>Fecha ingreso</span><span>${esc(rec.fechaIngreso) || '—'}</span></div>
         <div class="t-row"><span>Entrega est.</span><span>${esc(rec.fechaEntrega) || '—'}</span></div>
@@ -2985,7 +2996,6 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         if(ok && res && res.value) raw = res.value;
       }
     }
-
     // 3) Último respaldo: el navegador local.
     localBackupOK = localStorageTest();
     if(raw === null && localBackupOK){
@@ -3884,7 +3894,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
             <div><label>Próximo mantenimiento</label><input type="date" id="vf-fechaProximoMantenimiento" value="${esc(ventaForm.fechaProximoMantenimiento)}"/></div>
           </div>
           <div class="form-row">
-            <div><label>Precio</label><input type="number" id="vf-precio" min="0" step="0.01" value="${esc(ventaForm.precio)}" placeholder="0.00"/></div>
+            <div><label>Precio</label><input type="number" id="vf-precio" min="0" step="0.01" value="${esc(ventaForm.precio)}" placeholder="15000"/></div>
             <div><label>Abono / adelanto</label><input type="number" id="vf-abono" min="0" step="0.01" value="${esc(ventaForm.abono)}" placeholder="0.00"/></div>
           </div>
           <div class="form-row">
@@ -3984,8 +3994,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
               </select>
             </div>
           </div>
-        </div>
-        <div class="modal-foot">
+        </div>        <div class="modal-foot">
           <button class="btn-ghost" id="oportunidad-modal-cancel">Cancelar</button>
           <button class="btn-ghost" id="oportunidad-modal-print">🖨️ Guardar e imprimir cotización</button>
           <button class="btn-primary" id="oportunidad-modal-save">${editingOportunidadId ? 'Guardar cambios' : 'Crear oportunidad'}</button>
@@ -4224,6 +4233,29 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         <button class="btn-ghost danger" data-action="eliminar-oportunidad" data-id="${o.id}">Eliminar oportunidad</button>
       </div>
     `;
+  }
+
+  /* ---------- Programa Cliente Seguro ---------- */
+  const CLIENTE_SEGURO_PLANES = {
+    cliente_seguro:{nombre:'Cliente Seguro',equipos:'1–5 equipos',precio:15000,beneficios:['Registro de los extintores.','Historial de mantenimiento.','Recordatorio de mantenimiento.','Revisión visual preventiva.','Atención por WhatsApp.','Precio preferencial en determinados servicios.']},
+    cliente_seguro_plus:{nombre:'Cliente Seguro Plus',equipos:'6–15 equipos',precio:25000,beneficios:['Todo lo anterior.','Prioridad de atención.','Coordinación programada.','Beneficio adicional por volumen.','Seguimiento de equipos pendientes.']},
+    cliente_seguro_empresa:{nombre:'Cliente Seguro Empresa',equipos:'16+ equipos',precio:40000,beneficios:['Todo lo anterior.','Control individual de cada equipo.','Reporte de mantenimiento.','Programación anual.','Recolección y entrega según condiciones del servicio.','Cotización especial para empresas con volumen.']}
+  };
+  function planClienteSeguro(tipo){return CLIENTE_SEGURO_PLANES[tipo]||CLIENTE_SEGURO_PLANES.cliente_seguro;}
+  function renderClienteSeguro(){
+    const activos=contratos.filter(c=>c.estado==='activo');
+    const referidosRegistrados=contratos.filter(c=>c.referidoPor).length;
+    const creditosReferidos=contratos.reduce((s,c)=>s+(parseFloat(c.creditoReferido)||0),0);
+    return `<div class="cliente-seguro-view view-fade">
+      <div class="cs-hero"><div><h2>🛡️ Programa Cliente Seguro</h2><p>“Nosotros nos encargamos de recordar. Usted se encarga de estar protegido.”</p><div class="quote">Seguimiento, historial, recordatorios y beneficios especiales para sus equipos.</div></div><div class="cs-hero-actions"><button class="btn-primary" id="cs-nueva-membresia">+ Registrar Cliente Seguro</button><button class="btn-ghost" id="cs-ver-membresias">Ver membresías</button></div></div>
+      <div class="cs-section"><h3>Planes disponibles</h3><span>Vigencia de 12 meses</span></div>
+      <div class="cs-plan-grid">${Object.entries(CLIENTE_SEGURO_PLANES).map(([id,p],idx)=>`<div class="cs-plan ${idx===1?'featured':''}">${idx===1?'<div class="cs-ribbon">Plus</div>':''}<h4>${p.nombre}</h4><div class="equipos">${p.equipos}</div><div class="cs-price">₡${p.precio.toLocaleString('es-CR')} <small>/ año</small></div><ul>${p.beneficios.map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('')}</div>
+      <div class="cs-note"><b>Importante:</b> la membresía no sustituye el costo de recargas, reparaciones, repuestos, pruebas u otros trabajos que requieran los equipos. Es el servicio de seguimiento y beneficios.</div>
+      <div class="cs-section"><h3>Beneficios y referidos</h3><span>Información del programa</span></div>
+      <div class="cs-two"><div class="cs-panel"><h4>Beneficios del programa</h4><div class="cs-benefit-grid">${['Registro e historial de sus equipos.','Recordatorios de mantenimiento.','Seguimiento de fechas de servicio.','Revisión visual preventiva.','Atención y coordinación mediante WhatsApp.','Precios preferenciales y/o beneficios especiales según el plan.','Prioridad de atención en los planes que correspondan.','Beneficios por referir nuevos clientes.'].map(x=>`<div class="cs-benefit">✓ ${x}</div>`).join('')}</div></div>
+      <div class="cs-panel cs-referral"><h4>🔥 PROGRAMA “CLIENTE QUE RECOMIENDA”</h4><strong>Por cada cliente nuevo referido que realice un servicio:</strong><div class="credit">₡5.000 de crédito</div><div style="font-size:11.5px;color:#4B5563;line-height:1.55;">El crédito se utiliza en futuros servicios. Límite sugerido: hasta ₡25.000 acumulables por año.</div><div style="margin-top:12px;font-size:11px;color:#6B7280;">Referidos registrados: <b>${referidosRegistrados}</b> · Créditos registrados: <b>₡${creditosReferidos.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div></div></div>
+      <div class="cs-section"><h3>Membresías activas</h3><span>${activos.length} cliente(s)</span></div><div class="cs-panel">${activos.length?`<div class="cs-active-list">${activos.slice(0,10).map(c=>{const p=planClienteSeguro(c.tipoMembresia);return `<div class="cs-active-row"><div class="cs-active-main"><b>${esc(c.cliente||'Sin nombre')}</b><span>${esc(p.nombre)} · ${c.cantidadExtintores||0} extintores · renueva ${esc(c.fechaRenovacion||'—')}</span></div><span class="cs-status">Activo</span></div>`}).join('')}</div>${activos.length>10?'<div style="margin-top:10px;font-size:11px;color:#6B7280;">Mostrando las primeras 10. Consulte “Ventas / CRM → Membresías” para ver todas.</div>':''}`:'<div class="dash-empty">Todavía no hay membresías activas del Programa Cliente Seguro.</div>'}</div>
+    </div>`;
   }
 
   function renderCRM(){
@@ -4961,8 +4993,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     clienteSeleccionado = nuevaKey;
     if(!editingPerfilKey){
       // Solo es una creación nueva desde el listado de "Mantenimiento" (el botón
-      // "+ Nuevo cliente" solo existe en esa sub-pestaña); si veníamos editando el
-      // perfil desde la ficha de un cliente ya abierta, se respeta su tipo actual
+      // "+ Nuevo cliente" solo existe en esa sub-pestaña); si veníamos editando el      // perfil desde la ficha de un cliente ya abierta, se respeta su tipo actual
       // (mantenimiento o compras) para no mandarlo a la ficha equivocada.
       clienteSeleccionadoTipo = 'mantenimiento';
     }
@@ -5037,7 +5068,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   /* ---------- Contratos de mantenimiento recurrente ---------- */
 
   function emptyContrato(){
-    return { id:null, cliente:'', telefono:'', cedulaCliente:'', encargado:'', correo:'', direccion:'', tipoMembresia:'seguridad', cantidadExtintores:'', fechaInicio: todayISO(), fechaRenovacion:'', valorAnual:'', estado:'activo', notas:'' };
+    return { id:null, cliente:'', telefono:'', cedulaCliente:'', encargado:'', correo:'', direccion:'', tipoMembresia:'cliente_seguro', cantidadExtintores:'', fechaInicio: todayISO(), fechaRenovacion:'', valorAnual:'', estado:'activo', notas:'', referidoPor:'', creditoReferido:'' };
   }
   let contratoForm = emptyContrato();
   let editingContratoId = null;
@@ -5127,7 +5158,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     overlay.innerHTML = `
       <div class="modal">
         <div class="modal-head">
-          <h2>${editingContratoId ? 'Editar membresía' : 'Nueva membresía de mantenimiento'}</h2>
+          <h2>${editingContratoId ? 'Editar Cliente Seguro' : 'Registrar Cliente Seguro'}</h2>
           <button id="contrato-modal-close">×</button>
         </div>
         <div class="modal-body">
@@ -5146,9 +5177,12 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           <div class="form-row">
             <div><label>Tipo de membresía</label>
               <select id="ct-tipoMembresia">
-                <option value="seguridad" ${contratoForm.tipoMembresia==='seguridad'?'selected':''}>Seguridad</option>
-                <option value="seguridad_pro" ${contratoForm.tipoMembresia==='seguridad_pro'?'selected':''}>Seguridad Pro</option>
-                <option value="seguridad_corporativa" ${contratoForm.tipoMembresia==='seguridad_corporativa'?'selected':''}>Seguridad Corporativa</option>
+                <option value="cliente_seguro" ${contratoForm.tipoMembresia==='cliente_seguro'?'selected':''}>Cliente Seguro · 1–5 · ₡15.000/año</option>
+                <option value="cliente_seguro_plus" ${contratoForm.tipoMembresia==='cliente_seguro_plus'?'selected':''}>Cliente Seguro Plus · 6–15 · ₡25.000/año</option>
+                <option value="cliente_seguro_empresa" ${contratoForm.tipoMembresia==='cliente_seguro_empresa'?'selected':''}>Cliente Seguro Empresa · 16+ · desde ₡40.000/año</option>
+                <option value="seguridad" ${contratoForm.tipoMembresia==='seguridad'?'selected':''}>Seguridad (legacy)</option>
+                <option value="seguridad_pro" ${contratoForm.tipoMembresia==='seguridad_pro'?'selected':''}>Seguridad Pro (legacy)</option>
+                <option value="seguridad_corporativa" ${contratoForm.tipoMembresia==='seguridad_corporativa'?'selected':''}>Seguridad Corporativa (legacy)</option>
               </select>
             </div>
             <div><label>Estado</label>
@@ -5160,7 +5194,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           </div>
           <div class="form-row">
             <div><label>Cantidad de extintores cubiertos</label><input type="number" id="ct-cantidad" min="1" step="1" value="${esc(contratoForm.cantidadExtintores)}" placeholder="ej. 25"/></div>
-            <div><label>Valor anual del contrato</label><input type="number" id="ct-valorAnual" min="0" step="0.01" value="${esc(contratoForm.valorAnual)}" placeholder="0.00"/></div>
+            <div><label>Valor anual de la membresía</label><input type="number" id="ct-valorAnual" min="0" step="0.01" value="${esc(contratoForm.valorAnual)}" placeholder="0.00"/></div>
           </div>
           <div class="form-row">
             <div><label>Fecha de inicio</label><input type="date" id="ct-fechaInicio" value="${esc(contratoForm.fechaInicio)}"/></div>
@@ -5168,6 +5202,10 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           </div>
           <div class="form-row full">
             <div><label>Notas</label><textarea id="ct-notas" placeholder="Alcance del contrato, condiciones especiales...">${esc(contratoForm.notas)}</textarea></div>
+          </div>
+          <div class="form-row">
+            <div><label>Cliente que recomienda (referido)</label><input id="ct-referidoPor" value="${esc(contratoForm.referidoPor||'')}" placeholder="Nombre del cliente que lo refirió"/></div>
+            <div><label>Crédito por referido</label><input type="number" id="ct-creditoReferido" min="0" step="5000" value="${esc(contratoForm.creditoReferido||'')}" placeholder="5000"/></div>
           </div>
         </div>
         <div class="modal-foot">
@@ -5194,7 +5232,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         <summary>
           <div class="summary-main">
             <h3>${esc(c.cliente)}</h3>
-            <div class="sub-line">${c.cantidadExtintores ? c.cantidadExtintores+' extintores · ' : ''}Renueva ${esc(c.fechaRenovacion)}</div>
+            <div class="sub-line">${c.cantidadExtintores ? c.cantidadExtintores+' extintores · ' : ''}${esc((planClienteSeguro(c.tipoMembresia)||{}).nombre || 'Membresía')} · Renueva ${esc(c.fechaRenovacion)}</div>
           </div>
           <div class="summary-side">
             <span class="badge" style="background:${c.estado==='activo'?'var(--green)':'#6B7280'};">${c.estado==='activo'?'Activo':'Cancelado'}</span>
@@ -5954,8 +5992,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       .map(r=>({ rec:r, vs: vencStatus(r.fechaVencimiento), origen: 'mantenimiento', fecha: r.fechaVencimiento }));
     const deVentas = ventas
       .filter(v=>v.fechaProximoMantenimiento)
-      .map(v=>({ rec:v, vs: vencStatus(v.fechaProximoMantenimiento), origen: 'venta', fecha: v.fechaProximoMantenimiento }));
-    return [...deMantenimiento, ...deVentas]
+      .map(v=>({ rec:v, vs: vencStatus(v.fechaProximoMantenimiento), origen: 'venta', fecha: v.fechaProximoMantenimiento }));    return [...deMantenimiento, ...deVentas]
       .filter(x=>x.vs === 'vencido' || x.vs === 'proximo')
       .sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||''));
   }
@@ -6471,6 +6508,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           <button data-view="industrial" class="${view==='industrial'?'active':''}"><span class="snav-ico">⌂</span>Inicio</button>
           <button data-view="listado" class="${view==='listado'?'active':''}"><span class="snav-ico">▤</span>Operaciones</button>
           <button data-view="clientes" class="${view==='clientes'?'active':''}"><span class="snav-ico">◔</span>Clientes</button>
+           <button data-view="cliente-seguro" class="${view==='cliente-seguro'?'active':''}"><span class="snav-ico">🛡</span>Cliente Seguro</button>
           <button data-view="crm" class="${view==='crm'?'active':''}"><span class="snav-ico">◆</span>Ventas / CRM</button>
           <button data-view="panel" class="${view==='panel'?'active':''}"><span class="snav-ico">▲</span>Indicadores</button>
           <button data-view="inventario" class="${view==='inventario'?'active':''}"><span class="snav-ico">▣</span>Inventario</button>
@@ -6529,7 +6567,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           <div class="grid">${agruparPorOrden(filtered).map(orderCardHTML).join('')}</div>`
         }
       </div>
-      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : renderIndustrial()))))))}
+      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : (view === 'cliente-seguro' ? renderClienteSeguro() : renderIndustrial())))))))}
       </div>
       </div>
       </div>
@@ -6614,6 +6652,13 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       document.querySelectorAll('[data-ir-fecha]').forEach(row=>{
         row.addEventListener('click', ()=> irACajaFecha(row.getAttribute('data-ir-fecha')));
       });
+    }
+
+    if(view === 'cliente-seguro'){
+      const btnNueva = document.getElementById('cs-nueva-membresia');
+      if(btnNueva) btnNueva.addEventListener('click', ()=> openNuevoContrato());
+      const btnVer = document.getElementById('cs-ver-membresias');
+      if(btnVer) btnVer.addEventListener('click', ()=>{ view='crm'; crmSubvista='contratos'; animateViewChange=true; render(); });
     }
 
     if(view === 'inventario'){
@@ -6946,8 +6991,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     let scrollTop = 0;
     let focusedId = null;
     let focusedSelStart = null;
-    if(overlay){
-      const bodyEl = overlay.querySelector('.modal-body');
+    if(overlay){      const bodyEl = overlay.querySelector('.modal-body');
       if(bodyEl) scrollTop = bodyEl.scrollTop;
       const activeEl = document.activeElement;
       if(activeEl && activeEl.id && overlay.contains(activeEl)){
