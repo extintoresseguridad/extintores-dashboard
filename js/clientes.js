@@ -23,12 +23,45 @@
   function emptyPerfilCliente(){
     return { id:null, cliente:'', telefono:'', empresa:'', cedula:'', direccion:'', notas:'', etiquetas:[], extintores:[] };
   }
+
+  function extintorVacio(uid){ return { id: uid(), serie:'', tipo:'PQS ABC', capacidad:'', ubicacion:'', estado:'Activo', ultimoMantenimiento:'', proximoMantenimiento:'', trabajoRealizado:'', observaciones:'' }; }
+  function extintoresPerfilHTML(lista, esc){
+    const items=lista||[];
+    if(!items.length) return '<div class="caja-hint" style="margin:0;">No hay extintores individuales registrados todavía.</div>';
+    return items.map((e,i)=>`
+      <div class="perfil-extintor" data-extintor-id="${esc(e.id)}">
+        <div class="linea-head"><b>Extintor ${i+1}</b><button type="button" class="linea-remove" data-quitar-extintor="${esc(e.id)}">Quitar</button></div>
+        <div class="form-row"><div><label>ID / Serie</label><input class="pf-ext-serie" value="${esc(e.serie||'')}" placeholder="Ej. EXT-001"/></div><div><label>Tipo</label><select class="pf-ext-tipo">${TIPOS.map(t=>`<option ${t===e.tipo?'selected':''}>${t}</option>`).join('')}</select></div></div>
+        <div class="form-row"><div><label>Capacidad</label><input class="pf-ext-capacidad" value="${esc(e.capacidad||'')}" placeholder="Ej. 10 lb"/></div><div><label>Ubicación</label><input class="pf-ext-ubicacion" value="${esc(e.ubicacion||'')}" placeholder="Recepción, cocina, bodega..."/></div></div>
+        <div class="form-row"><div><label>Estado</label><select class="pf-ext-estado">${['Activo','En mantenimiento','Fuera de servicio','Reemplazado'].map(x=>`<option ${x===e.estado?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Último mantenimiento</label><input type="date" class="pf-ext-ultimo" value="${esc(e.ultimoMantenimiento||'')}"/></div></div>
+        <div class="form-row"><div><label>Próximo mantenimiento</label><input type="date" class="pf-ext-proximo" value="${esc(e.proximoMantenimiento||'')}"/></div><div><label>Trabajo realizado</label><input class="pf-ext-trabajo" value="${esc(e.trabajoRealizado||'')}" placeholder="Recarga, prueba, repintado..."/></div></div>
+        <div class="form-row full"><div><label>Observaciones</label><textarea class="pf-ext-observaciones" placeholder="Detalles del equipo...">${esc(e.observaciones||'')}</textarea></div></div>
+      </div>`).join('');
+  }
+  function capturarExtintoresPerfil(){
+    return Array.from(document.querySelectorAll('.perfil-extintor')).map(el=>({
+      id:el.getAttribute('data-extintor-id')||String(Date.now()+Math.random()),
+      serie:el.querySelector('.pf-ext-serie')?.value.trim()||'',
+      tipo:el.querySelector('.pf-ext-tipo')?.value||'PQS ABC',
+      capacidad:el.querySelector('.pf-ext-capacidad')?.value.trim()||'',
+      ubicacion:el.querySelector('.pf-ext-ubicacion')?.value.trim()||'',
+      estado:el.querySelector('.pf-ext-estado')?.value||'Activo',
+      ultimoMantenimiento:el.querySelector('.pf-ext-ultimo')?.value||'',
+      proximoMantenimiento:el.querySelector('.pf-ext-proximo')?.value||'',
+      trabajoRealizado:el.querySelector('.pf-ext-trabajo')?.value.trim()||'',
+      observaciones:el.querySelector('.pf-ext-observaciones')?.value.trim()||''
+    }));
+  }
+
   window.CRMClientes = {
     clienteKey,
     inicialesDe,
     telefonosTexto,
     perfilDeCliente,
     emptyPerfilCliente,
-    ETIQUETAS_CLIENTE
+    ETIQUETAS_CLIENTE,
+    extintorVacio,
+    extintoresPerfilHTML,
+    capturarExtintoresPerfil
   };
 })();
