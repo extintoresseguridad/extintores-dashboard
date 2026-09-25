@@ -3275,6 +3275,25 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   }
 
   function openNew(){ form = emptyForm(); formLineas = [emptyLinea()]; editingId = null; renderModal(true); }
+
+  // Abre un nuevo ingreso desde la Ficha 360° con los datos del cliente ya cargados.
+  function openNuevaOrdenCliente(clientePrellenado, telefonoPrellenado, clienteKeyPrellenado){
+    const cliente = agruparClientesMantenimiento().find(x => x.key === clienteKeyPrellenado);
+    const registroBase = cliente && cliente.registros && cliente.registros.length
+      ? [...cliente.registros].sort((a,b)=>(b.fechaIngreso||'').localeCompare(a.fechaIngreso||''))[0]
+      : null;
+    form = emptyForm();
+    form.cliente = clientePrellenado || (cliente && cliente.nombre) || '';
+    form.telefono = telefonoPrellenado || (cliente && cliente.telefono) || '';
+    formLineas = [emptyLinea()];
+    if(registroBase){
+      formLineas[0].tipo = registroBase.tipo || formLineas[0].tipo;
+      formLineas[0].capacidad = registroBase.capacidad || '';
+      formLineas[0].cantidad = Math.max(1, parseInt(cliente.totalExtintores,10) || parseInt(registroBase.cantidad,10) || 1);
+    }
+    editingId = null;
+    renderModal(true);
+  }
   function openEdit(id){
     const rec = records.find(r=>r.id===id);
     if(!rec) return;
@@ -5941,7 +5960,8 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           ${perfilClienteHTML(key, c.nombre, c.telefono)}
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
             <button class="btn-primary" id="btn-nueva-venta-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Registrar venta de equipo</button>
-            <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
+            <button class="btn-primary" id="btn-nueva-orden-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}" data-cliente-key="${esc(key)}">+ Nueva orden de servicio</button>
+          <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
             <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
             <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
           </div>
@@ -5976,6 +5996,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         </div>
         ${perfilClienteHTML(key, c.nombre, c.telefono)}
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+          <button class="btn-primary" id="btn-nueva-orden-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}" data-cliente-key="${esc(key)}">+ Nueva orden de servicio</button>
           <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
           <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
           <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
@@ -6857,6 +6878,8 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         if(btnSepararCliente) btnSepararCliente.addEventListener('click', ()=> abrirSepararCliente(btnSepararCliente.getAttribute('data-separar-cliente')));
         const btnNuevaVenta = document.getElementById('btn-nueva-venta-cliente');
         if(btnNuevaVenta) btnNuevaVenta.addEventListener('click', ()=> openNuevaVenta(btnNuevaVenta.getAttribute('data-cliente'), btnNuevaVenta.getAttribute('data-telefono')));
+        const btnNuevaOrdenCliente = document.getElementById('btn-nueva-orden-cliente');
+        if(btnNuevaOrdenCliente) btnNuevaOrdenCliente.addEventListener('click', ()=> openNuevaOrdenCliente(btnNuevaOrdenCliente.getAttribute('data-cliente'), btnNuevaOrdenCliente.getAttribute('data-telefono'), btnNuevaOrdenCliente.getAttribute('data-cliente-key')));
         const btnNuevaOpCliente = document.getElementById('btn-nueva-oportunidad-cliente');
         if(btnNuevaOpCliente) btnNuevaOpCliente.addEventListener('click', ()=> openNuevaOportunidad(btnNuevaOpCliente.getAttribute('data-cliente'), btnNuevaOpCliente.getAttribute('data-telefono')));
         const btnNuevoContratoCliente = document.getElementById('btn-nuevo-contrato-cliente');
