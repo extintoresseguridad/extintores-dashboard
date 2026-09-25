@@ -1584,12 +1584,14 @@
       inventario = [];
     }
     migrarServicioCombinado();
+    const migracionClientes = migrarClientesAFicha360();
     limpiarTarjetasObsoletas();
     limpiarPapeleraVieja();
     ultimaActualizacion = new Date();
     const nuevasOportunidades = generarOportunidadesRenovacion();
-    if(nuevasOportunidades > 0){
+    if(nuevasOportunidades > 0 || migracionClientes.creados > 0 || migracionClientes.actualizados > 0){
       await persist(); // persist() ya llama a render() al final
+      if(migracionClientes.creados > 0) showToast(`Se incorporaron ${migracionClientes.creados} cliente(s) a la Ficha 360°.`);
     } else {
       render();
     }
@@ -1665,6 +1667,66 @@
     tarjetasCerradas = new Set([...tarjetasCerradas].filter(k => ordenesVigentes.has(k)));
     guardarSetLocal(TARJETAS_ABIERTAS_KEY, tarjetasAbiertas);
     guardarSetLocal(TARJETAS_CERRADAS_KEY, tarjetasCerradas);
+  }
+
+  // Crea automáticamente una Ficha 360° para los clientes que ya existen en el historial.
+  // No elimina ni modifica órdenes, ventas ni demás registros: solo completa perfiles faltantes
+  // y aprovecha teléfono/dirección que ya estén registrados en el historial.
+  function migrarClientesAFicha360(){
+    const fuentes = [];
+    const agregarFuente = obj => {
+      if(!obj || !obj.cliente || !String(obj.cliente).trim()) return;
+      fuentes.push({
+        cliente: String(obj.cliente).trim(),
+        telefono: String(obj.telefono || '').trim(),
+        direccion: String(obj.direccion || '').trim()
+      });
+    };
+
+    records.forEach(agregarFuente);
+    ventas.forEach(agregarFuente);
+    contratos.forEach(agregarFuente);
+    oportunidades.forEach(agregarFuente);
+    recordatorios.forEach(agregarFuente);
+    cajas.forEach(caja => (caja.movimientos || []).forEach(agregarFuente));
+
+    const porKey = new Map();
+    clientesPerfil.forEach(p => {
+      const key = clienteKey(p);
+      if(key) porKey.set(key, p);
+    });
+
+    let creados = 0;
+    let actualizados = 0;
+    fuentes.forEach(src => {
+      const key = clienteKey(src);
+      if(!key) return;
+      const existente = porKey.get(key);
+      if(!existente){
+        const perfil = {
+          ...emptyPerfilCliente(),
+          id: uid(),
+          cliente: src.cliente,
+          telefono: src.telefono,
+          direccion: src.direccion,
+          fechaCreacion: todayISO(),
+          notas: 'Ficha 360° creada automáticamente a partir del historial existente.'
+        };
+        clientesPerfil.unshift(perfil);
+        porKey.set(key, perfil);
+        creados++;
+        return;
+      }
+
+      // Solo completamos campos vacíos; nunca reemplazamos información que el usuario
+      // ya haya introducido manualmente en la Ficha 360°.
+      let cambio = false;
+      if(!existente.telefono && src.telefono){ existente.telefono = src.telefono; cambio = true; }
+      if(!existente.direccion && src.direccion){ existente.direccion = src.direccion; cambio = true; }
+      if(cambio) actualizados++;
+    });
+
+    return { creados, actualizados };
   }
 
   function migrarServicioCombinado(){
