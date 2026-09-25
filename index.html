@@ -390,6 +390,7 @@
   .linea-remove{background:none;border:none;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;padding:2px 6px;}
   .linea-remove:disabled{opacity:.3;cursor:not-allowed;}
   .perfil-extintor{border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 16px;margin:10px 0;background:#F9FAFB;}
+  .orden-extintores-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;margin-top:8px}.orden-extintor-check{display:flex;gap:9px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff;cursor:pointer}.orden-extintor-check small{display:block;color:#6B7280;margin-top:3px}
   .btn-add-linea{
     width:100%;padding:10px;border:1.5px dashed var(--line);background:transparent;border-radius:var(--radius-sm);
     font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;margin-bottom:14px;
@@ -2086,6 +2087,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     return { id:null, cliente:'', telefono:'', direccion:'', orden:'', tipo:TIPOS[0], capacidad:'', cantidad:1,
       precio:'', abono:'', pagado:'pendiente', fechaVencimiento:'',
       fechaIngreso: todayISO(), fechaEntrega:'', estado:'recibido', servicios:[SERVICIOS[0]],
+      selectedExtintorIds:[],
       servicioPrecios:{}, observaciones:'' };
   }
   let form = emptyForm();
@@ -3288,6 +3290,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     form.telefono = telefonoPrellenado || (cliente && cliente.telefono) || '';
     const perfil = cliente ? perfilDeCliente(cliente.key) : null;
     form.direccion = (perfil && perfil.direccion) || '';
+    form.selectedExtintorIds = (perfil && perfil.extintores ? perfil.extintores.map(e=>e.id) : []);
     formLineas = [emptyLinea()];
     if(registroBase){
       formLineas[0].tipo = registroBase.tipo || formLineas[0].tipo;
@@ -3300,7 +3303,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   function openEdit(id){
     const rec = records.find(r=>r.id===id);
     if(!rec) return;
-    form = Object.assign({}, rec);
+    form = Object.assign({}, rec, { selectedExtintorIds: rec.selectedExtintorIds || [] });
     editingId = id;
     renderModal(true);
   }
@@ -3319,6 +3322,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       fechaEntrega: document.getElementById('f-fechaEntrega').value,
       fechaVencimiento: document.getElementById('f-fechaVencimiento').value,
       observaciones: document.getElementById('f-observaciones').value,
+      selectedExtintorIds: Array.from(document.querySelectorAll('.f-extintor-link:checked')).map(x=>x.value),
     };
   }
 
@@ -3349,6 +3353,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     const fechaEntrega = document.getElementById('f-fechaEntrega').value;
     const fechaVencimiento = document.getElementById('f-fechaVencimiento').value;
     const observaciones = document.getElementById('f-observaciones').value.trim();
+    const selectedExtintorIds = Array.from(document.querySelectorAll('.f-extintor-link:checked')).map(x=>x.value);
 
     if(editingId){
       const servicioPrecios = {};
@@ -3398,6 +3403,9 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       });
       records = [...nuevos, ...records];
     }
+    actualizarHistorialExtintores(cliente, selectedExtintorIds, fechaEntrega || fechaIngreso, fechaVencimiento, Array.from(document.querySelectorAll('.f-servicio-check:checked')).map(el=>el.value), observaciones);
+    records = records.map(r => r.id === editingId ? {...r, selectedExtintorIds} : r);
+    if(!editingId){ records = records.map(r => r.orden===orden && r.cliente===cliente ? {...r, selectedExtintorIds} : r); }
     const saveBtn = document.getElementById('modal-save');
     if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
     const ok = await persist();
@@ -7147,6 +7155,22 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     });
   }
 
+  function extintoresOrdenHTML(cliente, selectedIds){
+    const perfil = clientesPerfil.find(p=>clienteKey(p)===clienteKey({cliente}));
+    const lista = (perfil && perfil.extintores) || [];
+    if(!lista.length) return '<div class="caja-hint" style="margin:0;">Este cliente no tiene extintores individuales registrados en su Ficha 360°. Puedes registrarlos primero desde el perfil.</div>';
+    return '<div class="orden-extintores-grid">'+lista.map(e=>'<label class="orden-extintor-check"><input type="checkbox" class="f-extintor-link" value="'+esc(e.id)+'" '+((selectedIds||[]).includes(e.id)?'checked':'')+'/><span><b>'+esc(e.serie||'Sin serie')+'</b> · '+esc(e.tipo||'')+' '+(e.capacidad?'· '+esc(e.capacidad):'')+'<small>'+(e.ubicacion?esc(e.ubicacion)+' · ':'')+esc(e.estado||'Activo')+'</small></span></label>').join('')+'</div>';
+  }
+
+  function actualizarHistorialExtintores(cliente, selectedIds, fechaServicio, fechaProximo, servicios, observaciones){
+    if(!selectedIds || !selectedIds.length) return;
+    const ids = new Set(selectedIds);
+    clientesPerfil = clientesPerfil.map(p=>{
+      if(clienteKey(p)!==clienteKey({cliente}) || !p.extintores) return p;
+      return {...p, extintores:p.extintores.map(e=>ids.has(e.id)?{...e, estado:'Activo', ultimoMantenimiento:fechaServicio || e.ultimoMantenimiento || '', proximoMantenimiento:fechaProximo || e.proximoMantenimiento || '', trabajoRealizado:(servicios||[]).join(', ') || e.trabajoRealizado || '', observaciones:observaciones || e.observaciones || ''}:e)};
+    });
+  }
+
   function renderModal(open, preserveLineas){
     let overlay = document.querySelector('.overlay');
     if(!open){
@@ -7220,6 +7244,12 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           <div class="form-row full">
             <div><label>Observaciones</label><textarea id="f-observaciones" placeholder="Notas adicionales...">${esc(form.observaciones)}</textarea></div>
           </div>
+          <div class="form-row full">
+            <div><label>Extintores de la Ficha 360° incluidos en esta orden</label>
+              ${extintoresOrdenHTML(form.cliente, form.selectedExtintorIds)}
+              <small class="field-hint">Selecciona los equipos que realmente entraron a mantenimiento. Al guardar, su historial se actualizará automáticamente.</small>
+            </div>
+          </div>
     ` : `
           <div class="form-row">
             <div><label>Cliente *</label><input id="f-cliente" value="${esc(form.cliente)}" placeholder="Nombre o empresa"/></div>
@@ -7237,6 +7267,12 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           </div>
           <div class="form-row full">
             <div><label>Observaciones</label><textarea id="f-observaciones" placeholder="Notas adicionales de la orden...">${esc(form.observaciones)}</textarea></div>
+          </div>
+          <div class="form-row full">
+            <div><label>Extintores de la Ficha 360° incluidos en esta orden</label>
+              ${extintoresOrdenHTML(form.cliente, form.selectedExtintorIds)}
+              <small class="field-hint">Selecciona los equipos que realmente entraron a mantenimiento. Al guardar, su historial se actualizará automáticamente.</small>
+            </div>
           </div>
           <hr style="border:none;border-top:1px solid var(--line);margin:18px 0 16px;"/>
           <div id="lineas-container">
