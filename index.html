@@ -1483,14 +1483,14 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   let oportunidades = []; // { id, cliente, telefono, descripcion, montoEstimado, etapa:'contactado'|'cotizado'|'ganado'|'perdido', fechaCreacion, bitacora:[{id,fecha,tipo,nota}] }
   let recordatorios = []; // { id, texto, fecha, cliente, telefono, oportunidadId, completado }
   let clientesPerfil = []; // { id, cliente, telefono, empresa, cedula, notas, etiquetas, fechaCreacion } — datos personales del cliente, independientes de sus órdenes/ventas
-  let contratos = []; // { id, cliente, telefono, cantidadExtintores, fechaInicio, fechaRenovacion, valorAnual, estado:'activo'|'cancelado', notas, referidoPor, creditoReferido }
+  let contratos = []; // membresías Cliente Seguro\n  let referidos = []; // programa independiente de referidos
   let inventario = []; // { id, nombre, categoria:'extintor'|'repuesto'|'servicio', tipo, capacidad, cantidad, cantidadMinima, precioUnitario, notas, movimientos:[{id,tipo,cantidad,fecha,nota}] }
   let loadError = null;
   let filter = 'todos';
   let venceFilter = 'todos';
   let query = '';
   let editingId = null;
-  let view = 'industrial'; // 'industrial' | 'listado' | 'panel' | 'clientes' | 'caja' | 'crm' | 'inventario' | 'cliente-seguro'
+  let view = 'industrial'; // ... | 'cliente-seguro' | 'referidos'
   let crmSubvista = 'pipeline'; // 'pipeline' | 'recordatorios' | 'contratos'
   let pipelineQuery = '';
   let oportunidadSeleccionada = null;
@@ -2752,7 +2752,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   }
 
   function tamanoDatosKB(){
-    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario, configuracion });
+    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, referidos, inventario, configuracion });
     try{ return (new Blob([json]).size / 1024).toFixed(1); }
     catch(e){ return (json.length / 1024).toFixed(1); }
   }
@@ -3196,7 +3196,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     oportunidades = mergeArrayPorId(oportunidades, remoto.oportunidades, idsEnPapeleraPorTipo('oportunidad'));
     recordatorios = mergeArrayPorId(recordatorios, remoto.recordatorios, idsEnPapeleraPorTipo('recordatorio'));
     clientesPerfil = mergeArrayPorId(clientesPerfil, remoto.clientesPerfil, idsEnPapeleraPorTipo('perfil_cliente'));
-    contratos = mergeArrayPorId(contratos, remoto.contratos, idsEnPapeleraPorTipo('contrato'));
+    contratos = mergeArrayPorId(contratos, remoto.contratos, idsEnPapeleraPorTipo('contrato'));\n    referidos = mergeArrayPorId(referidos, remoto.referidos, idsEnPapeleraPorTipo('referido'));
     inventario = mergeArrayConSubcoleccion(inventario, remoto.inventario, 'movimientos', idsEnPapeleraPorTipo('producto_inventario'), new Set());
     cajas = mergeArrayConSubcoleccion(cajas, remoto.cajas, 'movimientos', new Set(), idsEnPapeleraPorTipo('movimiento_caja'));
     papelera = mergeArrayPorId(papelera, remoto.papelera, papeleraEliminadosRecientes);
@@ -4235,6 +4235,23 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     `;
   }
 
+  /* ---------- Programa de Referidos ---------- */
+  function renderReferidos(){
+    const confirmados=referidos.filter(r=>r.estado==='confirmado'), pendientes=referidos.filter(r=>r.estado==='pendiente');
+    const credito=confirmados.reduce((s,r)=>s+(parseFloat(r.credito)||0),0);
+    return `<div class="cliente-seguro-view view-fade"><div class="cs-hero"><div><h2>🔥 Programa de Referidos</h2><p>Cliente que recomienda</p><div class="quote">Programa independiente de Cliente Seguro. Los resultados se consolidan en el Dashboard.</div></div><div class="cs-hero-actions"><button class="btn-primary" id="ref-nuevo">+ Registrar referido</button></div></div>
+      <div class="cs-section"><h3>Resumen</h3><span>Referidos y créditos</span></div><div class="cs-two"><div class="cs-panel"><div class="cs-benefit-grid">
+      <div class="cs-benefit">🔥 Total: <b>${referidos.length}</b></div><div class="cs-benefit">🟢 Confirmados: <b>${confirmados.length}</b></div><div class="cs-benefit">🟠 Pendientes: <b>${pendientes.length}</b></div><div class="cs-benefit">💰 Créditos: <b>₡${credito.toLocaleString('es-CR')}</b></div>
+      </div></div></div><div class="cs-section"><h3>Historial</h3><span>${referidos.length} registro(s)</span></div><div class="cs-panel">${referidos.length?`<div class="cs-active-list">${referidos.map(r=>`<div class="cs-active-row"><div class="cs-active-main"><b>${esc(r.referidor||'')} → ${esc(r.referido||'')}</b><span>${esc(r.fecha||'—')} · ${esc(r.servicio||'Sin servicio')} · ₡${(parseFloat(r.credito)||0).toLocaleString('es-CR')}</span></div><span class="cs-status">${esc(r.estado||'pendiente')}</span></div>`).join('')}</div>`:'<div class="dash-empty">Todavía no hay referidos registrados.</div>'}</div></div>`;
+  }
+  function abrirNuevoReferido(){
+    const o=document.createElement('div'); o.className='overlay referido-overlay';
+    o.innerHTML=`<div class="modal" style="max-width:680px"><div class="modal-head"><h2>Registrar referido</h2><button id="ref-close">×</button></div><div class="modal-body">
+      <div class="form-row"><div><label>Cliente que recomienda *</label><input id="ref-r"></div><div><label>Teléfono</label><input id="ref-tr"></div></div><div class="form-row"><div><label>Cliente referido *</label><input id="ref-n"></div><div><label>Teléfono</label><input id="ref-tn"></div></div>
+      <div class="form-row"><div><label>Fecha</label><input type="date" id="ref-f" value="${todayISO()}"></div><div><label>Servicio</label><input id="ref-s" placeholder="Primera recarga"></div></div><div class="form-row"><div><label>Crédito</label><input type="number" id="ref-c" value="5000" step="5000"></div><div><label>Estado</label><select id="ref-e"><option value="pendiente">Pendiente</option><option value="confirmado">Confirmado</option><option value="rechazado">Rechazado</option></select></div></div></div><div class="modal-foot"><button class="btn-ghost" id="ref-cancel">Cancelar</button><button class="btn-primary" id="ref-save">Registrar referido</button></div></div>`;
+    document.body.appendChild(o); const close=()=>o.remove(); document.getElementById('ref-close').onclick=close; document.getElementById('ref-cancel').onclick=close;
+    document.getElementById('ref-save').onclick=async()=>{const a=document.getElementById('ref-r').value.trim(),b=document.getElementById('ref-n').value.trim();if(!a||!b){showToast('El referidor y el nuevo cliente son obligatorios.');return;} referidos=[{id:String(Date.now()),referidor:a,telefonoReferidor:document.getElementById('ref-tr').value.trim(),referido:b,telefonoReferido:document.getElementById('ref-tn').value.trim(),fecha:document.getElementById('ref-f').value,servicio:document.getElementById('ref-s').value.trim(),credito:parseFloat(document.getElementById('ref-c').value)||0,estado:document.getElementById('ref-e').value},...referidos]; if(await persist()){close();showToast('Referido registrado.');}};
+  }
   /* ---------- Programa Cliente Seguro ---------- */
   const CLIENTE_SEGURO_PLANES = {
     cliente_seguro:{nombre:'Cliente Seguro',equipos:'1–5 equipos',precio:15000,beneficios:['Registro de los extintores.','Historial de mantenimiento.','Recordatorio de mantenimiento.','Revisión visual preventiva.','Atención por WhatsApp.','Precio preferencial en determinados servicios.']},
@@ -6089,7 +6106,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     const porCapacidad = agruparPor('capacidad');
     const estados = conteoPorEstado();
     const maxEstado = Math.max(...estados.map(e=>e.count), 1);
-    const vencimientos = proximosVencimientos();
+    const referidosConfirmados=referidos.filter(r=>r.estado==='confirmado'), referidosPendientes=referidos.filter(r=>r.estado==='pendiente');\n    const creditosReferidos=referidosConfirmados.reduce((s,r)=>s+(parseFloat(r.credito)||0),0);\n    const membresiasActivas=contratos.filter(c=>c.estado==='activo');\n    const vencimientos = proximosVencimientos();
     const vencidosCount = vencimientos.filter(x=>x.vs==='vencido').length;
     const proximoCount = vencimientos.filter(x=>x.vs==='proximo').length;
     const riesgoCount = clientesEnRiesgo().length;
@@ -6112,7 +6129,8 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           <button class="btn-ghost" data-view="inventario">Ver inventario</button>
         </div>
 
-        <div class="kpi-grid">
+        <div class="kpi-grid" style="margin-bottom:18px;"><div class="kpi-card"><div class="kpi-label">🛡️ Cliente Seguro</div><div class="kpi-value">${membresiasActivas.length}</div><div class="kpi-sub">Membresías activas</div></div><div class="kpi-card"><div class="kpi-label">🔥 Referidos</div><div class="kpi-value">${referidosConfirmados.length}</div><div class="kpi-sub">${referidosPendientes.length} pendientes · ₡${creditosReferidos.toLocaleString('es-CR')}</div></div></div>
+      <div class="kpi-grid">
           <div class="kpi-card">
             <div class="kpi-label">Total de registros</div>
             <div class="kpi-value">${records.length}</div>
@@ -6577,7 +6595,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           <button data-view="industrial" class="${view==='industrial'?'active':''}"><span class="snav-ico">⌂</span>Inicio</button>
           <button data-view="listado" class="${view==='listado'?'active':''}"><span class="snav-ico">▤</span>Operaciones</button>
           <button data-view="clientes" class="${view==='clientes'?'active':''}"><span class="snav-ico">◔</span>Clientes</button>
-           <button data-view="cliente-seguro" class="${view==='cliente-seguro'?'active':''}"><span class="snav-ico">🛡</span>Cliente Seguro</button>
+           <button data-view="cliente-seguro" class="${view==='cliente-seguro'?'active':''}"><span class="snav-ico">🛡</span>Cliente Seguro</button>\n          <button data-view="referidos" class="${view==='referidos'?'active':''}"><span class="snav-ico">🔥</span>Referidos</button>
           <button data-view="crm" class="${view==='crm'?'active':''}"><span class="snav-ico">◆</span>Ventas / CRM</button>
           <button data-view="panel" class="${view==='panel'?'active':''}"><span class="snav-ico">▲</span>Indicadores</button>
           <button data-view="inventario" class="${view==='inventario'?'active':''}"><span class="snav-ico">▣</span>Inventario</button>
@@ -6636,7 +6654,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           <div class="grid">${agruparPorOrden(filtered).map(orderCardHTML).join('')}</div>`
         }
       </div>
-      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : (view === 'cliente-seguro' ? renderClienteSeguro() : renderIndustrial())))))))}
+      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : (view === 'cliente-seguro' ? renderClienteSeguro() : (view === 'referidos' ? renderReferidos() : renderIndustrial()))))))))}
       </div>
       </div>
       </div>
@@ -6723,7 +6741,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       });
     }
 
-    if(view === 'cliente-seguro'){
+    if(view === 'referidos'){ const b=document.getElementById('ref-nuevo'); if(b) b.addEventListener('click',abrirNuevoReferido); }\n    if(view === 'cliente-seguro'){
       const btnNueva = document.getElementById('cs-nueva-membresia');
       if(btnNueva) btnNueva.addEventListener('click', ()=> openNuevoContrato());
       const btnVer = document.getElementById('cs-ver-membresias');
