@@ -4271,16 +4271,12 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     const vencidas=activos.filter(c=>{const d=diasRenovacion(c.fechaRenovacion);return d!==null&&d<0;});
     const proximas=activos.filter(c=>{const d=diasRenovacion(c.fechaRenovacion);return d!==null&&d>=0&&d<=30;});
     const urgentes=activos.filter(c=>{const d=diasRenovacion(c.fechaRenovacion);return d!==null&&d>=0&&d<=7;});
-    const referidosRegistrados=contratos.filter(c=>c.referidoPor).length;
-    const creditosReferidos=contratos.reduce((s,c)=>s+(parseFloat(c.creditoReferido)||0),0);
     return `<div class="cliente-seguro-view view-fade">
       <div class="cs-hero"><div><h2>🛡️ Programa Cliente Seguro</h2><p>“Nosotros nos encargamos de recordar. Usted se encarga de estar protegido.”</p><div class="quote">Seguimiento, historial, recordatorios y beneficios especiales para sus equipos.</div></div><div class="cs-hero-actions"><button class="btn-primary" id="cs-nueva-membresia">+ Registrar Cliente Seguro</button><button class="btn-ghost" id="cs-ver-membresias">Ver membresías</button></div></div>
       <div class="cs-section"><h3>Planes disponibles</h3><span>Vigencia de 12 meses</span></div>
       <div class="cs-plan-grid">${Object.entries(CLIENTE_SEGURO_PLANES).map(([id,p],idx)=>`<div class="cs-plan ${idx===1?'featured':''}">${idx===1?'<div class="cs-ribbon">Plus</div>':''}<h4>${p.nombre}</h4><div class="equipos">${p.equipos}</div><div class="cs-price">₡${p.precio.toLocaleString('es-CR')} <small>/ año</small></div><ul>${p.beneficios.map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('')}</div>
       <div class="cs-note"><b>Importante:</b> la membresía no sustituye el costo de recargas, reparaciones, repuestos, pruebas u otros trabajos que requieran los equipos. Es el servicio de seguimiento y beneficios.</div>
-      <div class="cs-section"><h3>Beneficios y referidos</h3><span>Información del programa</span></div>
-      <div class="cs-two"><div class="cs-panel"><h4>Beneficios del programa</h4><div class="cs-benefit-grid">${['Registro e historial de sus equipos.','Recordatorios de mantenimiento.','Seguimiento de fechas de servicio.','Revisión visual preventiva.','Atención y coordinación mediante WhatsApp.','Precios preferenciales y/o beneficios especiales según el plan.','Prioridad de atención en los planes que correspondan.','Beneficios por referir nuevos clientes.'].map(x=>`<div class="cs-benefit">✓ ${x}</div>`).join('')}</div></div>
-      <div class="cs-panel cs-referral"><h4>🔥 PROGRAMA “CLIENTE QUE RECOMIENDA”</h4><strong>Por cada cliente nuevo referido que realice un servicio:</strong><div class="credit">₡5.000 de crédito</div><div style="font-size:11.5px;color:#4B5563;line-height:1.55;">El crédito se utiliza en futuros servicios. Límite sugerido: hasta ₡25.000 acumulables por año.</div><div style="margin-top:12px;font-size:11px;color:#6B7280;">Referidos registrados: <b>${referidosRegistrados}</b> · Créditos registrados: <b>₡${creditosReferidos.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div></div></div>
+      <div class="cs-section"><h3>Beneficios de Cliente Seguro</h3><span>Exclusivos de la membresía</span></div>
       <div class="cs-section"><h3>Seguimiento de renovaciones</h3><span>Control automático de vencimientos</span></div>
       <div class="cs-two">
         <div class="cs-panel">
@@ -5157,8 +5153,6 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       valorAnual: document.getElementById('ct-valorAnual').value.trim(),
       estado: document.getElementById('ct-estado').value,
       notas: document.getElementById('ct-notas').value.trim(),
-      referidoPor: document.getElementById('ct-referidoPor').value.trim(),
-      creditoReferido: document.getElementById('ct-creditoReferido').value.trim(),
     };
     if(editingContratoId){
       contratos = contratos.map(c => c.id === editingContratoId ? nuevo : c);
@@ -5247,8 +5241,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
             <div><label>Notas</label><textarea id="ct-notas" placeholder="Alcance del contrato, condiciones especiales...">${esc(contratoForm.notas)}</textarea></div>
           </div>
           <div class="form-row">
-            <div><label>Cliente que recomienda (referido)</label><input id="ct-referidoPor" value="${esc(contratoForm.referidoPor||'')}" placeholder="Nombre del cliente que lo refirió"/></div>
-            <div><label>Crédito por referido</label><input type="number" id="ct-creditoReferido" min="0" step="5000" value="${esc(contratoForm.creditoReferido||'')}" placeholder="5000"/></div>
+            <div class="cs-note" style="margin-top:4px;"><b>Referidos:</b> se administran desde el módulo independiente <b>🔥 Referidos</b>.</div>
           </div>
         </div>
         <div class="modal-foot">
