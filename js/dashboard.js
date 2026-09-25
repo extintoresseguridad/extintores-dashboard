@@ -1,7 +1,7 @@
 // Módulo de Dashboard — preparado para separación progresiva.
 // Contiene la vista consolidada; aún no se activa para mantener estable el CRM.
 (function(){
-function renderDashboard(){
+function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,contratos,proximosVencimientos,esc}){
     const ingresos = ingresosPorMes();
     const maxIngreso = Math.max(...ingresos.map(m=>m.total), 1);
     const ventasMes = ventasPorMes();
