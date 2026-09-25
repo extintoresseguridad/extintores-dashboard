@@ -4518,6 +4518,52 @@
       </details>`;
   }
 
+  function historialOrdenesClienteHTML(registros){
+    const lista = Array.isArray(registros) ? registros : [];
+    if(!lista.length) return '';
+    const grupos = new Map();
+    lista.forEach(r=>{
+      const k = r.orden ? 'orden:'+r.orden : 'registro:'+r.id;
+      if(!grupos.has(k)) grupos.set(k, []);
+      grupos.get(k).push(r);
+    });
+    const ordenes = [...grupos.values()].sort((a,b)=>{
+      const fa = a.reduce((m,r)=>Math.max(m, Date.parse(r.fechaIngreso||'')||0),0);
+      const fb = b.reduce((m,r)=>Math.max(m, Date.parse(r.fechaIngreso||'')||0),0);
+      return fb-fa;
+    });
+    return `
+      <div class="dash-panel" style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;">
+          <h3 style="margin:0;">Historial de órdenes de trabajo <span>${lista.length}</span></h3>
+          <span class="caja-hint" style="margin:0;">${ordenes.length} orden(es)</span>
+        </div>
+        <div class="vence-list">
+          ${ordenes.map(grupo=>{
+            const primero=grupo[0];
+            const total=grupo.reduce((s,r)=>s+(saldoOf(r).precio||0),0);
+            const saldo=grupo.reduce((s,r)=>s+(saldoOf(r).saldo||0),0);
+            const servicios=[...new Set(grupo.flatMap(r=>r.servicios||[]))];
+            const estados=[...new Set(grupo.map(r=>estadoOf(r.estado).label))];
+            const equipos=grupo.reduce((s,r)=>s+(parseInt(r.cantidad,10)||1),0);
+            return `
+              <div class="vence-item" style="align-items:flex-start;">
+                <div>
+                  <div class="v-name">${primero.orden ? 'Orden #'+esc(primero.orden) : 'Servicio sin número de orden'} · ${equipos} extintor(es)</div>
+                  <div class="v-order">${esc(primero.fechaIngreso||'Sin fecha')} · ${esc(estados.join(' / '))}</div>
+                  <div class="v-order">${servicios.length ? esc(servicios.join(' · ')) : 'Sin servicio especificado'}${primero.fechaVencimiento ? ' · Próx. recarga: '+esc(primero.fechaVencimiento) : ''}</div>
+                  ${primero.observaciones ? '<div class="v-order">'+esc(primero.observaciones)+'</div>' : ''}
+                </div>
+                <div style="text-align:right;white-space:nowrap;">
+                  ${total ? '<div class="v-name">₡'+total.toLocaleString('es-CR',{maximumFractionDigits:0})+'</div>' : ''}
+                  ${saldo>0 ? '<div class="v-date venc-vencido">Saldo ₡'+saldo.toLocaleString('es-CR',{maximumFractionDigits:0})+'</div>' : '<div class="v-date">Pagado</div>'}
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
   function etiquetasHTML(etiquetas){
     return (etiquetas||[]).map(et=>`<span class="etiqueta-badge etiqueta-${et.toLowerCase()}">${esc(et)}</span>`).join('');
   }
@@ -4614,6 +4660,7 @@
           <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
         </div>
         ${crmClienteResumenHTML(key)}
+        ${historialOrdenesClienteHTML(registrosOrdenados)}
         ${registrosOrdenados.length ? `<div class="grid">${registrosOrdenados.map(cardHTML).join('')}</div>` : ''}
         ${informalesOrdenados.length ? `
         <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#6B7280;margin:20px 0 10px;">Servicios rápidos (cobrados en caja, sin boleta)</h3>
