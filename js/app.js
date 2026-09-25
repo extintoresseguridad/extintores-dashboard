@@ -2812,6 +2812,8 @@
     `;
   }
 
+  function renderReferidos(){ return window.CRMReferidos.renderReferidos(referidos, esc); }
+
   /* ---------- Programa Cliente Seguro ---------- */
   const CLIENTE_SEGURO_PLANES = {
     cliente_seguro:{nombre:'Cliente Seguro',equipos:'1–5 equipos',precio:15000,beneficios:['Registro de los extintores.','Historial de mantenimiento.','Recordatorio de mantenimiento.','Revisión visual preventiva.','Atención por WhatsApp.','Precio preferencial en determinados servicios.']},
