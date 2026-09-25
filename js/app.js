@@ -3398,7 +3398,7 @@
   let separarClienteKey = null;
 
   function extintorVacio(){ return window.CRMClientes.extintorVacio(uid); }
-  function extintoresPerfilHTML(lista){ return window.CRMClientes.extintoresPerfilHTML(lista, esc); }
+  function extintoresPerfilHTML(lista){ return window.CRMClientes.extintoresPerfilHTML(lista, esc, TIPOS); }
   function capturarExtintoresPerfil(){ return window.CRMClientes.capturarExtintoresPerfil(); }
   function agregarExtintorPerfil(){ perfilForm.extintores=capturarExtintoresPerfil(); perfilForm.extintores.push(extintorVacio()); renderPerfilClienteModal(true,true); }
   function quitarExtintorPerfil(id){ perfilForm.extintores=capturarExtintoresPerfil().filter(e=>e.id!==id); renderPerfilClienteModal(true,true); }
