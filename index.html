@@ -1483,7 +1483,8 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   let oportunidades = []; // { id, cliente, telefono, descripcion, montoEstimado, etapa:'contactado'|'cotizado'|'ganado'|'perdido', fechaCreacion, bitacora:[{id,fecha,tipo,nota}] }
   let recordatorios = []; // { id, texto, fecha, cliente, telefono, oportunidadId, completado }
   let clientesPerfil = []; // { id, cliente, telefono, empresa, cedula, notas, etiquetas, fechaCreacion } — datos personales del cliente, independientes de sus órdenes/ventas
-  let contratos = []; // membresías Cliente Seguro\n  let referidos = []; // programa independiente de referidos
+  let contratos = []; // membresías Cliente Seguro
+  let referidos = []; // programa independiente de referidos
   let inventario = []; // { id, nombre, categoria:'extintor'|'repuesto'|'servicio', tipo, capacidad, cantidad, cantidadMinima, precioUnitario, notas, movimientos:[{id,tipo,cantidad,fecha,nota}] }
   let loadError = null;
   let filter = 'todos';
@@ -3196,7 +3197,8 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     oportunidades = mergeArrayPorId(oportunidades, remoto.oportunidades, idsEnPapeleraPorTipo('oportunidad'));
     recordatorios = mergeArrayPorId(recordatorios, remoto.recordatorios, idsEnPapeleraPorTipo('recordatorio'));
     clientesPerfil = mergeArrayPorId(clientesPerfil, remoto.clientesPerfil, idsEnPapeleraPorTipo('perfil_cliente'));
-    contratos = mergeArrayPorId(contratos, remoto.contratos, idsEnPapeleraPorTipo('contrato'));\n    referidos = mergeArrayPorId(referidos, remoto.referidos, idsEnPapeleraPorTipo('referido'));
+    contratos = mergeArrayPorId(contratos, remoto.contratos, idsEnPapeleraPorTipo('contrato'));
+    referidos = mergeArrayPorId(referidos, remoto.referidos, idsEnPapeleraPorTipo('referido'));
     inventario = mergeArrayConSubcoleccion(inventario, remoto.inventario, 'movimientos', idsEnPapeleraPorTipo('producto_inventario'), new Set());
     cajas = mergeArrayConSubcoleccion(cajas, remoto.cajas, 'movimientos', new Set(), idsEnPapeleraPorTipo('movimiento_caja'));
     papelera = mergeArrayPorId(papelera, remoto.papelera, papeleraEliminadosRecientes);
@@ -6099,7 +6101,10 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     const porCapacidad = agruparPor('capacidad');
     const estados = conteoPorEstado();
     const maxEstado = Math.max(...estados.map(e=>e.count), 1);
-    const referidosConfirmados=referidos.filter(r=>r.estado==='confirmado'), referidosPendientes=referidos.filter(r=>r.estado==='pendiente');\n    const creditosReferidos=referidosConfirmados.reduce((s,r)=>s+(parseFloat(r.credito)||0),0);\n    const membresiasActivas=contratos.filter(c=>c.estado==='activo');\n    const vencimientos = proximosVencimientos();
+    const referidosConfirmados=referidos.filter(r=>r.estado==='confirmado'), referidosPendientes=referidos.filter(r=>r.estado==='pendiente');
+    const creditosReferidos=referidosConfirmados.reduce((s,r)=>s+(parseFloat(r.credito)||0),0);
+    const membresiasActivas=contratos.filter(c=>c.estado==='activo');
+    const vencimientos = proximosVencimientos();
     const vencidosCount = vencimientos.filter(x=>x.vs==='vencido').length;
     const proximoCount = vencimientos.filter(x=>x.vs==='proximo').length;
     const riesgoCount = clientesEnRiesgo().length;
@@ -6588,7 +6593,8 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           <button data-view="industrial" class="${view==='industrial'?'active':''}"><span class="snav-ico">⌂</span>Inicio</button>
           <button data-view="listado" class="${view==='listado'?'active':''}"><span class="snav-ico">▤</span>Operaciones</button>
           <button data-view="clientes" class="${view==='clientes'?'active':''}"><span class="snav-ico">◔</span>Clientes</button>
-           <button data-view="cliente-seguro" class="${view==='cliente-seguro'?'active':''}"><span class="snav-ico">🛡</span>Cliente Seguro</button>\n          <button data-view="referidos" class="${view==='referidos'?'active':''}"><span class="snav-ico">🔥</span>Referidos</button>
+           <button data-view="cliente-seguro" class="${view==='cliente-seguro'?'active':''}"><span class="snav-ico">🛡</span>Cliente Seguro</button>
+          <button data-view="referidos" class="${view==='referidos'?'active':''}"><span class="snav-ico">🔥</span>Referidos</button>
           <button data-view="crm" class="${view==='crm'?'active':''}"><span class="snav-ico">◆</span>Ventas / CRM</button>
           <button data-view="panel" class="${view==='panel'?'active':''}"><span class="snav-ico">▲</span>Indicadores</button>
           <button data-view="inventario" class="${view==='inventario'?'active':''}"><span class="snav-ico">▣</span>Inventario</button>
@@ -6734,7 +6740,8 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       });
     }
 
-    if(view === 'referidos'){ const b=document.getElementById('ref-nuevo'); if(b) b.addEventListener('click',abrirNuevoReferido); }\n    if(view === 'cliente-seguro'){
+    if(view === 'referidos'){ const b=document.getElementById('ref-nuevo'); if(b) b.addEventListener('click',abrirNuevoReferido); }
+    if(view === 'cliente-seguro'){
       const btnNueva = document.getElementById('cs-nueva-membresia');
       if(btnNueva) btnNueva.addEventListener('click', ()=> openNuevoContrato());
       const btnVer = document.getElementById('cs-ver-membresias');
