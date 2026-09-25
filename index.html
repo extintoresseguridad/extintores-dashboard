@@ -2082,7 +2082,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   }
 
   function emptyForm(){
-    return { id:null, cliente:'', telefono:'', orden:'', tipo:TIPOS[0], capacidad:'', cantidad:1,
+    return { id:null, cliente:'', telefono:'', direccion:'', orden:'', tipo:TIPOS[0], capacidad:'', cantidad:1,
       precio:'', abono:'', pagado:'pendiente', fechaVencimiento:'',
       fechaIngreso: todayISO(), fechaEntrega:'', estado:'recibido', servicios:[SERVICIOS[0]],
       servicioPrecios:{}, observaciones:'' };
@@ -3285,6 +3285,8 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
     form = emptyForm();
     form.cliente = clientePrellenado || (cliente && cliente.nombre) || '';
     form.telefono = telefonoPrellenado || (cliente && cliente.telefono) || '';
+    const perfil = cliente ? perfilDeCliente(cliente.key) : null;
+    form.direccion = (perfil && perfil.direccion) || '';
     formLineas = [emptyLinea()];
     if(registroBase){
       formLineas[0].tipo = registroBase.tipo || formLineas[0].tipo;
@@ -3310,6 +3312,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       ...form,
       cliente: clienteEl.value,
       telefono: document.getElementById('f-telefono').value,
+      direccion: document.getElementById('f-direccion')?.value || '',
       orden: document.getElementById('f-orden').value,
       fechaIngreso: document.getElementById('f-fechaIngreso').value,
       fechaEntrega: document.getElementById('f-fechaEntrega').value,
@@ -3339,6 +3342,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       return;
     }
     const telefono = document.getElementById('f-telefono').value.trim();
+    const direccion = document.getElementById('f-direccion')?.value.trim() || '';
     const orden = document.getElementById('f-orden').value.trim();
     const fechaIngreso = document.getElementById('f-fechaIngreso').value;
     const fechaEntrega = document.getElementById('f-fechaEntrega').value;
@@ -3353,7 +3357,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       });
       const updated = {
         id: editingId,
-        cliente, telefono, orden,
+        cliente, telefono, direccion, orden,
         tipo: document.getElementById('f-tipo').value,
         capacidad: document.getElementById('f-capacidad').value.trim(),
         cantidad: Math.max(1, parseInt(document.getElementById('f-cantidad').value, 10) || 1),
@@ -3377,7 +3381,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
         });
         return {
           id: uid(),
-          cliente, telefono, orden,
+          cliente, telefono, direccion, orden,
           tipo: document.getElementById(`f-tipo-${l.lid}`).value,
           capacidad: document.getElementById(`f-capacidad-${l.lid}`).value.trim(),
           cantidad: Math.max(1, parseInt(document.getElementById(`f-cantidad-${l.lid}`).value, 10) || 1),
@@ -4877,7 +4881,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
 
   const ETIQUETAS_CLIENTE = ['VIP','Corporativo','Residencial','Moroso'];
   function emptyPerfilCliente(){
-    return { id:null, cliente:'', telefono:'', empresa:'', cedula:'', notas:'', etiquetas:[] };
+    return { id:null, cliente:'', telefono:'', empresa:'', cedula:'', direccion:'', notas:'', etiquetas:[] };
   }
   let perfilForm = emptyPerfilCliente();
   let editingPerfilKey = null; // clienteKey del perfil que se está editando (null = creando uno nuevo)
@@ -5015,6 +5019,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       telefono: document.getElementById('pf-telefono').value.trim(),
       empresa: document.getElementById('pf-empresa').value.trim(),
       cedula: document.getElementById('pf-cedula').value.trim(),
+      direccion: document.getElementById('pf-direccion')?.value.trim() || '',
       notas: document.getElementById('pf-notas').value.trim(),
       etiquetas: Array.from(document.querySelectorAll('.pf-etiqueta:checked')).map(el => el.value),
     };
@@ -5082,6 +5087,9 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           <div class="form-row">
             <div><label>Empresa</label><input id="pf-empresa" value="${esc(perfilForm.empresa)}" placeholder="Si es cliente corporativo"/></div>
             <div><label>Cédula / identificación</label><input id="pf-cedula" value="${esc(perfilForm.cedula)}" placeholder="ej. 1-2345-6789"/></div>
+          </div>
+          <div class="form-row full">
+            <div><label>Dirección</label><input id="pf-direccion" value="${esc(perfilForm.direccion||'')}" placeholder="Dirección del cliente"/></div>
           </div>
           <div class="form-row full">
             <div><label>Etiquetas</label>
@@ -7117,6 +7125,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
           <div class="form-row">
             <div><label>Cliente *</label><input id="f-cliente" value="${esc(form.cliente)}" placeholder="Nombre o empresa"/></div>
             <div><label>Teléfono</label><input type="tel" id="f-telefono" value="${esc(form.telefono)}" placeholder="8888-8888"/></div>
+            <div><label>Dirección</label><input id="f-direccion" value="${esc(form.direccion||'')}" placeholder="Dirección del servicio"/></div>
           </div>
           <div class="form-row">
             <div><label>Orden</label><input id="f-orden" value="${esc(form.orden)}" placeholder="N° de orden"/></div>
