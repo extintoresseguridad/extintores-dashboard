@@ -3400,7 +3400,23 @@
   function extintorVacio(){ return window.CRMClientes.extintorVacio(uid); }
   function extintoresPerfilHTML(lista){ return window.CRMClientes.extintoresPerfilHTML(lista, esc, TIPOS); }
   function capturarExtintoresPerfil(){ return window.CRMClientes.capturarExtintoresPerfil(); }
-  function agregarExtintorPerfil(){ perfilForm.extintores=capturarExtintoresPerfil(); perfilForm.extintores.push(extintorVacio()); renderPerfilClienteModal(true,true); }
+  function sincronizarPerfilFormDesdeDOM(){
+    if(!perfilForm) perfilForm=emptyPerfilCliente();
+    const v=id=>document.getElementById(id)?.value ?? '';
+    perfilForm.cliente=v('pf-cliente').trim();
+    perfilForm.telefono=v('pf-telefono').trim();
+    perfilForm.empresa=v('pf-empresa').trim();
+    perfilForm.cedula=v('pf-cedula').trim();
+    perfilForm.direccion=v('pf-direccion').trim();
+    perfilForm.notas=v('pf-notas').trim();
+    perfilForm.etiquetas=Array.from(document.querySelectorAll('.pf-etiqueta:checked')).map(el=>el.value);
+    perfilForm.extintores=capturarExtintoresPerfil();
+  }
+  function agregarExtintorPerfil(){
+    sincronizarPerfilFormDesdeDOM();
+    perfilForm.extintores.push(extintorVacio());
+    renderPerfilClienteModal(true,true);
+  }
   function quitarExtintorPerfil(id){ perfilForm.extintores=capturarExtintoresPerfil().filter(e=>e.id!==id); renderPerfilClienteModal(true,true); }
   function abrirSepararCliente(key){
     separarClienteKey = key;
