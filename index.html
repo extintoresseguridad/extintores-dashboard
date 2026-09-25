@@ -1483,7 +1483,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   let oportunidades = []; // { id, cliente, telefono, descripcion, montoEstimado, etapa:'contactado'|'cotizado'|'ganado'|'perdido', fechaCreacion, bitacora:[{id,fecha,tipo,nota}] }
   let recordatorios = []; // { id, texto, fecha, cliente, telefono, oportunidadId, completado }
   let clientesPerfil = []; // { id, cliente, telefono, empresa, cedula, notas, etiquetas, fechaCreacion } — datos personales del cliente, independientes de sus órdenes/ventas
-  let contratos = []; // { id, cliente, telefono, cantidadExtintores, fechaInicio, fechaRenovacion, valorAnual, estado:'activo'|'cancelado', notas }
+  let contratos = []; // { id, cliente, telefono, cantidadExtintores, fechaInicio, fechaRenovacion, valorAnual, estado:'activo'|'cancelado', notas, referidoPor, creditoReferido }
   let inventario = []; // { id, nombre, categoria:'extintor'|'repuesto'|'servicio', tipo, capacidad, cantidad, cantidadMinima, precioUnitario, notas, movimientos:[{id,tipo,cantidad,fecha,nota}] }
   let loadError = null;
   let filter = 'todos';
@@ -4244,6 +4244,16 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   function planClienteSeguro(tipo){return CLIENTE_SEGURO_PLANES[tipo]||CLIENTE_SEGURO_PLANES.cliente_seguro;}
   function renderClienteSeguro(){
     const activos=contratos.filter(c=>c.estado==='activo');
+    const diasRenovacion = (fecha)=>{
+      if(!fecha) return null;
+      const d=new Date(fecha+'T00:00:00');
+      const h=new Date(); h.setHours(0,0,0,0);
+      if(isNaN(d)) return null;
+      return Math.round((d-h)/86400000);
+    };
+    const vencidas=activos.filter(c=>{const d=diasRenovacion(c.fechaRenovacion);return d!==null&&d<0;});
+    const proximas=activos.filter(c=>{const d=diasRenovacion(c.fechaRenovacion);return d!==null&&d>=0&&d<=30;});
+    const urgentes=activos.filter(c=>{const d=diasRenovacion(c.fechaRenovacion);return d!==null&&d>=0&&d<=7;});
     const referidosRegistrados=contratos.filter(c=>c.referidoPor).length;
     const creditosReferidos=contratos.reduce((s,c)=>s+(parseFloat(c.creditoReferido)||0),0);
     return `<div class="cliente-seguro-view view-fade">
@@ -4254,6 +4264,19 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       <div class="cs-section"><h3>Beneficios y referidos</h3><span>Información del programa</span></div>
       <div class="cs-two"><div class="cs-panel"><h4>Beneficios del programa</h4><div class="cs-benefit-grid">${['Registro e historial de sus equipos.','Recordatorios de mantenimiento.','Seguimiento de fechas de servicio.','Revisión visual preventiva.','Atención y coordinación mediante WhatsApp.','Precios preferenciales y/o beneficios especiales según el plan.','Prioridad de atención en los planes que correspondan.','Beneficios por referir nuevos clientes.'].map(x=>`<div class="cs-benefit">✓ ${x}</div>`).join('')}</div></div>
       <div class="cs-panel cs-referral"><h4>🔥 PROGRAMA “CLIENTE QUE RECOMIENDA”</h4><strong>Por cada cliente nuevo referido que realice un servicio:</strong><div class="credit">₡5.000 de crédito</div><div style="font-size:11.5px;color:#4B5563;line-height:1.55;">El crédito se utiliza en futuros servicios. Límite sugerido: hasta ₡25.000 acumulables por año.</div><div style="margin-top:12px;font-size:11px;color:#6B7280;">Referidos registrados: <b>${referidosRegistrados}</b> · Créditos registrados: <b>₡${creditosReferidos.toLocaleString('es-CR',{maximumFractionDigits:0})}</b></div></div></div>
+      <div class="cs-section"><h3>Seguimiento de renovaciones</h3><span>Control automático de vencimientos</span></div>
+      <div class="cs-two">
+        <div class="cs-panel">
+          <h4>Estado de las membresías</h4>
+          <div class="cs-benefit-grid">
+            <div class="cs-benefit">🟢 Activas: <b>${activos.length}</b></div>
+            <div class="cs-benefit" style="${proximas.length?'border-color:#E5A81C;':''}">🟠 Por vencer en 30 días: <b>${proximas.length}</b></div>
+            <div class="cs-benefit" style="${urgentes.length?'border-color:#E5A81C;':''}">⏰ Renovación en 7 días: <b>${urgentes.length}</b></div>
+            <div class="cs-benefit" style="${vencidas.length?'border-color:#D64545;':''}">🔴 Vencidas: <b>${vencidas.length}</b></div>
+          </div>
+          ${(urgentes.length||vencidas.length) ? `<div class="cs-note" style="margin-top:12px;"><b>Atención:</b> hay ${vencidas.length} membresía(s) vencida(s) y ${urgentes.length} con renovación dentro de 7 días. Revise “Ventas / CRM → Membresías” para gestionar las renovaciones.</div>` : `<div class="cs-note" style="margin-top:12px;">No hay renovaciones urgentes registradas en este momento.</div>`}
+        </div>
+      </div>
       <div class="cs-section"><h3>Membresías activas</h3><span>${activos.length} cliente(s)</span></div><div class="cs-panel">${activos.length?`<div class="cs-active-list">${activos.slice(0,10).map(c=>{const p=planClienteSeguro(c.tipoMembresia);return `<div class="cs-active-row"><div class="cs-active-main"><b>${esc(c.cliente||'Sin nombre')}</b><span>${esc(p.nombre)} · ${c.cantidadExtintores||0} extintores · renueva ${esc(c.fechaRenovacion||'—')}</span></div><span class="cs-status">Activo</span></div>`}).join('')}</div>${activos.length>10?'<div style="margin-top:10px;font-size:11px;color:#6B7280;">Mostrando las primeras 10. Consulte “Ventas / CRM → Membresías” para ver todas.</div>':''}`:'<div class="dash-empty">Todavía no hay membresías activas del Programa Cliente Seguro.</div>'}</div>
     </div>`;
   }
@@ -5117,6 +5140,8 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       valorAnual: document.getElementById('ct-valorAnual').value.trim(),
       estado: document.getElementById('ct-estado').value,
       notas: document.getElementById('ct-notas').value.trim(),
+      referidoPor: document.getElementById('ct-referidoPor').value.trim(),
+      creditoReferido: document.getElementById('ct-creditoReferido').value.trim(),
     };
     if(editingContratoId){
       contratos = contratos.map(c => c.id === editingContratoId ? nuevo : c);
@@ -5243,11 +5268,26 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
       contratoForm.valorAnual = String(precio);
       contratoForm.cantidadExtintores = String(cantidad);
     };
+    const inicioInput = document.getElementById('ct-fechaInicio');
+    const renovacionInput = document.getElementById('ct-fechaRenovacion');
+    const actualizarRenovacion = () => {
+      if(!inicioInput || !renovacionInput) return;
+      if(inicioInput.value && (!renovacionInput.value || renovacionInput.dataset.auto==='true')){
+        renovacionInput.value = addMonths(inicioInput.value, 12);
+        renovacionInput.dataset.auto = 'true';
+      }
+    };
+    if(renovacionInput) {
+      renovacionInput.addEventListener('input', ()=>{ renovacionInput.dataset.auto='false'; });
+      renovacionInput.addEventListener('change', ()=>{ renovacionInput.dataset.auto='false'; });
+    }
+    if(inicioInput) inicioInput.addEventListener('change', actualizarRenovacion);
     if(cantidadInput) {
       cantidadInput.addEventListener('input', actualizarPlanClienteSeguro);
       cantidadInput.addEventListener('change', actualizarPlanClienteSeguro);
       actualizarPlanClienteSeguro();
     }
+    actualizarRenovacion();
   }
 
   function contratoCardHTML(c){
