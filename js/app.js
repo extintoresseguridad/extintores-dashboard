@@ -4277,48 +4277,58 @@
 
   function crmClienteResumenHTML(key){
     const { opsCliente, recsCliente, contratosCliente } = crmDelCliente(key);
-    if(opsCliente.length === 0 && recsCliente.length === 0 && contratosCliente.length === 0) return '';
+    const ventasCliente = ventas.filter(v => clienteKey(v) === key)
+      .sort((a,b)=>(b.fechaCompra||'').localeCompare(a.fechaCompra||''));
+    const referidosCliente = referidos.filter(r => {
+      const referidorKey = r.referidor ? clienteKey({cliente:r.referidor, telefono:r.telefonoReferidor}) : '';
+      const referidoKey = r.referido ? clienteKey({cliente:r.referido, telefono:r.telefonoReferido}) : '';
+      return referidorKey === key || referidoKey === key;
+    }).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+    if(!opsCliente.length && !recsCliente.length && !contratosCliente.length && !ventasCliente.length && !referidosCliente.length) return '';
     const hoy = todayISO();
     return `
       <div class="dash-panel" style="margin-bottom:16px;">
         ${contratosCliente.length ? `
-        <h3 style="margin-bottom:8px;">Membresías de mantenimiento <span>${contratosCliente.length}</span></h3>
-        <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length)?'14px':'0'};">
-          ${contratosCliente.map(c=>{
-            const vs = c.estado==='activo' ? vencStatus(c.fechaRenovacion) : null;
-            return `
+        <h3 style="margin-bottom:8px;">Membresías Cliente Seguro <span>${contratosCliente.length}</span></h3>
+        <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length||ventasCliente.length||referidosCliente.length)?'14px':'0'};">
+          ${contratosCliente.map(c=>`
             <div class="vence-item">
-              <div>
-                <div class="v-name">${c.cantidadExtintores ? c.cantidadExtintores+' extintores' : 'Membresía'}${c.valorAnual ? ' · ₡'+parseFloat(c.valorAnual).toLocaleString('es-CR',{maximumFractionDigits:0})+'/año' : ''}</div>
-                <div class="v-order">${c.estado==='activo' ? 'Activo' : 'Cancelado'}</div>
-              </div>
-              <div class="v-date ${vs==='vencido'?'venc-vencido':(vs==='proximo'?'venc-proximo':'')}">${esc(c.fechaRenovacion)}</div>
-            </div>`;
-          }).join('')}
+              <div><div class="v-name">${c.cantidadExtintores ? c.cantidadExtintores+' extintores' : 'Membresía'}${c.valorAnual ? ' · ₡'+parseFloat(c.valorAnual).toLocaleString('es-CR',{maximumFractionDigits:0})+'/año' : ''}</div>
+              <div class="v-order">${c.estado==='activo' ? 'Activo' : 'Cancelado'}${c.tipoMembresia ? ' · '+esc(c.tipoMembresia) : ''}</div></div>
+              <div class="v-date">${esc(c.fechaRenovacion||'—')}</div>
+            </div>`).join('')}
+        </div>` : ''}
+        ${ventasCliente.length ? `
+        <h3 style="margin-bottom:8px;">Ventas de equipos <span>${ventasCliente.length}</span></h3>
+        <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length||referidosCliente.length)?'14px':'0'};">
+          ${ventasCliente.map(v=>{ const saldo=saldoOf(v); return `
+            <div class="vence-item">
+              <div><div class="v-name">${esc((v.marca ? v.marca+' — ' : '')+(v.producto||'Equipo'))} · ${v.cantidad||1} unidad(es)</div>
+              <div class="v-order">${esc(v.fechaCompra||'Sin fecha')}${v.fechaProximoMantenimiento ? ' · Próx. mantenimiento: '+esc(v.fechaProximoMantenimiento) : ''}</div>
+              ${v.observaciones ? '<div class="v-order">'+esc(v.observaciones)+'</div>' : ''}</div>
+              <div style="text-align:right;white-space:nowrap;"><div class="v-name">₡${(parseFloat(v.precio)||0).toLocaleString('es-CR',{maximumFractionDigits:0})}</div>
+              <div class="v-date ${saldo.saldo>0?'venc-vencido':''}">${saldo.saldo>0?'Saldo ₡'+saldo.saldo.toLocaleString('es-CR',{maximumFractionDigits:0}):'Pagado'}</div></div>
+            </div>`; }).join('')}
+        </div>` : ''}
+        ${referidosCliente.length ? `
+        <h3 style="margin-bottom:8px;">Referidos relacionados <span>${referidosCliente.length}</span></h3>
+        <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length)?'14px':'0'};">
+          ${referidosCliente.map(r=>{ const esReferidor=r.referidor && clienteKey({cliente:r.referidor,telefono:r.telefonoReferidor})===key; return `
+            <div class="vence-item">
+              <div><div class="v-name">${esReferidor?'Refirió a: ':'Fue referido por: '}${esc(esReferidor?(r.referido||''):(r.referidor||''))}</div>
+              <div class="v-order">${esc(r.fecha||'Sin fecha')} · ${esc(r.servicio||'Sin servicio')} · Crédito ₡${(parseFloat(r.credito)||0).toLocaleString('es-CR')}</div></div>
+              <span class="cs-status">${esc(r.estado||'pendiente')}</span>
+            </div>`; }).join('')}
         </div>` : ''}
         ${opsCliente.length ? `
         <h3 style="margin-bottom:8px;">Oportunidades <span>${opsCliente.length}</span></h3>
-        <div class="vence-list" style="margin-bottom:${recsCliente.length?'14px':'0'};">
-          ${opsCliente.map(o=>`
-            <div class="vence-item" data-abrir-oportunidad="${o.id}" style="cursor:pointer;">
-              <div>
-                <div class="v-name">${esc(o.descripcion || 'Sin descripción')}</div>
-                <div class="v-order">${o.montoEstimado ? '₡'+parseFloat(o.montoEstimado).toLocaleString('es-CR',{maximumFractionDigits:0}) : 'Sin monto estimado'}</div>
-              </div>
-              <span class="etapa-badge ${etapaOf(o.etapa).cls}">${etapaOf(o.etapa).label}</span>
-            </div>`).join('')}
-        </div>` : ''}
+        <div class="vence-list" style="margin-bottom:${recsCliente.length?'14px':'0'};">${opsCliente.map(o=>`
+          <div class="vence-item" data-abrir-oportunidad="${o.id}" style="cursor:pointer;"><div><div class="v-name">${esc(o.descripcion||'Sin descripción')}</div><div class="v-order">${o.montoEstimado?'₡'+parseFloat(o.montoEstimado).toLocaleString('es-CR',{maximumFractionDigits:0}):'Sin monto estimado'}</div></div><span class="etapa-badge ${etapaOf(o.etapa).cls}">${etapaOf(o.etapa).label}</span></div>`).join('')}</div>` : ''}
         ${recsCliente.length ? `
         <h3 style="margin-bottom:8px;">Recordatorios pendientes <span>${recsCliente.length}</span></h3>
-        <div class="vence-list">
-          ${recsCliente.map(r=>`
-            <div class="vence-item">
-              <div class="v-name">${esc(r.texto)}</div>
-              <div class="v-date ${r.fecha<hoy?'venc-vencido':(r.fecha===hoy?'venc-proximo':'')}">${esc(r.fecha)}</div>
-            </div>`).join('')}
-        </div>` : ''}
-      </div>
-    `;
+        <div class="vence-list">${recsCliente.map(r=>`
+          <div class="vence-item"><div class="v-name">${esc(r.texto)}</div><div class="v-date ${r.fecha<hoy?'venc-vencido':(r.fecha===hoy?'venc-proximo':'')}">${esc(r.fecha)}</div></div>`).join('')}</div>` : ''}
+      </div>`;
   }
 
   function movimientosConCliente(){
