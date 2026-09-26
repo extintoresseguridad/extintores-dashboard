@@ -4629,6 +4629,7 @@
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
             <button class="btn-primary" id="btn-nueva-venta-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Registrar venta de equipo</button>
             <button class="btn-primary" id="btn-nueva-orden-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}" data-cliente-key="${esc(key)}">+ Nueva orden de servicio</button>
+          <button class="btn-ghost" id="btn-agregar-extintor-cliente" data-cliente-key="${esc(key)}">+ Agregar extintor</button>
           <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
             <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
             <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
@@ -5297,6 +5298,8 @@
         if(btnNuevaVenta) btnNuevaVenta.addEventListener('click', ()=> openNuevaVenta(btnNuevaVenta.getAttribute('data-cliente'), btnNuevaVenta.getAttribute('data-telefono')));
         const btnNuevaOrdenCliente = document.getElementById('btn-nueva-orden-cliente');
         if(btnNuevaOrdenCliente) btnNuevaOrdenCliente.addEventListener('click', ()=> openNuevaOrdenCliente(btnNuevaOrdenCliente.getAttribute('data-cliente'), btnNuevaOrdenCliente.getAttribute('data-telefono'), btnNuevaOrdenCliente.getAttribute('data-cliente-key')));
+        const btnAgregarExtintorCliente = document.getElementById('btn-agregar-extintor-cliente');
+        if(btnAgregarExtintorCliente) btnAgregarExtintorCliente.addEventListener('click', ()=> openEditarPerfilCliente(btnAgregarExtintorCliente.getAttribute('data-cliente-key')));
         const btnNuevaOpCliente = document.getElementById('btn-nueva-oportunidad-cliente');
         if(btnNuevaOpCliente) btnNuevaOpCliente.addEventListener('click', ()=> openNuevaOportunidad(btnNuevaOpCliente.getAttribute('data-cliente'), btnNuevaOpCliente.getAttribute('data-telefono')));
         const btnNuevoContratoCliente = document.getElementById('btn-nuevo-contrato-cliente');
