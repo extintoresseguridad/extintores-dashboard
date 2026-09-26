@@ -25,7 +25,7 @@
       <div class="cs-hero"><div><h2>🛡️ Programa Cliente Seguro</h2><p>“Nosotros nos encargamos de recordar. Usted se encarga de estar protegido.”</p><div class="quote">Seguimiento, historial, recordatorios y beneficios especiales para sus equipos.</div></div><div class="cs-hero-actions"><button class="btn-primary" id="cs-nueva-membresia">+ Registrar Cliente Seguro</button><button class="btn-ghost" id="cs-ver-membresias">Ver membresías</button></div></div>
       <div class="cs-section"><h3>Planes disponibles</h3><span>Vigencia de 12 meses</span></div>
       <div class="cs-plan-grid">${Object.entries(CLIENTE_SEGURO_PLANES).map(([id,p],idx)=>`<div class="cs-plan ${idx===1?'featured':''}">${idx===1?'<div class="cs-ribbon">Plus</div>':''}<h4>${p.nombre}</h4><div class="equipos">${p.equipos}</div><div class="cs-price">₡${p.precio.toLocaleString('es-CR')} <small>/ año</small></div><ul>${p.beneficios.map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('')}</div>
-      <div class="cs-note"><b>Importante:</b> la membresía no sustituye el costo de recargas, reparaciones, repuestos, pruebas u otros trabajos que requieran los equipos. Es el servicio de seguimiento y beneficios.</div>
+      <div class="cs-note"><b>Importante:</b> LA MEMBRESÍA NO SUSTITUYE EL COSTO DE RECARGAS, REPARACIONES, REPUESTOS, PRUEBAS U OTROS TRABAJOS QUE REQUIERAN LOS EQUIPOS. ES EL SERVICIO DE SEGUIMIENTO Y BENEFICIOS.</div>
       <div class="cs-section"><h3>Beneficios de Cliente Seguro</h3><span>Exclusivos de la membresía</span></div>
       <div class="cs-section"><h3>Seguimiento de renovaciones</h3><span>Control automático de vencimientos</span></div>
       <div class="cs-two">
