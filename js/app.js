@@ -4647,6 +4647,18 @@
     }
     const registrosOrdenados = [...c.registros].sort((a,b)=> (b.fechaIngreso||'').localeCompare(a.fechaIngreso||''));
     const informalesOrdenados = [...c.movimientosInformales].sort((a,b)=> (b.fechaCaja||'').localeCompare(a.fechaCaja||''));
+    const ventas360 = ventas.filter(v=>clienteKey(v)===key);
+    const contratos360 = contratos.filter(x=>clienteKey(x)===key);
+    const pendientes360 = [
+      ...registrosOrdenados.filter(r=>(saldoOf(r).saldo||0)>0).map(r=>({fecha:r.fechaIngreso||'',monto:saldoOf(r).saldo||0})),
+      ...ventas360.filter(v=>(saldoOf(v).saldo||0)>0).map(v=>({fecha:v.fechaCompra||'',monto:saldoOf(v).saldo||0}))
+    ];
+    const totalPendiente360 = pendientes360.reduce((s,x)=>s+x.monto,0);
+    const ultimoMovimiento = registrosOrdenados[0]?.fechaIngreso || ventas360.slice().sort((a,b)=>(b.fechaCompra||'').localeCompare(a.fechaCompra||''))[0]?.fechaCompra || '—';
+    const perfil360 = perfilDeCliente(key);
+    const extintores360 = (perfil360?.extintores||[]).length;
+    const proximoMantenimiento360 = (perfil360?.extintores||[]).map(e=>e.proximoMantenimiento).filter(Boolean).sort()[0] || registrosOrdenados.map(r=>r.fechaVencimiento).filter(Boolean).sort()[0] || '—';
+    const contratoActivo360 = contratos360.find(x=>x.estado==='activo');
     return `
       <div class="clientes-content">
         <button class="back-link" id="btn-volver-clientes">← Volver a clientes</button>
@@ -4661,6 +4673,17 @@
             <div class="cliente-kpi"><b>₡${c.totalPagado.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Total pagado</small></div>
             <div class="cliente-kpi"><b style="color:${c.totalPendiente>0?'#DC2626':'inherit'}">₡${c.totalPendiente.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Pendiente</small></div>
           </div>
+        </div>
+        <div class="cliente-kpis" style="margin-bottom:16px;">
+          <div class="cliente-kpi"><b>${c.registros.length}</b><small>Órdenes / servicios</small></div>
+          <div class="cliente-kpi"><b>${extintores360}</b><small>Extintores en ficha</small></div>
+          <div class="cliente-kpi"><b>${contratoActivo360 ? "Activo" : "No"}</b><small>Cliente Seguro</small></div>
+          <div class="cliente-kpi"><b style="color:${totalPendiente360>0?"#DC2626":"inherit"}">₡${totalPendiente360.toLocaleString("es-CR",{maximumFractionDigits:0})}</b><small>Saldo pendiente</small></div>
+        </div>
+        <div class="dash-panel" style="margin-bottom:16px;">
+          <div class="meta-row"><span class="k">Última actividad</span><span class="v">${esc(ultimoMovimiento)}</span></div>
+          <div class="meta-row"><span class="k">Próximo mantenimiento / recarga</span><span class="v">${esc(proximoMantenimiento360)}</span></div>
+          <div class="meta-row"><span class="k">Membresía</span><span class="v">${contratoActivo360 ? "Activa" : "Sin membresía activa"}</span></div>
         </div>
         ${perfilClienteHTML(key, c.nombre, c.telefono)}
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
