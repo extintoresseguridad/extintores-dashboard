@@ -4578,6 +4578,18 @@
     return (etiquetas||[]).map(et=>`<span class="etiqueta-badge etiqueta-${et.toLowerCase()}">${esc(et)}</span>`).join('');
   }
 
+  function estadoMantenimientoExtintor(fecha){
+    if(!fecha) return {texto:'Sin fecha', cls:'', icono:'•'};
+    const hoy = new Date();
+    hoy.setHours(0,0,0,0);
+    const d = new Date(fecha + 'T00:00:00');
+    if(Number.isNaN(d.getTime())) return {texto:fecha, cls:'', icono:'•'};
+    const dias = Math.ceil((d.getTime()-hoy.getTime())/86400000);
+    if(dias < 0) return {texto:'Vencido', cls:'venc-vencido', icono:'⚠'};
+    if(dias <= 30) return {texto:'Próximo', cls:'venc-proximo', icono:'!'};
+    return {texto:'Vigente', cls:'', icono:'✓'};
+  }
+
   function perfilClienteHTML(key, nombre, telefono){
     const p = perfilDeCliente(key);
     if(!p){
@@ -4595,8 +4607,25 @@
         <div class="meta-row"><span class="k">Cédula</span><span class="v">${p.cedula ? esc(p.cedula) : '—'}</span></div>
         ${p.direccion ? `<div class="meta-row"><span class="k">Dirección</span><span class="v">${esc(p.direccion)}</span></div>` : ''}
         ${p.notas ? `<div class="meta-row"><span class="k">Notas</span><span class="v">${esc(p.notas)}</span></div>` : ''}
-        <div style="margin-top:12px;"><div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6B7280;font-weight:700;margin-bottom:6px;">Extintores individuales · ${(p.extintores||[]).length}</div>
-          ${(p.extintores||[]).length ? `<div class="vence-list">${(p.extintores||[]).map(e=>`<div class="vence-item"><div><div class="v-name">${esc(e.serie || 'Sin serie')} · ${esc(e.tipo || 'Sin tipo')} ${e.capacidad ? '· '+esc(e.capacidad) : ''}</div><div class="v-order">${e.ubicacion ? esc(e.ubicacion)+' · ' : ''}${esc(e.estado || 'Activo')}${e.ultimoMantenimiento ? ' · Último: '+esc(e.ultimoMantenimiento) : ''}</div></div><div class="v-date">${e.proximoMantenimiento ? esc(e.proximoMantenimiento) : '—'}</div></div>`).join('')}</div>` : '<div class="caja-hint">Registra los equipos para llevar el historial individual de cada extintor.</div>'}
+        <div style="margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+            <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6B7280;font-weight:700;">Extintores individuales · ${(p.extintores||[]).length}</div>
+            <button class="btn-ghost" style="padding:4px 10px;font-size:11px;" data-editar-perfil="${esc(key)}">Gestionar equipos</button>
+          </div>
+          ${(p.extintores||[]).length ? `<div class="vence-list">${(p.extintores||[]).map(e=>{
+            const em = estadoMantenimientoExtintor(e.proximoMantenimiento);
+            const estadoEquipo = e.estado || 'Activo';
+            return `<div class="vence-item" style="align-items:flex-start;">
+              <div style="min-width:0;">
+                <div class="v-name">${esc(e.serie || 'Sin serie')} · ${esc(e.tipo || 'Sin tipo')} ${e.capacidad ? '· '+esc(e.capacidad) : ''}</div>
+                <div class="v-order">${e.ubicacion ? esc(e.ubicacion)+' · ' : ''}${esc(estadoEquipo)}${e.ultimoMantenimiento ? ' · Último: '+esc(e.ultimoMantenimiento) : ''}</div>
+              </div>
+              <div style="text-align:right;white-space:nowrap;">
+                <div class="v-date ${em.cls}">${em.icono} ${e.proximoMantenimiento ? esc(e.proximoMantenimiento) : 'Sin fecha'}</div>
+                <div style="font-size:10px;color:#6B7280;">${em.texto}</div>
+              </div>
+            </div>`;
+          }).join('')}</div>` : '<div class="caja-hint">Registra los equipos para llevar el historial individual de cada extintor.</div>'}
         </div>
       </div>`;
   }
@@ -4689,6 +4718,7 @@
         ${perfilClienteHTML(key, c.nombre, c.telefono)}
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
           <button class="btn-primary" id="btn-nueva-orden-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}" data-cliente-key="${esc(key)}">+ Nueva orden de servicio</button>
+          <button class="btn-ghost" id="btn-agregar-extintor-cliente" data-cliente-key="${esc(key)}">+ Agregar extintor</button>
           <button class="btn-ghost" id="btn-nueva-venta-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva venta</button>
           <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
           <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
