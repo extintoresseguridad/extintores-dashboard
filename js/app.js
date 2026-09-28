@@ -2381,7 +2381,7 @@
     return { id:null, texto:'', fecha: todayISO(), cliente:'', telefono:'', oportunidadId:null, completado:false };
   }
 
-  function abrirRecordatorioRapidoModal(cliente, telefono){
+  function abrirRecordatorioRapidoModal(cliente, telefono, textoSugerido){
     let overlay = document.querySelector('.rec-rapido-overlay');
     if(overlay) overlay.remove();
     overlay = document.createElement('div');
@@ -2394,7 +2394,7 @@
         </div>
         <div class="modal-body">
           <p style="font-size:12.5px;color:#6B7280;margin-top:0;">${cliente ? 'Para ' + esc(cliente) : 'Recordatorio general'}</p>
-          <div class="form-row full"><div><label>Texto</label><input id="rr-texto" placeholder="ej. Llamar para confirmar próxima recarga"/></div></div>
+          <div class="form-row full"><div><label>Texto</label><input id="rr-texto" placeholder="ej. Llamar para confirmar próxima recarga" value="${esc(textoSugerido||'')}"/></div></div>
           <div class="form-row full"><div><label>Fecha</label><input type="date" id="rr-fecha" value="${todayISO()}"/></div></div>
         </div>
         <div class="modal-foot">
@@ -5181,6 +5181,14 @@
         b.addEventListener('click', ()=> setView(b.getAttribute('data-ind-view')));
       });
     }
+    document.querySelectorAll('[data-vencimiento-seguimiento]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const cliente = b.getAttribute('data-vencimiento-seguimiento') || '';
+        const telefono = b.getAttribute('data-vencimiento-telefono') || '';
+        const tipo = b.getAttribute('data-vencimiento-tipo') || 'servicio';
+        abrirRecordatorioRapidoModal(cliente, telefono, 'Dar seguimiento a '+tipo+' de '+cliente);
+      });
+    });
     document.querySelectorAll('[data-cliente-riesgo]').forEach(b=>{
       b.addEventListener('click', ()=>{
         view = 'clientes';
