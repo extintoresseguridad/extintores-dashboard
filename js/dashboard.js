@@ -1,7 +1,7 @@
 // Módulo de Dashboard — preparado para separación progresiva.
 // Contiene la vista consolidada; aún no se activa para mantener estable el CRM.
 (function(){
-function barsHTML(data, colorCls, maxItems){
+function barsHTML(data, colorCls, maxItems, esc){
   const list = maxItems ? data.slice(0, maxItems) : data;
   if(!list.length) return '<div class="dash-empty">Sin datos todavía.</div>';
   const max = Math.max(...list.map(x=>x[1]), 1);
@@ -321,7 +321,7 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
             </div>
             ${Object.keys(resVentasAnio.porProducto).length ? `
             <div class="caja-subtitle" style="margin-top:16px;">Por producto (unidades, este año)</div>
-            ${barsHTML(Object.entries(resVentasAnio.porProducto).sort((a,b)=>b[1]-a[1]), 'c-amber', 8)}
+            ${barsHTML(Object.entries(resVentasAnio.porProducto).sort((a,b)=>b[1]-a[1]), 'c-amber', 8, esc)}
             ` : ''}
             `}
           </div>
@@ -338,12 +338,12 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
 
           <div class="dash-panel">
             <h3>Extintores por tipo <span>cantidad</span></h3>
-            ${barsHTML(porTipo, 'c-red')}
+            ${barsHTML(porTipo, 'c-red', null, esc)}
           </div>
 
           <div class="dash-panel">
             <h3>Extintores por capacidad <span>cantidad</span></h3>
-            ${barsHTML(porCapacidad, 'c-amber', 8)}
+            ${barsHTML(porCapacidad, 'c-amber', 8, esc)}
           </div>
         </div>
       </div>
