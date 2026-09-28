@@ -2383,7 +2383,9 @@
   }
 
   function abrirWhatsApp(cliente, telefono, mensaje){
-    const numero = normalizarWhatsApp(telefono);
+    const perfil = perfilDeCliente(clienteKey({cliente}), clientesPerfil);
+    if(!perfil || !perfil.whatsappConsent || perfil.whatsappNoContactar){ showToast('WhatsApp no está autorizado para este cliente. Activa el consentimiento en su Ficha 360°.'); return; }
+    const numero = normalizarWhatsApp(telefono || perfil.telefono);
     if(!numero){ showToast('Este cliente no tiene un teléfono/WhatsApp registrado.'); return; }
     const texto = mensaje || ('Hola ' + (cliente || '') + ', le contactamos de Extintores Seguridad.');
     window.open('https://wa.me/' + numero + '?text=' + encodeURIComponent(texto), '_blank', 'noopener,noreferrer');
@@ -2767,7 +2769,7 @@
             <div class="rec-texto">${esc(r.texto)}</div>
             <div class="rec-sub">${r.cliente ? esc(r.cliente)+' · ' : ''}<span class="mono ${vencido?'venc-vencido':(esHoy?'venc-proximo':'')}">${esc(r.fecha)}${vencido?' · Atrasado':(esHoy?' · Hoy':'')}</span></div>
           </div>
-          ${r.telefono ? `<button class="btn-ghost" data-whatsapp-rec="${r.id}" style="padding:5px 8px;font-size:11px;" title="Abrir WhatsApp">WhatsApp</button>` : ''}
+          ${r.telefono && (()=>{const p=perfilDeCliente(clienteKey(r), clientesPerfil); return p && p.whatsappConsent && !p.whatsappNoContactar;})() ? `<button class="btn-ghost" data-whatsapp-rec="${r.id}" style="padding:5px 8px;font-size:11px;" title="Abrir WhatsApp">WhatsApp</button>` : ''}
           <button class="rec-del" data-del-rec="${r.id}">Quitar</button>
         </div>`;
     }
@@ -3628,6 +3630,10 @@
       notas: document.getElementById('pf-notas').value.trim(),
       etiquetas: Array.from(document.querySelectorAll('.pf-etiqueta:checked')).map(el => el.value),
       extintores: capturarExtintoresPerfil(),
+      whatsappConsent: document.getElementById('pf-whatsapp-consent')?.checked || false,
+      whatsappConsentDate: document.getElementById('pf-whatsapp-consent-date')?.value || '',
+      whatsappNoContactar: document.getElementById('pf-whatsapp-no-contactar')?.checked || false,
+      whatsappUltimoContacto: document.getElementById('pf-whatsapp-ultimo')?.value || '',
     };
     const keyNuevo = clienteKey(datos);
     const yaExiste = clientesPerfil.some(p => clienteKey(p) === keyNuevo && clienteKey(p) !== editingPerfilKey);
@@ -3706,6 +3712,24 @@
                     <span>${et}</span>
                   </label>`).join('')}
               </div>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div>
+              <label>📲 WhatsApp y consentimiento</label>
+              <div class="caja-hint" style="margin:0 0 8px;">El CRM no envía mensajes automáticamente. Solo permite preparar y abrir una conversación cuando el cliente autorizó el contacto.</div>
+              <label class="service-check" style="margin-bottom:6px;">
+                <input type="checkbox" id="pf-whatsapp-consent" ${perfilForm.whatsappConsent?'checked':''}/>
+                <span>Cliente autorizó comunicaciones por WhatsApp</span>
+              </label>
+              <div class="form-row" style="margin-top:8px;">
+                <div><label>Fecha de autorización</label><input type="date" id="pf-whatsapp-consent-date" value="${esc(perfilForm.whatsappConsentDate||'')}"/></div>
+                <div><label>Último contacto</label><input type="date" id="pf-whatsapp-ultimo" value="${esc(perfilForm.whatsappUltimoContacto||'')}"/></div>
+              </div>
+              <label class="service-check" style="margin-top:8px;">
+                <input type="checkbox" id="pf-whatsapp-no-contactar" ${perfilForm.whatsappNoContactar?'checked':''}/>
+                <span>🚫 No contactar por WhatsApp</span>
+              </label>
             </div>
           </div>
           <div class="form-row full">
