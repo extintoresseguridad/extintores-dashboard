@@ -5196,6 +5196,14 @@
         b.addEventListener('click', ()=> setView(b.getAttribute('data-ind-view')));
       });
     }
+    document.querySelectorAll('[data-vencimiento-whatsapp]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const cliente = b.getAttribute('data-vencimiento-whatsapp') || '';
+        const telefono = b.getAttribute('data-vencimiento-telefono') || '';
+        const tipo = b.getAttribute('data-vencimiento-tipo') || 'servicio';
+        abrirWhatsApp(cliente, telefono, 'Hola ' + cliente + ', le contactamos de Extintores Seguridad. Tenemos registrado un ' + tipo + ' próximo a vencer. ¿Desea que coordinemos el servicio?');
+      });
+    });
     document.querySelectorAll('[data-vencimiento-seguimiento]').forEach(b=>{
       b.addEventListener('click', ()=>{
         const cliente = b.getAttribute('data-vencimiento-seguimiento') || '';
