@@ -4836,8 +4836,17 @@
   }
 
   function renderDashboard(){
+    const deps = {ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,contratos,proximosVencimientos,esc,records,ventas,oportunidades,recordatorios,clientesPerfil,clientesEnRiesgo,tasaRenovacionAnual,todayISO,saldoOf,DIAS_RIESGO_CLIENTE,productosStockBajo,ETAPAS_EMBUDO,cajaDeHoy,calcularEsperado,resumenMes,resumenAnio,METODOS_PAGO,planClienteSeguro};
     if(window.CRMDashboard && typeof window.CRMDashboard.renderDashboard==='function'){
-      return window.CRMDashboard.renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,contratos,proximosVencimientos,esc,records,ventas,oportunidades,recordatorios,clientesPerfil,clientesEnRiesgo,tasaRenovacionAnual,todayISO,saldoOf,DIAS_RIESGO_CLIENTE,productosStockBajo,ETAPAS_EMBUDO,cajaDeHoy,calcularEsperado,resumenMes,resumenAnio,METODOS_PAGO,planClienteSeguro});
+      try{
+        return window.CRMDashboard.renderDashboard(deps);
+      }catch(error){
+        console.error('Error al abrir Indicadores:', error);
+        const activos = records.filter(r=>r.estado!=='entregado').length;
+        const vencidos = records.filter(r=>vencStatus(r.fechaVencimiento)==='vencido').length;
+        const porCobrar = records.reduce((s,r)=>s+(saldoOf(r).saldo||0),0);
+        return '<div class="dash-content"><div class="dash-panel" style="margin-bottom:18px;"><h2>📊 Indicadores</h2><p style="color:var(--red-dark);">Se detectó un problema al cargar el panel completo. Los indicadores básicos siguen disponibles.</p></div><div class="kpi-grid"><div class="kpi-card"><div class="kpi-label">Activos registrados</div><div class="kpi-value">'+activos+'</div></div><div class="kpi-card kpi-red"><div class="kpi-label">Recargas vencidas</div><div class="kpi-value">'+vencidos+'</div></div><div class="kpi-card"><div class="kpi-label">Clientes</div><div class="kpi-value">'+new Set([...records,...ventas,...clientesPerfil,...oportunidades].map(x=>x.cliente).filter(Boolean)).size+'</div></div><div class="kpi-card kpi-amber"><div class="kpi-label">Por cobrar</div><div class="kpi-value">₡'+porCobrar.toLocaleString('es-CR',{maximumFractionDigits:0})+'</div></div></div></div>';
+      }
     }
     return '';
   }
