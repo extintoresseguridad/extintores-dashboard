@@ -102,7 +102,7 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
                   <div class="v-date ${x.dias<0?"venc-vencido":x.dias<=30?"venc-proximo":""}">${esc(x.fecha)}</div>
                   <div style="font-size:10px;color:#6B7280;">${x.dias<0 ? "Vencido hace "+Math.abs(x.dias)+" día(s)" : x.dias===0 ? "Vence hoy" : "En "+x.dias+" día(s)"}</div>
                   <button class="btn-ghost" data-vencimiento-seguimiento="${esc(x.cliente)}" data-vencimiento-telefono="${esc(x.telefono||'')}" data-vencimiento-tipo="${esc(x.tipo)}" style="padding:4px 8px;font-size:10px;margin-top:5px;">Crear seguimiento</button>
-                  ${x.telefono ? `<button class="btn-ghost" data-vencimiento-whatsapp="${esc(x.cliente)}" data-vencimiento-telefono="${esc(x.telefono||'')}" data-vencimiento-tipo="${esc(x.tipo)}" style="padding:4px 8px;font-size:10px;margin-top:5px;">WhatsApp</button>` : ''}
+                  ${x.telefono && (()=>{const p=(clientesPerfil||[]).find(c=>String(c.cliente||'').trim().toLowerCase()===String(x.cliente||'').trim().toLowerCase()); return p && p.whatsappConsent && !p.whatsappNoContactar;})() ? `<button class="btn-ghost" data-vencimiento-whatsapp="${esc(x.cliente)}" data-vencimiento-telefono="${esc(x.telefono||'')}" data-vencimiento-tipo="${esc(x.tipo)}" style="padding:4px 8px;font-size:10px;margin-top:5px;">WhatsApp</button>` : ''}
                 </div>
               </div>
             `).join('') || '<div class="dash-empty">No hay vencimientos o renovaciones dentro de los próximos 60 días.</div>'}
