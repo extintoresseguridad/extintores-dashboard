@@ -2382,13 +2382,23 @@
     return n;
   }
 
-  function abrirWhatsApp(cliente, telefono, mensaje){
+  async function abrirWhatsApp(cliente, telefono, mensaje){
     const perfil = perfilDeCliente(clienteKey({cliente}), clientesPerfil);
     if(!perfil || !perfil.whatsappConsent || perfil.whatsappNoContactar){ showToast('WhatsApp no está autorizado para este cliente. Activa el consentimiento en su Ficha 360°.'); return; }
     const numero = normalizarWhatsApp(telefono || perfil.telefono);
     if(!numero){ showToast('Este cliente no tiene un teléfono/WhatsApp registrado.'); return; }
     const texto = mensaje || ('Hola ' + (cliente || '') + ', le contactamos de Extintores Seguridad.');
     window.open('https://wa.me/' + numero + '?text=' + encodeURIComponent(texto), '_blank', 'noopener,noreferrer');
+    // Registramos que el empleado abrió el contacto de WhatsApp.
+    const key = clienteKey(perfil);
+    const idx = clientesPerfil.findIndex(p => clienteKey(p) === key);
+    if(idx !== -1){
+      clientesPerfil = clientesPerfil.map((p,i) => i === idx ? {...p, whatsappUltimoContacto: todayISO()} : p);
+      await persist();
+      const fecha = document.getElementById('pf-whatsapp-ultimo');
+      if(fecha && editingPerfilKey === key) fecha.value = todayISO();
+      showToast('WhatsApp abierto y último contacto actualizado.');
+    }
   }
 
   /* ---------- Recordatorios ---------- */
