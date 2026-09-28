@@ -47,19 +47,19 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
         const d=new Date(e.proximoMantenimiento+'T00:00:00');
         if(Number.isNaN(d.getTime())) return;
         const dias=Math.ceil((d-hoy)/86400000);
-        if(dias<=60) centroVencimientos.push({tipo:'Extintor',cliente:p.cliente||'Cliente',detalle:[e.serie||'Sin serie',e.tipo||'',e.ubicacion||''].filter(Boolean).join(' · '),fecha:e.proximoMantenimiento,dias});
+        if(dias<=60) centroVencimientos.push({tipo:'Extintor',cliente:p.cliente||'Cliente',telefono:p.telefono||'',detalle:[e.serie||'Sin serie',e.tipo||'',e.ubicacion||''].filter(Boolean).join(' · '),fecha:e.proximoMantenimiento,dias});
       });
     });
     records.filter(r=>r.fechaVencimiento).forEach(r=>{
       const d=new Date(r.fechaVencimiento+'T00:00:00');
       if(Number.isNaN(d.getTime())) return;
       const dias=Math.ceil((d-hoy)/86400000);
-      if(dias<=60) centroVencimientos.push({tipo:'Orden',cliente:r.cliente||'Cliente',detalle:[r.orden?'Orden #'+r.orden:'Servicio',r.tipo||'',r.capacidad||''].filter(Boolean).join(' · '),fecha:r.fechaVencimiento,dias});
+      if(dias<=60) centroVencimientos.push({tipo:'Orden',cliente:r.cliente||'Cliente',telefono:r.telefono||'',detalle:[r.orden?'Orden #'+r.orden:'Servicio',r.tipo||'',r.capacidad||''].filter(Boolean).join(' · '),fecha:r.fechaVencimiento,dias});
     });
     const renovacionesCentro=(contratos||[]).filter(c=>c.estado==='activo' && c.fechaRenovacion).map(c=>{
       const d=new Date(c.fechaRenovacion+'T00:00:00');
       const dias=Number.isNaN(d.getTime())?9999:Math.ceil((d-hoy)/86400000);
-      return {tipo:'Cliente Seguro',cliente:c.cliente||'Cliente',detalle:'Renovación · '+((planClienteSeguro(c.tipoMembresia)||{}).nombre||'Membresía'),fecha:c.fechaRenovacion,dias};
+      return {tipo:'Cliente Seguro',cliente:c.cliente||'Cliente',telefono:c.telefono||'',detalle:'Renovación · '+((planClienteSeguro(c.tipoMembresia)||{}).nombre||'Membresía'),fecha:c.fechaRenovacion,dias};
     }).filter(x=>x.dias<=60);
     centroVencimientos.push(...renovacionesCentro);
     centroVencimientos.sort((a,b)=>a.dias-b.dias);
@@ -101,6 +101,7 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
                 <div style="text-align:right;white-space:nowrap;">
                   <div class="v-date ${x.dias<0?"venc-vencido":x.dias<=30?"venc-proximo":""}">${esc(x.fecha)}</div>
                   <div style="font-size:10px;color:#6B7280;">${x.dias<0 ? "Vencido hace "+Math.abs(x.dias)+" día(s)" : x.dias===0 ? "Vence hoy" : "En "+x.dias+" día(s)"}</div>
+                  <button class="btn-ghost" data-vencimiento-seguimiento="${x.cliente}" data-vencimiento-telefono="${x.telefono||""}" data-vencimiento-tipo="${x.tipo}" style="padding:4px 8px;font-size:10px;margin-top:5px;">Crear seguimiento</button>
                 </div>
               </div>
             `).join('') || '<div class="dash-empty">No hay vencimientos o renovaciones dentro de los próximos 60 días.</div>'}
