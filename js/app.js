@@ -5161,15 +5161,24 @@
           </div>
         </div>
         <nav class="sidebar-nav">
-          <button data-view="industrial" class="${view==='industrial'?'active':''}"><span class="snav-ico">⌂</span>Inicio</button>
-          <button data-view="listado" class="${view==='listado'?'active':''}"><span class="snav-ico">▤</span>Operaciones</button>
-          <button data-view="clientes" class="${view==='clientes'?'active':''}"><span class="snav-ico">◔</span>Clientes</button>
-           <button data-view="cliente-seguro" class="${view==='cliente-seguro'?'active':''}"><span class="snav-ico">🛡</span>Cliente Seguro</button>
-          <button data-view="referidos" class="${view==='referidos'?'active':''}"><span class="snav-ico">🔥</span>Referidos</button>
-          <button data-view="crm" class="${view==='crm'?'active':''}"><span class="snav-ico">◆</span>Ventas / CRM</button>
-          <button data-view="panel" class="${view==='panel'?'active':''}"><span class="snav-ico">▲</span>Indicadores</button>
-          <button data-view="inventario" class="${view==='inventario'?'active':''}"><span class="snav-ico">▣</span>Inventario</button>
-          <button data-view="caja" class="${view==='caja'?'active':''}"><span class="snav-ico">$</span>Caja</button>
+          <button class="nav-home ${view==='industrial'?'active':''}" data-view="industrial"><span class="snav-ico">⌂</span>Inicio</button>
+          <div class="nav-section-label">Operaciones</div>
+          <div class="nav-section">
+            <button data-view="listado" class="${view==='listado'?'active':''}"><span class="snav-ico">▤</span>Órdenes de trabajo</button>
+            <button data-view="clientes" class="${view==='clientes'?'active':''}"><span class="snav-ico">◔</span>Clientes · Ficha 360°</button>
+            <button data-view="cliente-seguro" class="${view==='cliente-seguro'?'active':''}"><span class="snav-ico">🛡</span>Cliente Seguro</button>
+            <button data-view="referidos" class="${view==='referidos'?'active':''}"><span class="snav-ico">🔥</span>Referidos</button>
+          </div>
+          <div class="nav-section-label">Ventas / CRM</div>
+          <div class="nav-section">
+            <button data-view="crm" class="${view==='crm'?'active':''}"><span class="snav-ico">◆</span>Embudo comercial</button>
+            <button data-view="panel" class="${view==='panel'?'active':''}"><span class="snav-ico">▲</span>Indicadores</button>
+            <button data-view="caja" class="${view==='caja'?'active':''}"><span class="snav-ico">$</span>Caja</button>
+          </div>
+          <div class="nav-section-label">Inventario</div>
+          <div class="nav-section nav-section-inventory">
+            <button data-view="inventario" class="${view==='inventario'?'active':''}"><span class="snav-ico">▣</span><span class="nav-main-text">Inventario</span><span class="nav-arrow">→</span></button>
+          </div>
         </nav>
         <div class="sidebar-foot">
           <div class="sidebar-user" title="${esc(authUser ? authUser.email : '')}">${esc(authUser ? authUser.email : '')}</div>
