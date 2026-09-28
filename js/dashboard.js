@@ -65,6 +65,10 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
     centroVencimientos.sort((a,b)=>a.dias-b.dias);
     const centroVencidos=centroVencimientos.filter(x=>x.dias<0).length;
     const centroProximos=centroVencimientos.filter(x=>x.dias>=0).length;
+    function addDaysLocal(iso,n){ const d=new Date((iso||hoyISO)+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+    const renovaciones30 = contratos.filter(c=>c.estado==='activo' && c.fechaRenovacion && c.fechaRenovacion>=hoyISO && c.fechaRenovacion<=addDaysLocal(hoyISO,30)).length;
+    const cotizacionesPendientes = oportunidades.filter(o=>o.etapa==='contactado' || o.etapa==='cotizado').length;
+    const whatsappAutorizados = clientesPerfil.filter(p=>p.whatsappConsent && !p.whatsappNoContactar).length;
 
     return `
       <div class="dash-content">
@@ -80,6 +84,19 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
         </div>
 
         <div class="kpi-grid" style="margin-bottom:18px;"><div class="kpi-card"><div class="kpi-label">🛡️ Cliente Seguro</div><div class="kpi-value">${membresiasActivas.length}</div><div class="kpi-sub">Membresías activas</div></div><div class="kpi-card"><div class="kpi-label">🔥 Referidos</div><div class="kpi-value">${referidosConfirmados.length}</div><div class="kpi-sub">${referidosPendientes.length} pendientes · ₡${creditosReferidos.toLocaleString('es-CR')}</div></div></div>
+        <div class="dash-panel full" style="margin:0 0 18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div><h3 style="margin-bottom:3px;">📌 Hoy</h3><div class="caja-hint" style="margin:0;">Lo que merece atención primero en la jornada.</div></div>
+          </div>
+          <div class="kpi-grid" style="margin:12px 0 0;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));">
+            <div class="kpi-card kpi-red ${centroVencidos>0?'kpi-critical':''}"><div class="kpi-label">🔴 Vencidos</div><div class="kpi-value">${centroVencidos}</div><button class="btn-ghost" data-hoy-action="vencidos" style="margin-top:8px;padding:5px 9px;font-size:10px;">Ver vencidos</button></div>
+            <div class="kpi-card kpi-amber ${centroProximos>0?'kpi-critical':''}"><div class="kpi-label">🟡 Próximos</div><div class="kpi-value">${centroProximos}</div><button class="btn-ghost" data-hoy-action="proximos" style="margin-top:8px;padding:5px 9px;font-size:10px;">Ver próximos</button></div>
+            <div class="kpi-card kpi-amber ${seguimientosHoyCount>0?'kpi-critical':''}"><div class="kpi-label">📞 Seguimientos</div><div class="kpi-value">${seguimientosHoyCount}</div><button class="btn-ghost" data-hoy-action="seguimientos" style="margin-top:8px;padding:5px 9px;font-size:10px;">Abrir</button></div>
+            <div class="kpi-card"><div class="kpi-label">💰 Cotizaciones abiertas</div><div class="kpi-value">${cotizacionesPendientes}</div><button class="btn-ghost" data-hoy-action="cotizaciones" style="margin-top:8px;padding:5px 9px;font-size:10px;">Ver embudo</button></div>
+            <div class="kpi-card"><div class="kpi-label">🛡️ Renovaciones 30 días</div><div class="kpi-value">${renovaciones30}</div><button class="btn-ghost" data-hoy-action="membresias" style="margin-top:8px;padding:5px 9px;font-size:10px;">Ver membresías</button></div>
+            <div class="kpi-card"><div class="kpi-label">📲 WhatsApp autorizado</div><div class="kpi-value">${whatsappAutorizados}</div><button class="btn-ghost" data-hoy-action="clientes" style="margin-top:8px;padding:5px 9px;font-size:10px;">Ver clientes</button></div>
+          </div>
+        </div>
         <div class="dash-panel" style="margin:0 0 18px;">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
             <div>
