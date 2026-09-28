@@ -101,7 +101,7 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
                 <div style="text-align:right;white-space:nowrap;">
                   <div class="v-date ${x.dias<0?"venc-vencido":x.dias<=30?"venc-proximo":""}">${esc(x.fecha)}</div>
                   <div style="font-size:10px;color:#6B7280;">${x.dias<0 ? "Vencido hace "+Math.abs(x.dias)+" día(s)" : x.dias===0 ? "Vence hoy" : "En "+x.dias+" día(s)"}</div>
-                  <button class="btn-ghost" data-vencimiento-seguimiento="${x.cliente}" data-vencimiento-telefono="${x.telefono||""}" data-vencimiento-tipo="${x.tipo}" style="padding:4px 8px;font-size:10px;margin-top:5px;">Crear seguimiento</button>
+                  <button class="btn-ghost" data-vencimiento-seguimiento="${esc(x.cliente)}" data-vencimiento-telefono="${esc(x.telefono||'')}" data-vencimiento-tipo="${esc(x.tipo)}" style="padding:4px 8px;font-size:10px;margin-top:5px;">Crear seguimiento</button>
                 </div>
               </div>
             `).join('') || '<div class="dash-empty">No hay vencimientos o renovaciones dentro de los próximos 60 días.</div>'}
