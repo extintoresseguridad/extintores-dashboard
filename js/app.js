@@ -2375,6 +2375,20 @@
     render();
   }
 
+  function normalizarWhatsApp(telefono){
+    let n = String(telefono || '').replace(/\D/g,'');
+    if(n.startsWith('00')) n = n.slice(2);
+    if(n.length === 8) n = '506' + n;
+    return n;
+  }
+
+  function abrirWhatsApp(cliente, telefono, mensaje){
+    const numero = normalizarWhatsApp(telefono);
+    if(!numero){ showToast('Este cliente no tiene un teléfono/WhatsApp registrado.'); return; }
+    const texto = mensaje || ('Hola ' + (cliente || '') + ', le contactamos de Extintores Seguridad.');
+    window.open('https://wa.me/' + numero + '?text=' + encodeURIComponent(texto), '_blank', 'noopener,noreferrer');
+  }
+
   /* ---------- Recordatorios ---------- */
 
   function emptyRecordatorio(){
@@ -2753,6 +2767,7 @@
             <div class="rec-texto">${esc(r.texto)}</div>
             <div class="rec-sub">${r.cliente ? esc(r.cliente)+' · ' : ''}<span class="mono ${vencido?'venc-vencido':(esHoy?'venc-proximo':'')}">${esc(r.fecha)}${vencido?' · Atrasado':(esHoy?' · Hoy':'')}</span></div>
           </div>
+          ${r.telefono ? `<button class="btn-ghost" data-whatsapp-rec="${r.id}" style="padding:5px 8px;font-size:11px;" title="Abrir WhatsApp">WhatsApp</button>` : ''}
           <button class="rec-del" data-del-rec="${r.id}">Quitar</button>
         </div>`;
     }
@@ -5325,6 +5340,12 @@
           });
         });
       }
+      document.querySelectorAll('[data-whatsapp-rec]').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          const rec = recordatorios.find(x=>x.id===b.getAttribute('data-whatsapp-rec'));
+          if(rec) abrirWhatsApp(rec.cliente, rec.telefono, rec.texto);
+        });
+      });
       document.querySelectorAll('[data-toggle-rec]').forEach(chk=>{
         chk.addEventListener('change', ()=> toggleRecordatorio(chk.getAttribute('data-toggle-rec')));
       });
