@@ -21,7 +21,7 @@
   }
   const ETIQUETAS_CLIENTE = ['VIP','Corporativo','Residencial','Moroso'];
   function emptyPerfilCliente(){
-    return { id:null, cliente:'', telefono:'', empresa:'', cedula:'', direccion:'', notas:'', etiquetas:[], extintores:[], whatsappConsent:false, whatsappConsentDate:'', whatsappNoContactar:false, whatsappUltimoContacto:'' };
+    return { id:null, cliente:'', telefono:'', empresa:'', cedula:'', direccion:'', notas:'', etiquetas:[], extintores:[], whatsappConsent:false, whatsappConsentDate:'', whatsappNoContactar:false, whatsappUltimoContacto:'', bitacora:[] };
   }
 
   function extintorVacio(uid){ return { id: uid(), serie:'', tipo:'PQS ABC', capacidad:'', ubicacion:'', estado:'Activo', ultimoMantenimiento:'', proximoMantenimiento:'', trabajoRealizado:'', observaciones:'' }; }
