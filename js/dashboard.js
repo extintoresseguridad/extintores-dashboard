@@ -25,6 +25,34 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
     const pagadoCount = records.filter(r=>saldoOf(r).saldo<=0 && saldoOf(r).precio>0).length;
     const pendienteCount = records.filter(r=>saldoOf(r).saldo>0).length;
 
+    // Centro de vencimientos: consolida equipos de la Ficha 360°, órdenes y renovaciones.
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const centroVencimientos = [];
+    (clientesPerfil||[]).forEach(p=>{
+      (p.extintores||[]).forEach(e=>{
+        if(!e.proximoMantenimiento) return;
+        const d=new Date(e.proximoMantenimiento+'T00:00:00');
+        if(Number.isNaN(d.getTime())) return;
+        const dias=Math.ceil((d-hoy)/86400000);
+        if(dias<=60) centroVencimientos.push({tipo:'Extintor',cliente:p.cliente||'Cliente',detalle:[e.serie||'Sin serie',e.tipo||'',e.ubicacion||''].filter(Boolean).join(' · '),fecha:e.proximoMantenimiento,dias});
+      });
+    });
+    records.filter(r=>r.fechaVencimiento).forEach(r=>{
+      const d=new Date(r.fechaVencimiento+'T00:00:00');
+      if(Number.isNaN(d.getTime())) return;
+      const dias=Math.ceil((d-hoy)/86400000);
+      if(dias<=60) centroVencimientos.push({tipo:'Orden',cliente:r.cliente||'Cliente',detalle:[r.orden?'Orden #'+r.orden:'Servicio',r.tipo||'',r.capacidad||''].filter(Boolean).join(' · '),fecha:r.fechaVencimiento,dias});
+    });
+    const renovacionesCentro=(contratos||[]).filter(c=>c.estado==='activo' && c.fechaRenovacion).map(c=>{
+      const d=new Date(c.fechaRenovacion+'T00:00:00');
+      const dias=Number.isNaN(d.getTime())?9999:Math.ceil((d-hoy)/86400000);
+      return {tipo:'Cliente Seguro',cliente:c.cliente||'Cliente',detalle:'Renovación · '+((planClienteSeguro(c.tipoMembresia)||{}).nombre||'Membresía'),fecha:c.fechaRenovacion,dias};
+    }).filter(x=>x.dias<=60);
+    centroVencimientos.push(...renovacionesCentro);
+    centroVencimientos.sort((a,b)=>a.dias-b.dias);
+    const centroVencidos=centroVencimientos.filter(x=>x.dias<0).length;
+    const centroProximos=centroVencimientos.filter(x=>x.dias>=0).length;
+
     return `
       <div class="dash-content">
         <div class="quick-actions">
@@ -39,6 +67,32 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
         </div>
 
         <div class="kpi-grid" style="margin-bottom:18px;"><div class="kpi-card"><div class="kpi-label">🛡️ Cliente Seguro</div><div class="kpi-value">${membresiasActivas.length}</div><div class="kpi-sub">Membresías activas</div></div><div class="kpi-card"><div class="kpi-label">🔥 Referidos</div><div class="kpi-value">${referidosConfirmados.length}</div><div class="kpi-sub">${referidosPendientes.length} pendientes · ₡${creditosReferidos.toLocaleString('es-CR')}</div></div></div>
+        <div class="dash-panel" style="margin:0 0 18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div>
+              <h3 style="margin-bottom:3px;">🗓️ Centro de vencimientos</h3>
+              <div class="caja-hint" style="margin:0;">Extintores de Ficha 360°, órdenes de trabajo y renovaciones de Cliente Seguro · próximos 60 días</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="badge" style="background:var(--red);color:#fff;">${centroVencidos} vencidos</span>
+              <span class="badge" style="background:#FEF3C7;color:#92400E;">${centroProximos} próximos</span>
+            </div>
+          </div>
+          <div class="vence-list" style="margin-top:12px;">
+            ${centroVencimientos.slice(0,12).map(x=>`
+              <div class="vence-item" style="align-items:flex-start;">
+                <div>
+                  <div class="v-name">${esc(x.cliente)} · ${esc(x.tipo)}</div>
+                  <div class="v-order">${esc(x.detalle)}</div>
+                </div>
+                <div style="text-align:right;white-space:nowrap;">
+                  <div class="v-date ${x.dias<0?"venc-vencido":x.dias<=30?"venc-proximo":""}">${esc(x.fecha)}</div>
+                  <div style="font-size:10px;color:#6B7280;">${x.dias<0 ? "Vencido hace "+Math.abs(x.dias)+" día(s)" : x.dias===0 ? "Vence hoy" : "En "+x.dias+" día(s)"}</div>
+                </div>
+              </div>
+            `).join('') || '<div class="dash-empty">No hay vencimientos o renovaciones dentro de los próximos 60 días.</div>'}
+          </div>
+        </div>
       <div class="kpi-grid">
           <div class="kpi-card">
             <div class="kpi-label">Total de registros</div>
