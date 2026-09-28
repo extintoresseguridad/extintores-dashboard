@@ -2393,7 +2393,7 @@
     const key = clienteKey(perfil);
     const idx = clientesPerfil.findIndex(p => clienteKey(p) === key);
     if(idx !== -1){
-      clientesPerfil = clientesPerfil.map((p,i) => i === idx ? {...p, whatsappUltimoContacto: todayISO()} : p);
+      clientesPerfil = clientesPerfil.map((p,i) => i === idx ? {...p, whatsappUltimoContacto: todayISO(), bitacora:[{id:uid(),fecha:todayISO(),tipo:'WhatsApp',nota:'Conversación abierta desde el CRM (mensaje no enviado automáticamente).'},...(p.bitacora||[])]} : p);
       await persist();
       const fecha = document.getElementById('pf-whatsapp-ultimo');
       if(fecha && editingPerfilKey === key) fecha.value = todayISO();
@@ -3644,6 +3644,7 @@
       whatsappConsentDate: document.getElementById('pf-whatsapp-consent-date')?.value || '',
       whatsappNoContactar: document.getElementById('pf-whatsapp-no-contactar')?.checked || false,
       whatsappUltimoContacto: document.getElementById('pf-whatsapp-ultimo')?.value || '',
+      bitacora: Array.isArray(perfilForm?.bitacora) ? perfilForm.bitacora : [],
     };
     const keyNuevo = clienteKey(datos);
     const yaExiste = clientesPerfil.some(p => clienteKey(p) === keyNuevo && clienteKey(p) !== editingPerfilKey);
@@ -3768,6 +3769,48 @@
     document.querySelectorAll('[data-quitar-extintor]').forEach(b=>b.addEventListener('click', ()=>quitarExtintorPerfil(b.getAttribute('data-quitar-extintor'))));
   }
 
+  function abrirBitacoraClienteModal(key){
+    const p = perfilDeCliente(key);
+    if(!p) return;
+    let overlay = document.querySelector('.bitacora-cliente-overlay');
+    if(overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.className = 'overlay bitacora-cliente-overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:430px;">
+        <div class="modal-head"><h2>Registrar contacto</h2><button id="bc-close">×</button></div>
+        <div class="modal-body">
+          <div class="caja-hint" style="margin-top:0;">Cliente: <b>${esc(p.cliente)}</b></div>
+          <div class="form-row">
+            <div><label>Fecha</label><input type="date" id="bc-fecha" value="${todayISO()}"/></div>
+            <div><label>Canal</label><select id="bc-tipo">${['Llamada','WhatsApp','Visita','Correo','Nota interna','Otro'].map(x=>'<option>'+x+'</option>').join('')}</select></div>
+          </div>
+          <div class="form-row full"><div><label>Nota</label><textarea id="bc-nota" placeholder="Ej. Cliente confirma visita para el viernes..."></textarea></div></div>
+        </div>
+        <div class="modal-foot"><button class="btn-ghost" id="bc-cancel">Cancelar</button><button class="btn-primary" id="bc-save">Guardar contacto</button></div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const close=()=>overlay.remove();
+    overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
+    document.getElementById('bc-close').addEventListener('click',close);
+    document.getElementById('bc-cancel').addEventListener('click',close);
+    document.getElementById('bc-save').addEventListener('click',async()=>{
+      const fecha=document.getElementById('bc-fecha').value||todayISO();
+      const tipo=document.getElementById('bc-tipo').value;
+      const nota=document.getElementById('bc-nota').value.trim();
+      if(!nota){showToast('Escribe una nota del contacto.');return;}
+      const idx=clientesPerfil.findIndex(x=>clienteKey(x)===key);
+      if(idx===-1)return;
+      const actualizado={...clientesPerfil[idx],bitacora:[{id:uid(),fecha,tipo,nota},...(clientesPerfil[idx].bitacora||[])]};
+      clientesPerfil=clientesPerfil.map((x,i)=>i===idx?actualizado:x);
+      const ok=await persist();
+      if(!ok)return;
+      close();
+      showToast('Contacto agregado a la bitácora.');
+      render();
+    });
+  }
   async function removePerfilCliente(key){
     const p = perfilDeCliente(key);
     if(!p) return;
@@ -4264,6 +4307,13 @@
             ${esServicio ? '' : `<div class="meta-row"><span class="k">Cantidad mínima</span><span class="v">${p.cantidadMinima || 0}</span></div>`}
             ${p.precioUnitario ? `<div class="meta-row"><span class="k">Precio ${esServicio?'del servicio':'unitario'}</span><span class="v">₡${parseFloat(p.precioUnitario).toLocaleString('es-CR',{maximumFractionDigits:0})}</span></div>` : ''}
             ${p.notas ? `<div class="meta-row"><span class="k">Notas</span><span class="v">${esc(p.notas)}</span></div>` : ''}
+        <div style="margin-top:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+            <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6B7280;font-weight:700;">Bitácora de contactos · ${(p.bitacora||[]).length}</div>
+            <button class="btn-ghost" style="padding:4px 10px;font-size:11px;" data-agregar-bitacora="${esc(key)}">+ Registrar contacto</button>
+          </div>
+          ${(p.bitacora||[]).length ? `<div class="vence-list">${(p.bitacora||[]).slice(0,8).map(b=>`<div class="vence-item" style="align-items:flex-start;"><div><div class="v-name">${esc(b.tipo||'Contacto')}</div><div class="v-order">${esc(b.nota||'')}</div></div><div class="v-date">${esc(b.fecha||'')}</div></div>`).join('')}</div>` : '<div class="caja-hint">Todavía no hay contactos registrados. Aquí quedará el historial de llamadas, visitas, WhatsApp y notas.</div>'}
+        </div>
           </div>
           <div class="card-actions">
             ${esServicio ? '' : `<button data-action="movimiento-producto" data-id="${p.id}">± Stock</button>`}
@@ -5230,6 +5280,9 @@
         b.addEventListener('click', ()=> setView(b.getAttribute('data-ind-view')));
       });
     }
+    document.querySelectorAll('[data-agregar-bitacora]').forEach(b=>{
+      b.addEventListener('click',()=>abrirBitacoraClienteModal(b.getAttribute('data-agregar-bitacora')));
+    });
     document.querySelectorAll('[data-vencimiento-whatsapp]').forEach(b=>{
       b.addEventListener('click', ()=>{
         const cliente = b.getAttribute('data-vencimiento-whatsapp') || '';
