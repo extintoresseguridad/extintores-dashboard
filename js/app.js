@@ -4837,7 +4837,7 @@
 
   function renderDashboard(){
     if(window.CRMDashboard && typeof window.CRMDashboard.renderDashboard==='function'){
-      return window.CRMDashboard.renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,contratos,proximosVencimientos,esc});
+      return window.CRMDashboard.renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,contratos,proximosVencimientos,esc,records,ventas,oportunidades,recordatorios,clientesPerfil,clientesEnRiesgo,tasaRenovacionAnual,todayISO,saldoOf,DIAS_RIESGO_CLIENTE,productosStockBajo,ETAPAS_EMBUDO,cajaDeHoy,calcularEsperado,resumenMes,resumenAnio,METODOS_PAGO,planClienteSeguro});
     }
     return '';
   }
