@@ -5283,6 +5283,17 @@
     document.querySelectorAll('[data-agregar-bitacora]').forEach(b=>{
       b.addEventListener('click',()=>abrirBitacoraClienteModal(b.getAttribute('data-agregar-bitacora')));
     });
+    document.querySelectorAll('[data-hoy-action]').forEach(b=>{
+      b.addEventListener('click',()=>{
+        const action=b.getAttribute('data-hoy-action');
+        if(action==='vencidos'){ view='listado'; venceFilter='vencidos'; query=''; animateViewChange=true; render(); return; }
+        if(action==='proximos'){ view='listado'; venceFilter='proximo'; query=''; animateViewChange=true; render(); return; }
+        if(action==='seguimientos'){ view='crm'; crmSubvista='recordatorios'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }
+        if(action==='cotizaciones'){ view='crm'; crmSubvista='pipeline'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }
+        if(action==='membresias'){ view='crm'; crmSubvista='contratos'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }
+        if(action==='clientes'){ view='clientes'; clienteSeleccionado=null; animateViewChange=true; render(); return; }
+      });
+    });
     document.querySelectorAll('[data-vencimiento-whatsapp]').forEach(b=>{
       b.addEventListener('click', ()=>{
         const cliente = b.getAttribute('data-vencimiento-whatsapp') || '';
