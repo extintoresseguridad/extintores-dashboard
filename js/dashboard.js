@@ -1,6 +1,19 @@
 // Módulo de Dashboard — preparado para separación progresiva.
 // Contiene la vista consolidada; aún no se activa para mantener estable el CRM.
 (function(){
+function barsHTML(data, colorCls, maxItems){
+  const list = maxItems ? data.slice(0, maxItems) : data;
+  if(!list.length) return '<div class="dash-empty">Sin datos todavía.</div>';
+  const max = Math.max(...list.map(x=>x[1]), 1);
+  return list.map(([label,val])=>
+    '<div class="bar-row">'+
+      '<div class="bar-label" title="'+esc(label)+'">'+esc(label)+'</div>'+
+      '<div class="bar-track"><div class="bar-fill '+colorCls+'" style="width:'+Math.max(4,(val/max*100))+'%"></div></div>'+
+      '<div class="bar-value">'+val+'</div>'+
+    '</div>'
+  ).join('');
+}
+
 function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,contratos,proximosVencimientos,esc,records,ventas,oportunidades,recordatorios,clientesPerfil,clientesEnRiesgo,tasaRenovacionAnual,todayISO,saldoOf,DIAS_RIESGO_CLIENTE,productosStockBajo,ETAPAS_EMBUDO,cajaDeHoy,calcularEsperado,resumenMes,resumenAnio,METODOS_PAGO,planClienteSeguro}){
     const ingresos = ingresosPorMes();
     const maxIngreso = Math.max(...ingresos.map(m=>m.total), 1);
