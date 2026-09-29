@@ -3111,6 +3111,10 @@
             <h3>${esc(first.cliente)}</h3>
             <div class="sub-line">${first.telefono ? esc(first.telefono)+' · ' : ''}Orden #${esc(first.orden)} · ${grupo.length} extintores</div>
           </div>
+          <div class="linear-service">
+            ${esc((grupo.map(r=>(r.servicios||[]).join(', ')).filter(Boolean).join(' · ')) || 'Sin servicio')}
+            <small>${grupo.map(r=>r.fechaVencimiento).filter(Boolean)[0] ? 'Recarga: '+esc(grupo.map(r=>r.fechaVencimiento).filter(Boolean)[0]) : 'Sin fecha de recarga'}</small>
+          </div>
           <div class="summary-side">
             <span class="summary-price" style="${totalSaldo>0?'color:var(--red);':''}">₡${(totalSaldo>0?totalSaldo:totalPrecio).toLocaleString('es-CR',{maximumFractionDigits:0})}${totalSaldo>0?' pend.':''}</span>
           </div>
@@ -4301,6 +4305,7 @@
             <h3>${esc(p.nombre)}</h3>
             <div class="sub-line">${p.tipo ? esc(p.tipo)+' · ' : ''}${p.capacidad ? esc(p.capacidad)+' · ' : ''}${CATEGORIAS_INVENTARIO.find(c=>c.id===p.categoria)?.label || ''}</div>
           </div>
+          <div class="linear-category">${esc(CATEGORIAS_INVENTARIO.find(c=>c.id===p.categoria)?.label || '—')}<small>${p.tipo ? esc(p.tipo) : (p.capacidad ? esc(p.capacidad) : '')}</small></div>
           <div class="summary-side">
             ${esServicio
               ? (p.precioUnitario ? `<span class="summary-price">₡${parseFloat(p.precioUnitario).toLocaleString('es-CR',{maximumFractionDigits:0})}</span>` : '')
@@ -4366,7 +4371,12 @@
           <input class="search" id="inventario-search-input" placeholder="Buscar producto..." value="${esc(inventarioQuery)}" style="flex:1;min-width:180px;"/>
           <button class="btn-primary" id="btn-nuevo-producto">+ Nuevo producto</button>
         </div>
-        ${filtrados.length === 0 ? '<div class="dash-empty">No hay productos que coincidan.</div>' : `<div class="grid">${filtrados.map(productoCardHTML).join('')}</div>`}
+        ${filtrados.length === 0 ? '<div class="dash-empty">No hay productos que coincidan.</div>' : `
+          <div class="linear-table-head inventory-table-head">
+            <span>Producto</span><span>Categoría / Tipo</span><span>Existencia / Estado</span><span>Precio</span><span></span>
+          </div>
+          <div class="grid">${filtrados.map(productoCardHTML).join('')}</div>
+        `}
       </div>
     `;
   }
@@ -5252,6 +5262,9 @@
             </svg>
             <p>${records.length===0 ? 'Aún no hay extintores registrados.' : 'Nada coincide con ese filtro o búsqueda.'}</p>
           </div>` : `
+          <div class="linear-table-head operations-table-head">
+            <span>Cliente / Orden</span><span>Servicio / Recarga</span><span>Estado</span><span>Monto</span><span></span>
+          </div>
           <div class="grid">${agruparPorOrden(filtered).map(orderCardHTML).join('')}</div>`
         }
       </div>
