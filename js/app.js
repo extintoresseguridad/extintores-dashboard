@@ -4415,6 +4415,19 @@
     return { opsCliente, recsCliente, contratosCliente };
   }
 
+  function crmClienteSeguimientoHTML(key,c,perfil,contratoActivo,proximoMantenimiento){
+    const hoy=todayISO();
+    const ult=c.registros && c.registros.length ? c.registros.slice().sort((a,b)=>(b.fechaIngreso||'').localeCompare(a.fechaIngreso||''))[0] : null;
+    const fechaUlt=ult ? ult.fechaIngreso : '—';
+    const prox=proximoMantenimiento && proximoMantenimiento!=='—' ? proximoMantenimiento : '—';
+    let estado='Al día', clase='green', accion='Seguimiento preventivo';
+    if(prox!=='—' && prox<hoy){estado='Mantenimiento vencido';clase='red';accion='Contactar para programar servicio';}
+    else if(prox===hoy){estado='Mantenimiento hoy';clase='amber';accion='Confirmar servicio';}
+    else if(prox!=='—'){const d=Math.ceil((new Date(prox+'T00:00:00')-new Date(hoy+'T00:00:00'))/86400000);if(d<=30){estado='Próximo mantenimiento';clase='amber';accion='Contactar y agendar';}}
+    if(contratoActivo && contratoActivo.fechaRenovacion && contratoActivo.fechaRenovacion<=hoy){estado='Renovación pendiente';clase='red';accion='Contactar para renovar Cliente Seguro';}
+    return '<div class="ficha360-followup"><div class="ficha360-followup-head"><div><span class="ficha360-kicker">SEGUIMIENTO</span><h3>Próxima acción</h3></div><span class="ficha360-followup-status '+clase+'">'+esc(estado)+'</span></div><div class="ficha360-followup-grid"><div><span>Último servicio</span><b>'+esc(fechaUlt)+'</b></div><div><span>Próximo mantenimiento</span><b>'+esc(prox)+'</b></div><div><span>Cliente Seguro</span><b>'+esc(contratoActivo?'Activo':'Sin membresía')+'</b></div><div><span>Acción sugerida</span><b>'+esc(accion)+'</b></div></div><div class="ficha360-followup-actions"><button class="btn-primary" data-seguimiento-whatsapp="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">WhatsApp</button><button class="btn-ghost" data-seguimiento-recordatorio="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">+ Recordatorio</button></div></div>';
+  }
+
   function crmClienteResumenHTML(key){
     const { opsCliente, recsCliente, contratosCliente } = crmDelCliente(key);
     const ventasCliente = ventas.filter(v => clienteKey(v) === key)
@@ -4883,6 +4896,7 @@
           <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
           <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
         </div>
+        ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoMantenimiento360)}
         ${crmClienteResumenHTML(key)}
         ${historialOrdenesClienteHTML(registrosOrdenados)}
         ${registrosOrdenados.length ? `<div class="grid">${registrosOrdenados.map(cardHTML).join('')}</div>` : ''}
@@ -5626,6 +5640,8 @@
       if(clienteSeleccionado){
         const btnVolver = document.getElementById('btn-volver-clientes');
         if(btnVolver) btnVolver.addEventListener('click', volverClientes);
+        document.querySelectorAll('[data-seguimiento-whatsapp]').forEach(b=>b.addEventListener('click',()=>abrirWhatsApp(b.getAttribute('data-seguimiento-whatsapp'),b.getAttribute('data-seguimiento-telefono')||'','Hola, le contactamos de Extintores Seguridad para dar seguimiento a su servicio.')));
+        document.querySelectorAll('[data-seguimiento-recordatorio]').forEach(b=>b.addEventListener('click',()=>crearRecordatorioRapido(b.getAttribute('data-seguimiento-recordatorio'),b.getAttribute('data-seguimiento-telefono')||'')));
         const btnSepararCliente = document.querySelector('[data-separar-cliente]');
         if(btnSepararCliente) btnSepararCliente.addEventListener('click', ()=> abrirSepararCliente(btnSepararCliente.getAttribute('data-separar-cliente')));
         const btnNuevaVenta = document.getElementById('btn-nueva-venta-cliente');
