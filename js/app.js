@@ -26,7 +26,8 @@
   let papelera = []; // { id, tipo:'extintor'|'movimiento_caja'|'venta'|'oportunidad'|'recordatorio', fechaEliminado, data, cajaId (solo para movimientos) }
   let ventas = []; // { id, cliente, telefono, marca, producto, cantidad, precio, abono, pagado, fechaCompra, fechaProximoMantenimiento, observaciones }
   let oportunidades = []; // { id, cliente, telefono, descripcion, montoEstimado, etapa:'contactado'|'cotizado'|'ganado'|'perdido', fechaCreacion, bitacora:[{id,fecha,tipo,nota}] }
-  let recordatorios = []; // { id, texto, fecha, cliente, telefono, oportunidadId, completado }
+  let recordatorios = [];
+  let contactosCRM = []; // { id, texto, fecha, cliente, telefono, oportunidadId, completado }
   let clientesPerfil = []; // { id, cliente, telefono, empresa, cedula, notas, etiquetas, fechaCreacion } — datos personales del cliente, independientes de sus órdenes/ventas
   let contratos = []; // membresías Cliente Seguro
   let referidos = []; // programa independiente de referidos
@@ -4415,7 +4416,1721 @@
     return { opsCliente, recsCliente, contratosCliente };
   }
 
+  function registrarContactoCliente(nombre, telefono, resultado, proximaFecha, nota){
+    const historial = Array.isArray(contactosCRM) ? contactosCRM : [];
+    contactosCRM = [{id:uid(),fecha:todayISO(),hora:new Date().toLocaleTimeString('es-CR',{hour:'2-digit',minute:'2-digit'}),cliente:nombre,telefono,resultado,proximaFecha,nota}, ...historial];
+    return persist();
+  }
+
+  function crmHistorialContactoHTML(nombre){
+    const lista=(Array.isArray(contactosCRM)?contactosCRM:[]).filter(x=>clienteKey(x)===clienteKey({cliente:nombre})).slice(0,8);
+    return '<div class="ficha360-contactos"><div class="ficha360-contactos-head"><div><span class="ficha360-kicker">CRM</span><h3>Historial de contacto</h3></div><button class="btn-primary" data-nuevo-contacto="'+esc(nombre)+'">+ Registrar contacto</button></div>'+
+      (lista.length ? '<div class="ficha360-contactos-list">'+lista.map(x=>'<div class="ficha360-contacto-row"><div class="ficha360-contacto-date">'+esc(x.fecha)+'<small>'+esc(x.hora||'')+'</small></div><div><b>'+esc(x.resultado||'Contacto realizado')+'</b><small>'+esc(x.nota||'Sin nota')+(x.proximaFecha?' · Próxima acción: '+esc(x.proximaFecha):'')+'</small></div></div>').join('')+'</div>' : '<div class="dash-empty">Todavía no hay contactos registrados para este cliente.</div>')+'</div>';
+  }
+
   function crmClienteSeguimientoHTML(key,c,perfil,contratoActivo,proximoMantenimiento){
+    const hoy=todayISO();
+    const ult=c.registros && c.registros.length ? c.registros.slice().sort((a,b)=>(b.fechaIngreso||'').localeCompare(a.fechaIngreso||''))[0] : null;
+    const fechaUlt=ult ? ult.fechaIngreso : '—';
+    const prox=proximoMantenimiento && proximoMantenimiento!=='—' ? proximoMantenimiento : '—';
+    let estado='Al día', clase='green', accion='Seguimiento preventivo';
+    if(prox!=='—' && prox<hoy){estado='Mantenimiento vencido';clase='red';accion='Contactar para programar servicio';}
+    else if(prox===hoy){estado='Mantenimiento hoy';clase='amber';accion='Confirmar servicio';}
+    else if(prox!=='—'){const d=Math.ceil((new Date(prox+'T00:00:00')-new Date(hoy+'T00:00:00'))/86400000);if(d<=30){estado='Próximo mantenimiento';clase='amber';accion='Contactar y agendar';}}
+    if(contratoActivo && contratoActivo.fechaRenovacion && contratoActivo.fechaRenovacion<=hoy){estado='Renovación pendiente';clase='red';accion='Contactar para renovar Cliente Seguro';}
+    return '<div class="ficha360-followup"><div class="ficha360-followup-head"><div><span class="ficha360-kicker">SEGUIMIENTO</span><h3>Próxima acción</h3></div><span class="ficha360-followup-status '+clase+'">'+esc(estado)+'</span></div><div class="ficha360-followup-grid"><div><span>Último servicio</span><b>'+esc(fechaUlt)+'</b></div><div><span>Próximo mantenimiento</span><b>'+esc(prox)+'</b></div><div><span>Cliente Seguro</span><b>'+esc(contratoActivo?'Activo':'Sin membresía')+'</b></div><div><span>Acción sugerida</span><b>'+esc(accion)+'</b></div></div><div class="ficha360-followup-actions"><button class="btn-primary" data-seguimiento-whatsapp="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">WhatsApp</button><button class="btn-ghost" data-seguimiento-recordatorio="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">+ Recordatorio</button></div></div>';
+  }
+
+  function crmClienteResumenHTML(key){
+    const { opsCliente, recsCliente, contratosCliente } = crmDelCliente(key);
+    const ventasCliente = ventas.filter(v => clienteKey(v) === key)
+      .sort((a,b)=>(b.fechaCompra||'').localeCompare(a.fechaCompra||''));
+    const referidosCliente = referidos.filter(r => {
+      const referidorKey = r.referidor ? clienteKey({cliente:r.referidor, telefono:r.telefonoReferidor}) : '';
+      const referidoKey = r.referido ? clienteKey({cliente:r.referido, telefono:r.telefonoReferido}) : '';
+      return referidorKey === key || referidoKey === key;
+    }).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+    if(!opsCliente.length && !recsCliente.length && !contratosCliente.length && !ventasCliente.length && !referidosCliente.length) return '';
+    const hoy = todayISO();
+    return `
+      <div class="dash-panel" style="margin-bottom:16px;">
+        ${contratosCliente.length ? `
+        <h3 style="margin-bottom:8px;">Membresías Cliente Seguro <span>${contratosCliente.length}</span></h3>
+        <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length||ventasCliente.length||referidosCliente.length)?'14px':'0'};">
+          ${contratosCliente.map(c=>`
+            <div class="vence-item">
+              <div><div class="v-name">${c.cantidadExtintores ? c.cantidadExtintores+' extintores' : 'Membresía'}${c.valorAnual ? ' · ₡'+parseFloat(c.valorAnual).toLocaleString('es-CR',{maximumFractionDigits:0})+'/año' : ''}</div>
+              <div class="v-order">${c.estado==='activo' ? 'Activo' : 'Cancelado'}${c.tipoMembresia ? ' · '+esc(c.tipoMembresia) : ''}</div></div>
+              <div class="v-date">${esc(c.fechaRenovacion||'—')}</div>
+            </div>`).join('')}
+        </div>` : ''}
+        ${ventasCliente.length ? `
+        <h3 style="margin-bottom:8px;">Ventas de equipos <span>${ventasCliente.length}</span></h3>
+        <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length||referidosCliente.length)?'14px':'0'};">
+          ${ventasCliente.map(v=>{ const saldo=saldoOf(v); return `
+            <div class="vence-item">
+              <div><div class="v-name">${esc((v.marca ? v.marca+' — ' : '')+(v.producto||'Equipo'))} · ${v.cantidad||1} unidad(es)</div>
+              <div class="v-order">${esc(v.fechaCompra||'Sin fecha')}${v.fechaProximoMantenimiento ? ' · Próx. mantenimiento: '+esc(v.fechaProximoMantenimiento) : ''}</div>
+              ${v.observaciones ? '<div class="v-order">'+esc(v.observaciones)+'</div>' : ''}</div>
+              <div style="text-align:right;white-space:nowrap;"><div class="v-name">₡${(parseFloat(v.precio)||0).toLocaleString('es-CR',{maximumFractionDigits:0})}</div>
+              <div class="v-date ${saldo.saldo>0?'venc-vencido':''}">${saldo.saldo>0?'Saldo ₡'+saldo.saldo.toLocaleString('es-CR',{maximumFractionDigits:0}):'Pagado'}</div></div>
+            </div>`; }).join('')}
+        </div>` : ''}
+        ${referidosCliente.length ? `
+        <h3 style="margin-bottom:8px;">Referidos relacionados <span>${referidosCliente.length}</span></h3>
+        <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length)?'14px':'0'};">
+          ${referidosCliente.map(r=>{ const esReferidor=r.referidor && clienteKey({cliente:r.referidor,telefono:r.telefonoReferidor})===key; return `
+            <div class="vence-item">
+              <div><div class="v-name">${esReferidor?'Refirió a: ':'Fue referido por: '}${esc(esReferidor?(r.referido||''):(r.referidor||''))}</div>
+              <div class="v-order">${esc(r.fecha||'Sin fecha')} · ${esc(r.servicio||'Sin servicio')} · Crédito ₡${(parseFloat(r.credito)||0).toLocaleString('es-CR')}</div></div>
+              <span class="cs-status">${esc(r.estado||'pendiente')}</span>
+            </div>`; }).join('')}
+        </div>` : ''}
+        ${opsCliente.length ? `
+        <h3 style="margin-bottom:8px;">Oportunidades <span>${opsCliente.length}</span></h3>
+        <div class="vence-list" style="margin-bottom:${recsCliente.length?'14px':'0'};">${opsCliente.map(o=>`
+          <div class="vence-item" data-abrir-oportunidad="${o.id}" style="cursor:pointer;"><div><div class="v-name">${esc(o.descripcion||'Sin descripción')}</div><div class="v-order">${o.montoEstimado?'₡'+parseFloat(o.montoEstimado).toLocaleString('es-CR',{maximumFractionDigits:0}):'Sin monto estimado'}</div></div><span class="etapa-badge ${etapaOf(o.etapa).cls}">${etapaOf(o.etapa).label}</span></div>`).join('')}</div>` : ''}
+        ${recsCliente.length ? `
+        <h3 style="margin-bottom:8px;">Recordatorios pendientes <span>${recsCliente.length}</span></h3>
+        <div class="vence-list">${recsCliente.map(r=>`
+          <div class="vence-item"><div class="v-name">${esc(r.texto)}</div><div class="v-date ${r.fecha<hoy?'venc-vencido':(r.fecha===hoy?'venc-proximo':'')}">${esc(r.fecha)}</div></div>`).join('')}</div>` : ''}
+      </div>`;
+  }
+
+  function movimientosConCliente(){
+    // Recorre todos los días de caja y junta los movimientos que llevan un cliente anotado
+    // (servicios rápidos/informales que se cobraron en caja sin pasar por el formulario de ingreso).
+    const lista = [];
+    cajas.forEach(c=>{
+      (c.movimientos||[]).forEach(m=>{
+        if(m.cliente && m.cliente.trim()){
+          lista.push({ ...m, fechaCaja: c.fecha });
+        }
+      });
+    });
+    return lista;
+  }
+
+  function agregarTelefono(c, telefono){
+    if(!telefono) return;
+    const limpio = cleanPhone(telefono);
+    if(!limpio) return;
+    if(!c._telSet) c._telSet = new Map();
+    if(!c._telSet.has(limpio)) c._telSet.set(limpio, telefono.trim());
+  }
+
+  function agruparClientesMantenimiento(){
+    const map = {};
+    records.forEach(r=>{
+      const key = clienteKey(r);
+      if(!map[key]){
+        map[key] = { key, nombre: r.cliente || 'Sin nombre', registros: [], movimientosInformales: [] };
+      }
+      map[key].registros.push(r);
+      agregarTelefono(map[key], r.telefono);
+    });
+    movimientosConCliente().forEach(m=>{
+      const key = clienteKey(m);
+      if(!map[key]){
+        map[key] = { key, nombre: m.cliente || 'Sin nombre', registros: [], movimientosInformales: [] };
+      }
+      map[key].movimientosInformales.push(m);
+      agregarTelefono(map[key], m.telefono);
+    });
+    clientesPerfil.forEach(p=>{
+      const key = clienteKey(p);
+      if(!map[key]){
+        map[key] = { key, nombre: p.cliente || 'Sin nombre', registros: [], movimientosInformales: [] };
+      }
+      agregarTelefono(map[key], p.telefono);
+    });
+    return Object.values(map).map(c=>{
+      const totalPagadoRegistros = c.registros.reduce((s,r)=> s + (saldoOf(r).precio - saldoOf(r).saldo), 0);
+      const totalPendienteRegistros = c.registros.reduce((s,r)=> s + saldoOf(r).saldo, 0);
+      const totalInformal = c.movimientosInformales.reduce((s,m)=> s + (m.tipo==='entrada' ? m.monto : 0), 0);
+      const ultimaFecha = c.registros.reduce((max,r)=> (r.fechaIngreso||'') > max ? (r.fechaIngreso||'') : max, '');
+      const perfil = perfilDeCliente(c.key);
+      const telefonos = c._telSet ? Array.from(c._telSet.values()) : [];
+      return {
+        ...c,
+        telefonos,
+        telefono: telefonos[0] || '',
+        totalExtintores: c.registros.reduce((s,r)=>s+(r.cantidad||1),0),
+        totalServicios: c.registros.length + c.movimientosInformales.length,
+        totalPagado: totalPagadoRegistros + totalInformal,
+        totalPendiente: totalPendienteRegistros,
+        ultimaFecha,
+        etiquetas: (perfil && perfil.etiquetas) || [],
+        membresiaActiva: contratos.some(ct => clienteKey(ct) === c.key && ct.estado === 'activo'),
+      };
+    }).sort((a,b)=> a.nombre.localeCompare(b.nombre));
+  }
+
+  function agruparClientesCompras(){
+    const map = {};
+    ventas.forEach(v=>{
+      const key = clienteKey(v);
+      if(!map[key]){
+        map[key] = { key, nombre: v.cliente || 'Sin nombre', compras: [] };
+      }
+      map[key].compras.push(v);
+      agregarTelefono(map[key], v.telefono);
+    });
+    return Object.values(map).map(c=>{
+      const totalPagado = c.compras.reduce((s,v)=> s + (saldoOf(v).precio - saldoOf(v).saldo), 0);
+      const totalPendiente = c.compras.reduce((s,v)=> s + saldoOf(v).saldo, 0);
+      const ultimaFecha = c.compras.reduce((max,v)=> (v.fechaCompra||'') > max ? (v.fechaCompra||'') : max, '');
+      const perfil = perfilDeCliente(c.key);
+      const telefonos = c._telSet ? Array.from(c._telSet.values()) : [];
+      return {
+        ...c,
+        telefonos,
+        telefono: telefonos[0] || '',
+        totalCompras: c.compras.length,
+        totalEquiposComprados: c.compras.reduce((s,v)=>s+(v.cantidad||1),0),
+        totalPagado, totalPendiente, ultimaFecha,
+        etiquetas: (perfil && perfil.etiquetas) || [],
+        membresiaActiva: contratos.some(ct => clienteKey(ct) === c.key && ct.estado === 'activo'),
+      };
+    }).sort((a,b)=> a.nombre.localeCompare(b.nombre));
+  }
+
+  function setEtiquetaFiltro(et){ etiquetaFiltro = et; render(); }
+
+  function renderClientesLista(){
+    const esCompras = clientesSubvista === 'compras';
+    const todos = esCompras ? agruparClientesCompras() : agruparClientesMantenimiento();
+    const clientes = todos.filter(c=>{
+      if(etiquetaFiltro !== 'todas' && !(c.etiquetas||[]).includes(etiquetaFiltro)) return false;
+      if(!clienteQuery) return true;
+      const q = clienteQuery.toLowerCase();
+      return c.nombre.toLowerCase().includes(q) || (c.telefonos||[]).some(t=>t.includes(q));
+    });
+    return `
+      <div class="clientes-toolbar" style="flex-wrap:wrap;gap:10px;">
+        <div class="view-toggle">
+          <button data-clientes-subvista="mantenimiento" class="${!esCompras?'active':''}">Mantenimiento</button>
+          <button data-clientes-subvista="compras" class="${esCompras?'active':''}">Compras de equipo</button>
+        </div>
+        <input class="search" id="cliente-search-input" placeholder="Buscar cliente por nombre o teléfono..." value="${esc(clienteQuery)}" style="flex:1;min-width:200px;"/>
+        ${esCompras ? `<button class="btn-primary" id="btn-nueva-venta-listado">+ Nueva venta de equipo</button>` : `<button class="btn-primary" id="btn-nuevo-cliente">+ Nuevo cliente</button>`}
+        <div style="font-size:12px;color:#6B7280;">${clientes.length} cliente(s)</div>
+      </div>
+      <div class="clientes-toolbar" style="padding-top:0;">
+        <div class="filters">
+          <button class="chip ${etiquetaFiltro==='todas'?'active':''}" data-etiqueta-filtro="todas">Todas</button>
+          ${ETIQUETAS_CLIENTE.map(et=>`<button class="chip ${etiquetaFiltro===et?'active':''}" data-etiqueta-filtro="${et}">${et}</button>`).join('')}
+        </div>
+      </div>
+      <div class="clientes-content">
+        ${clientes.length === 0 ? `<div class="dash-empty">${esCompras ? 'Todavía no hay clientes de compras de equipo.' : 'No hay clientes que coincidan.'}</div>` : `
+        <div class="contact-list">
+          <div class="contact-row contact-row-head">
+            <div class="contact-avatar-col"></div>
+            <div class="contact-main">Cliente</div>
+            <div class="contact-metrics">${esCompras ? '<div class="cm">Compras</div><div class="cm">Equipos</div>' : '<div class="cm">Servicios</div><div class="cm">Extintores</div>'}</div>
+            <div class="contact-balance">Por cobrar</div>
+            <div class="contact-chevron-col"></div>
+          </div>
+          ${clientes.map(c=>`
+            <div class="contact-row" data-cliente-key="${esc(c.key)}" data-cliente-tipo="${esCompras?'compras':'mantenimiento'}">
+              <div class="contact-avatar-col"><div class="contact-avatar">${esc(inicialesDe(c.nombre))}</div></div>
+              <div class="contact-main">
+                <div class="contact-name">${esc(c.nombre)}${c.membresiaActiva ? '<span class="etiqueta-badge etiqueta-membresia">Membresía</span>' : ''}${c.etiquetas && c.etiquetas.length ? etiquetasHTML(c.etiquetas) : ''}</div>
+                <div class="contact-sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono'}${c.ultimaFecha ? ` · Última actividad ${esc(c.ultimaFecha)}` : ''}</div>
+              </div>
+              <div class="contact-metrics">
+                ${esCompras ? `
+                <div class="cm"><b>${c.totalCompras}</b><span>Compras</span></div>
+                <div class="cm"><b>${c.totalEquiposComprados}</b><span>Equipos</span></div>
+                ` : `
+                <div class="cm"><b>${c.totalServicios}</b><span>Servicios</span></div>
+                <div class="cm"><b>${c.totalExtintores}</b><span>Extintores</span></div>
+                `}
+              </div>
+              <div class="contact-balance ${c.totalPendiente>0?'neg':''}">₡${c.totalPendiente.toLocaleString('es-CR',{maximumFractionDigits:0})}</div>
+              <div class="contact-chevron-col">›</div>
+            </div>`).join('')}
+        </div>`}
+      </div>
+    `;
+  }
+
+  function ventaCardHTML(v){
+    const s = saldoOf(v);
+    const cardKey = 'venta-' + v.id;
+    const isOpen = tarjetasAbiertas.has(cardKey);
+    return `
+      <details class="card-collapse" data-card-key="${cardKey}" ${isOpen ? 'open' : ''}>
+        <summary>
+          <div class="summary-main">
+            <h3>${esc(v.marca || 'Sin marca')} — ${esc(v.producto || 'Equipo')}</h3>
+            <div class="sub-line">Compra · ${esc(v.fechaCompra) || 'sin fecha'}</div>
+          </div>
+          <div class="summary-side">
+            <span class="badge" style="background:#FBE9E9;color:#B91C1C;">Venta</span>
+            ${v.precio ? `<span class="summary-price" style="${s.saldo>0?'color:var(--red);':''}">₡${(s.saldo>0?s.saldo:s.precio).toLocaleString('es-CR',{maximumFractionDigits:0})}${s.saldo>0?' pend.':''}</span>` : ''}
+          </div>
+        </summary>
+        <div class="card-inner-body">
+          <div class="card-body">
+            ${v.telefono ? `<div class="sub">${esc(v.telefono)}</div>` : ''}
+            <div class="meta-row"><span class="k">Cantidad</span><span class="v">${v.cantidad || 1}</span></div>
+            <div class="meta-row"><span class="k">Fecha de compra</span><span class="v mono">${esc(v.fechaCompra) || '—'}</span></div>
+            ${v.fechaProximoMantenimiento ? `<div class="meta-row"><span class="k">Próx. mantenimiento</span><span class="v mono">${esc(v.fechaProximoMantenimiento)}</span></div>` : ''}
+            ${v.observaciones ? `<div class="meta-row"><span class="k">Observaciones</span><span class="v">${esc(v.observaciones)}</span></div>` : ''}
+            ${v.precio ? (()=>{
+              const badge = s.saldo <= 0 ? '<span class="pay-badge pay-ok">Pagado</span>' : `<span class="pay-badge pay-pend">Pendiente</span>`;
+              return `<div class="meta-row"><span class="k">Precio</span><span class="v">₡${s.precio.toLocaleString('es-CR',{maximumFractionDigits:0})} ${badge}</span></div>
+              ${s.abono>0 ? `<div class="meta-row"><span class="k">Abono</span><span class="v">₡${s.abono.toLocaleString('es-CR',{maximumFractionDigits:0})}</span></div>
+              <div class="meta-row"><span class="k">Saldo</span><span class="v" style="${s.saldo>0?'color:var(--red);font-weight:700;':''}">₡${s.saldo.toLocaleString('es-CR',{maximumFractionDigits:0})}</span></div>` : ''}`;
+            })() : ''}
+          </div>
+          <div class="card-actions">
+            <button data-action="editar-venta" data-id="${v.id}">Editar</button>
+            <button class="danger" data-action="eliminar-venta" data-id="${v.id}">Eliminar</button>
+          </div>
+        </div>
+      </details>`;
+  }
+
+  function historialOrdenesClienteHTML(registros){
+    const lista = Array.isArray(registros) ? registros : [];
+    if(!lista.length) return '';
+    const grupos = new Map();
+    lista.forEach(r=>{
+      const k = r.orden ? 'orden:'+r.orden : 'registro:'+r.id;
+      if(!grupos.has(k)) grupos.set(k, []);
+      grupos.get(k).push(r);
+    });
+    const ordenes = [...grupos.values()].sort((a,b)=>{
+      const fa = a.reduce((m,r)=>Math.max(m, Date.parse(r.fechaIngreso||'')||0),0);
+      const fb = b.reduce((m,r)=>Math.max(m, Date.parse(r.fechaIngreso||'')||0),0);
+      return fb-fa;
+    });
+    return `
+      <div class="dash-panel" style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;">
+          <h3 style="margin:0;">Historial de órdenes de trabajo <span>${lista.length}</span></h3>
+          <span class="caja-hint" style="margin:0;">${ordenes.length} orden(es)</span>
+        </div>
+        <div class="vence-list">
+          ${ordenes.map(grupo=>{
+            const primero=grupo[0];
+            const total=grupo.reduce((s,r)=>s+(saldoOf(r).precio||0),0);
+            const saldo=grupo.reduce((s,r)=>s+(saldoOf(r).saldo||0),0);
+            const servicios=[...new Set(grupo.flatMap(r=>r.servicios||[]))];
+            const estados=[...new Set(grupo.map(r=>estadoOf(r.estado).label))];
+            const equipos=grupo.reduce((s,r)=>s+(parseInt(r.cantidad,10)||1),0);
+            return `
+              <div class="vence-item" style="align-items:flex-start;">
+                <div>
+                  <div class="v-name">${primero.orden ? 'Orden #'+esc(primero.orden) : 'Servicio sin número de orden'} · ${equipos} extintor(es)</div>
+                  <div class="v-order">${esc(primero.fechaIngreso||'Sin fecha')} · ${esc(estados.join(' / '))}</div>
+                  <div class="v-order">${servicios.length ? esc(servicios.join(' · ')) : 'Sin servicio especificado'}${primero.fechaVencimiento ? ' · Próx. recarga: '+esc(primero.fechaVencimiento) : ''}</div>
+                  ${primero.observaciones ? '<div class="v-order">'+esc(primero.observaciones)+'</div>' : ''}
+                </div>
+                <div style="text-align:right;white-space:nowrap;">
+                  ${total ? '<div class="v-name">₡'+total.toLocaleString('es-CR',{maximumFractionDigits:0})+'</div>' : ''}
+                  ${saldo>0 ? '<div class="v-date venc-vencido">Saldo ₡'+saldo.toLocaleString('es-CR',{maximumFractionDigits:0})+'</div>' : '<div class="v-date">Pagado</div>'}
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
+  function etiquetasHTML(etiquetas){
+    return (etiquetas||[]).map(et=>`<span class="etiqueta-badge etiqueta-${et.toLowerCase()}">${esc(et)}</span>`).join('');
+  }
+
+  function estadoMantenimientoExtintor(fecha){
+    if(!fecha) return {texto:'Sin fecha', cls:'', icono:'•'};
+    const hoy = new Date();
+    hoy.setHours(0,0,0,0);
+    const d = new Date(fecha + 'T00:00:00');
+    if(Number.isNaN(d.getTime())) return {texto:fecha, cls:'', icono:'•'};
+    const dias = Math.ceil((d.getTime()-hoy.getTime())/86400000);
+    if(dias < 0) return {texto:'Vencido', cls:'venc-vencido', icono:'⚠'};
+    if(dias <= 30) return {texto:'Próximo', cls:'venc-proximo', icono:'!'};
+    return {texto:'Vigente', cls:'', icono:'✓'};
+  }
+
+  function perfilClienteHTML(key, nombre, telefono){
+    const p = perfilDeCliente(key);
+    if(!p){
+      return `
+        <div class="dash-panel" style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div style="font-size:12.5px;color:#6B7280;">Todavía no tienes datos personales guardados de este cliente (empresa, cédula, notas).</div>
+          <button class="btn-ghost" data-agregar-perfil="${esc(key)}" data-nombre="${esc(nombre)}" data-telefono="${esc(telefono)}">+ Agregar datos personales</button>
+        </div>`;
+    }
+    return `
+      <div class="dash-panel" style="margin-bottom:16px;">
+        <h3 style="margin-bottom:8px;">Datos personales <span><button class="btn-ghost" style="padding:4px 10px;font-size:11px;" data-editar-perfil="${esc(key)}">Editar</button> <button class="btn-ghost" style="padding:4px 10px;font-size:11px;color:var(--red);border-color:var(--red);" data-eliminar-perfil="${esc(key)}">Eliminar</button></span></h3>
+        ${p.etiquetas && p.etiquetas.length ? `<div style="margin-bottom:8px;">${etiquetasHTML(p.etiquetas)}</div>` : ''}
+        <div class="meta-row"><span class="k">Empresa</span><span class="v">${p.empresa ? esc(p.empresa) : '—'}</span></div>
+        <div class="meta-row"><span class="k">Cédula</span><span class="v">${p.cedula ? esc(p.cedula) : '—'}</span></div>
+        ${p.direccion ? `<div class="meta-row"><span class="k">Dirección</span><span class="v">${esc(p.direccion)}</span></div>` : ''}
+        ${p.notas ? `<div class="meta-row"><span class="k">Notas</span><span class="v">${esc(p.notas)}</span></div>` : ''}
+        <div style="margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+            <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6B7280;font-weight:700;">Extintores individuales · ${(p.extintores||[]).length}</div>
+            <button class="btn-ghost" style="padding:4px 10px;font-size:11px;" data-editar-perfil="${esc(key)}">Gestionar equipos</button>
+          </div>
+          ${(p.extintores||[]).length ? `<div class="vence-list">${(p.extintores||[]).map(e=>{
+            const em = estadoMantenimientoExtintor(e.proximoMantenimiento);
+            const estadoEquipo = e.estado || 'Activo';
+            return `<div class="vence-item" style="align-items:flex-start;">
+              <div style="min-width:0;">
+                <div class="v-name">${esc(e.serie || 'Sin serie')} · ${esc(e.tipo || 'Sin tipo')} ${e.capacidad ? '· '+esc(e.capacidad) : ''}</div>
+                <div class="v-order">${e.ubicacion ? esc(e.ubicacion)+' · ' : ''}${esc(estadoEquipo)}${e.ultimoMantenimiento ? ' · Último: '+esc(e.ultimoMantenimiento) : ''}</div>
+              </div>
+              <div style="text-align:right;white-space:nowrap;">
+                <div class="v-date ${em.cls}">${em.icono} ${e.proximoMantenimiento ? esc(e.proximoMantenimiento) : 'Sin fecha'}</div>
+                <div style="font-size:10px;color:#6B7280;">${em.texto}</div>
+              </div>
+            </div>`;
+          }).join('')}</div>` : '<div class="caja-hint">Registra los equipos para llevar el historial individual de cada extintor.</div>'}
+        </div>
+      </div>`;
+  }
+
+  function renderClienteDetalle(key){
+    if(clienteSeleccionadoTipo === 'compras'){
+      const clientes = agruparClientesCompras();
+      const c = clientes.find(x=>x.key===key);
+      if(!c){
+        clienteSeleccionado = null;
+        return renderClientesLista();
+      }
+      const comprasOrdenadas = [...c.compras].sort((a,b)=> (b.fechaCompra||'').localeCompare(a.fechaCompra||''));
+      return `
+        <div class="clientes-content">
+          <button class="back-link" id="btn-volver-clientes">← Volver a clientes</button>
+          <div class="cliente-detail-head">
+            <div>
+              <h2>${esc(c.nombre)}${c.membresiaActiva ? ' <span class="etiqueta-badge etiqueta-membresia">Membresía activa</span>' : ''}</h2>
+              <div class="sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono registrado'}${c.telefonos && c.telefonos.length>1 ? ` <button class="link-btn" data-separar-cliente="${esc(key)}">¿Son dos personas distintas? Separar</button>` : ''}</div>
+            </div>
+            <div class="cliente-kpis">
+              <div class="cliente-kpi"><b>${c.totalCompras}</b><small>Compras totales</small></div>
+              <div class="cliente-kpi"><b>${c.totalEquiposComprados}</b><small>Equipos comprados</small></div>
+              <div class="cliente-kpi"><b>₡${c.totalPagado.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Total pagado</small></div>
+              <div class="cliente-kpi"><b style="color:${c.totalPendiente>0?'#DC2626':'inherit'}">₡${c.totalPendiente.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Pendiente</small></div>
+            </div>
+          </div>
+          ${perfilClienteHTML(key, c.nombre, c.telefono)}
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+            <button class="btn-primary" id="btn-nueva-venta-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Registrar venta de equipo</button>
+            <button class="btn-primary" id="btn-nueva-orden-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}" data-cliente-key="${esc(key)}">+ Nueva orden de servicio</button>
+          <button class="btn-ghost" id="btn-agregar-extintor-cliente" data-cliente-key="${esc(key)}">+ Agregar extintor</button>
+          <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
+            <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
+            <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
+          </div>
+          ${crmClienteResumenHTML(key)}
+          <div class="grid">${comprasOrdenadas.map(ventaCardHTML).join('')}</div>
+        </div>
+      `;
+    }
+
+    const clientes = agruparClientesMantenimiento();
+    const c = clientes.find(x=>x.key===key);
+    if(!c){
+      clienteSeleccionado = null;
+      return renderClientesLista();
+    }
+    const registrosOrdenados = [...c.registros].sort((a,b)=> (b.fechaIngreso||'').localeCompare(a.fechaIngreso||''));
+    const informalesOrdenados = [...c.movimientosInformales].sort((a,b)=> (b.fechaCaja||'').localeCompare(a.fechaCaja||''));
+    const ventas360 = ventas.filter(v=>clienteKey(v)===key);
+    const contratos360 = contratos.filter(x=>clienteKey(x)===key);
+    const pendientes360 = [
+      ...registrosOrdenados.filter(r=>(saldoOf(r).saldo||0)>0).map(r=>({fecha:r.fechaIngreso||'',monto:saldoOf(r).saldo||0})),
+      ...ventas360.filter(v=>(saldoOf(v).saldo||0)>0).map(v=>({fecha:v.fechaCompra||'',monto:saldoOf(v).saldo||0}))
+    ];
+    const totalPendiente360 = pendientes360.reduce((s,x)=>s+x.monto,0);
+    const ultimoMovimiento = registrosOrdenados[0]?.fechaIngreso || ventas360.slice().sort((a,b)=>(b.fechaCompra||'').localeCompare(a.fechaCompra||''))[0]?.fechaCompra || '—';
+    const perfil360 = perfilDeCliente(key);
+    const extintores360 = (perfil360?.extintores||[]).length;
+    const proximoMantenimiento360 = (perfil360?.extintores||[]).map(e=>e.proximoMantenimiento).filter(Boolean).sort()[0] || registrosOrdenados.map(r=>r.fechaVencimiento).filter(Boolean).sort()[0] || '—';
+    const contratoActivo360 = contratos360.find(x=>x.estado==='activo');
+    return `
+      <div class="clientes-content">
+        <button class="back-link" id="btn-volver-clientes">← Volver a clientes</button>
+        <div class="cliente-detail-head">
+          <div>
+            <h2>${esc(c.nombre)}${c.membresiaActiva ? ' <span class="etiqueta-badge etiqueta-membresia">Membresía activa</span>' : ''}</h2>
+            <div class="sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono registrado'}${c.telefonos && c.telefonos.length>1 ? ` <button class="link-btn" data-separar-cliente="${esc(key)}">¿Son dos personas distintas? Separar</button>` : ''}</div>
+          </div>
+          <div class="cliente-kpis">
+            <div class="cliente-kpi"><b>${c.totalServicios}</b><small>Servicios totales</small></div>
+            <div class="cliente-kpi"><b>${c.totalExtintores}</b><small>Extintores</small></div>
+            <div class="cliente-kpi"><b>₡${c.totalPagado.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Total pagado</small></div>
+            <div class="cliente-kpi"><b style="color:${c.totalPendiente>0?'#DC2626':'inherit'}">₡${c.totalPendiente.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><small>Pendiente</small></div>
+          </div>
+        </div>
+        <div class="cliente-kpis" style="margin-bottom:16px;">
+          <div class="cliente-kpi"><b>${c.registros.length}</b><small>Órdenes / servicios</small></div>
+          <div class="cliente-kpi"><b>${extintores360}</b><small>Extintores en ficha</small></div>
+          <div class="cliente-kpi"><b>${contratoActivo360 ? "Activo" : "No"}</b><small>Cliente Seguro</small></div>
+          <div class="cliente-kpi"><b style="color:${totalPendiente360>0?"#DC2626":"inherit"}">₡${totalPendiente360.toLocaleString("es-CR",{maximumFractionDigits:0})}</b><small>Saldo pendiente</small></div>
+        </div>
+        <div class="ficha360-summary">
+          <div class="ficha360-summary-head">
+            <div>
+              <span class="ficha360-kicker">Ficha 360°</span>
+              <h3>Resumen del cliente</h3>
+              <div class="ficha360-contact">${esc(c.telefono || 'Sin teléfono')} · ${esc((perfil360 && perfil360.direccion) || 'Sin dirección registrada')}</div>
+            </div>
+            <div class="ficha360-quick-actions">
+              <button class="btn-primary" data-whatsapp-cliente="${esc(c.nombre)}" data-whatsapp-telefono="${esc(c.telefono || '')}">WhatsApp</button>
+              <button class="btn-ghost" id="btn-nueva-orden-cliente-top" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}" data-cliente-key="${esc(key)}">+ Nueva orden</button>
+            </div>
+          </div>
+          <div class="ficha360-stats">
+            <div><b>${c.registros.length}</b><span>Órdenes</span></div>
+            <div><b>${extintores360}</b><span>Extintores</span></div>
+            <div><b>${contratoActivo360 ? 'Activo' : 'No'}</b><span>Cliente Seguro</span></div>
+            <div><b class="${totalPendiente360>0?'danger-text':''}">₡${totalPendiente360.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><span>Saldo pendiente</span></div>
+          </div>
+          <div class="ficha360-dates">
+            <div><span>Última actividad</span><b>${esc(ultimoMovimiento)}</b></div>
+            <div><span>Próximo mantenimiento</span><b>${esc(proximoMantenimiento360)}</b></div>
+            <div><span>Membresía</span><b>${contratoActivo360 ? 'Activa' : 'Sin membresía activa'}</b></div>
+          </div>
+        </div>
+        ${perfilClienteHTML(key, c.nombre, c.telefono)}
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+          <button class="btn-primary" id="btn-nueva-orden-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}" data-cliente-key="${esc(key)}">+ Nueva orden de servicio</button>
+          <button class="btn-ghost" id="btn-agregar-extintor-cliente" data-cliente-key="${esc(key)}">+ Agregar extintor</button>
+          <button class="btn-ghost" id="btn-nueva-venta-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva venta</button>
+          <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
+          <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
+          <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
+        </div>
+        ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoMantenimiento360)}
+        ${crmHistorialContactoHTML(c.nombre)}
+        ${crmClienteResumenHTML(key)}
+        ${historialOrdenesClienteHTML(registrosOrdenados)}
+        ${registrosOrdenados.length ? `<div class="grid">${registrosOrdenados.map(cardHTML).join('')}</div>` : ''}
+        ${informalesOrdenados.length ? `
+        <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#6B7280;margin:20px 0 10px;">Servicios rápidos (cobrados en caja, sin boleta)</h3>
+        <div class="caja-card" style="padding:6px 18px;">
+          <div class="mov-list">
+            ${informalesOrdenados.map(m=>`
+              <div class="mov-row">
+                <span class="m-hora">${esc(m.fechaCaja||'')}</span>
+                <span class="m-metodo-tag">${esc(m.metodo||'Efectivo')}</span>
+                <span class="m-concepto">${esc(m.concepto)}</span>
+                <span class="m-monto ${m.tipo}">${m.tipo==='entrada'?'+':'−'}₡${m.monto.toLocaleString('es-CR',{maximumFractionDigits:0})}</span>
+              </div>`).join('')}
+          </div>
+        </div>` : ''}
+      </div>
+    `;
+  }
+
+  const MESES_CORTOS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  function ingresosPorMes(){
+    // Ingresos (dinero) de los últimos 6 meses, agrupados por mes de fechaIngreso (o fecha de entrega si no hay ingreso).
+    const now = new Date();
+    const months = [];
+    for(let i=5;i>=0;i--){
+      const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+      months.push({ key: d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'), label: MESES_CORTOS[d.getMonth()]+' '+String(d.getFullYear()).slice(2), total:0 });
+    }
+    records.forEach(r=>{
+      const precio = parseFloat(r.precio);
+      if(!precio || !r.fechaIngreso) return;
+      const key = r.fechaIngreso.slice(0,7);
+      const m = months.find(mo=>mo.key===key);
+      if(m) m.total += precio;
+    });
+    return months;
+  }
+
+  function ventasPorMes(){
+    // Ingresos por venta de equipos de los últimos 6 meses, agrupados por mes de fechaCompra.
+    const now = new Date();
+    const months = [];
+    for(let i=5;i>=0;i--){
+      const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+      months.push({ key: d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'), label: MESES_CORTOS[d.getMonth()]+' '+String(d.getFullYear()).slice(2), total:0, unidades:0 });
+    }
+    ventas.forEach(v=>{
+      const precio = parseFloat(v.precio);
+      if(!v.fechaCompra) return;
+      const key = v.fechaCompra.slice(0,7);
+      const m = months.find(mo=>mo.key===key);
+      if(m){
+        if(precio) m.total += precio;
+        m.unidades += (v.cantidad || 1);
+      }
+    });
+    return months;
+  }
+
+  function resumenVentasAnio(){
+    const now = new Date();
+    const anio = String(now.getFullYear());
+    const delAnio = ventas.filter(v => (v.fechaCompra||'').slice(0,4) === anio);
+    const totalMonto = delAnio.reduce((s,v)=> s + (parseFloat(v.precio)||0), 0);
+    const totalUnidades = delAnio.reduce((s,v)=> s + (v.cantidad||1), 0);
+    const porProducto = {};
+    delAnio.forEach(v=>{
+      const key = (v.marca ? v.marca+' — ' : '') + (v.producto || 'Sin especificar');
+      porProducto[key] = (porProducto[key]||0) + (v.cantidad||1);
+    });
+    return { anio, cantidadVentas: delAnio.length, totalMonto, totalUnidades, porProducto };
+  }
+
+  function agruparPor(campo){
+    const counts = {};
+    records.forEach(r=>{
+      const val = (r[campo] || 'Sin especificar').toString().trim() || 'Sin especificar';
+      counts[val] = (counts[val]||0) + (r.cantidad || 1);
+    });
+    return Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  }
+
+  function conteoPorEstado(){
+    return ESTADOS.map(e => ({ ...e, count: records.filter(r=>r.estado===e.id).length }));
+  }
+
+  function proximosVencimientos(){
+    const deMantenimiento = records
+      .filter(r=>r.fechaVencimiento)
+      .map(r=>({ rec:r, vs: vencStatus(r.fechaVencimiento), origen: 'mantenimiento', fecha: r.fechaVencimiento }));
+    const deVentas = ventas
+      .filter(v=>v.fechaProximoMantenimiento)
+      .map(v=>({ rec:v, vs: vencStatus(v.fechaProximoMantenimiento), origen: 'venta', fecha: v.fechaProximoMantenimiento }));    return [...deMantenimiento, ...deVentas]
+      .filter(x=>x.vs === 'vencido' || x.vs === 'proximo')
+      .sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||''));
+  }
+
+  function barsHTML(data, colorCls, maxItems){
+    const list = maxItems ? data.slice(0, maxItems) : data;
+    if(!list.length) return '<div class="dash-empty">Sin datos todavía.</div>';
+    const max = Math.max(...list.map(d=>d[1]), 1);
+    return list.map(([label,val])=>`
+      <div class="bar-row">
+        <div class="bar-label" title="${esc(label)}">${esc(label)}</div>
+        <div class="bar-track"><div class="bar-fill ${colorCls}" style="width:${Math.max(4,(val/max*100))}%"></div></div>
+        <div class="bar-value">${val}</div>
+      </div>`).join('');
+  }
+
+  function renderDashboard(){
+    const deps = {ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,contratos,proximosVencimientos,esc,records,ventas,oportunidades,recordatorios,clientesPerfil,clientesEnRiesgo,tasaRenovacionAnual,todayISO,saldoOf,DIAS_RIESGO_CLIENTE,productosStockBajo,ETAPAS_EMBUDO,cajaDeHoy,calcularEsperado,resumenMes,resumenAnio,METODOS_PAGO,planClienteSeguro};
+    if(window.CRMDashboard && typeof window.CRMDashboard.renderDashboard==='function'){
+      try{
+        return window.CRMDashboard.renderDashboard(deps);
+      }catch(error){
+        console.error('Error al abrir Indicadores:', error);
+        const activos = records.filter(r=>r.estado!=='entregado').length;
+        const vencidos = records.filter(r=>vencStatus(r.fechaVencimiento)==='vencido').length;
+        const porCobrar = records.reduce((s,r)=>s+(saldoOf(r).saldo||0),0);
+        return '<div class="dash-content"><div class="dash-panel" style="margin-bottom:18px;"><h2>📊 Indicadores</h2><p style="color:var(--red-dark);">Se detectó un problema al cargar el panel completo. Los indicadores básicos siguen disponibles.</p></div><div class="kpi-grid"><div class="kpi-card"><div class="kpi-label">Activos registrados</div><div class="kpi-value">'+activos+'</div></div><div class="kpi-card kpi-red"><div class="kpi-label">Recargas vencidas</div><div class="kpi-value">'+vencidos+'</div></div><div class="kpi-card"><div class="kpi-label">Clientes</div><div class="kpi-value">'+new Set([...records,...ventas,...clientesPerfil,...oportunidades].map(x=>x.cliente).filter(Boolean)).size+'</div></div><div class="kpi-card kpi-amber"><div class="kpi-label">Por cobrar</div><div class="kpi-value">₡'+porCobrar.toLocaleString('es-CR',{maximumFractionDigits:0})+'</div></div></div></div>';
+      }
+    }
+    return '';
+  }
+
+
+  function exportarRespaldoIndustrial(){
+    const payload = {
+      version:'CRM Industrial Extintores Seguridad 3.0',
+      exportedAt:new Date().toISOString(),
+      records,cajas,papelera,ventas,oportunidades,recordatorios,clientesPerfil,contratos,inventario,configuracion
+    };
+    const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`respaldo-extintores-seguridad-${todayISO()}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    showToast('Respaldo descargado.');
+  }
+
+  // Nota: la restauración desde archivo vive en el Panel de control de superadministrador
+  // (pestaña "Zona de riesgo" → wireAdminTabRiesgo), que pide escribir "RESTAURAR" como
+  // confirmación antes de reemplazar los datos. No duplicar esa lógica aquí.
+
+  function irVistaIndustrial(v){
+    setView(v);
+  }
+
+  function renderIndustrial(){
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const en30 = records.filter(r=>{
+      if(!r.fechaVencimiento) return false;
+      const d=new Date(r.fechaVencimiento+'T00:00:00');
+      const diff=Math.ceil((d-hoy)/86400000);
+      return diff>=0 && diff<=30;
+    });
+    const vencidos = records.filter(r=>vencStatus(r.fechaVencimiento)==='vencido');
+    const taller = records.filter(r=>r.estado==='recibido'||r.estado==='proceso');
+    const listos = records.filter(r=>r.estado==='listo');
+    const clientes = new Set([
+      ...records.map(r=>r.cliente).filter(Boolean),
+      ...ventas.map(v=>v.cliente).filter(Boolean),
+      ...clientesPerfil.map(c=>c.cliente).filter(Boolean),
+      ...oportunidades.map(o=>o.cliente).filter(Boolean)
+    ]);
+    const porCobrar = records.reduce((s,r)=>s+(saldoOf(r).saldo||0),0);
+    const stockBajo = typeof productosStockBajo==='function' ? productosStockBajo() : [];
+    const contratosActivos = contratos.filter(c=>c.estado==='activo');
+    const opsAbiertas = oportunidades.filter(o=>o.etapa!=='perdido' && o.etapa!=='ganado');
+    const recPend = recordatorios.filter(r=>!r.completado).sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+    const proximos = [...en30].sort((a,b)=>(a.fechaVencimiento||'').localeCompare(b.fechaVencimiento||'')).slice(0,6);
+    const riesgo = typeof clientesEnRiesgo==='function' ? clientesEnRiesgo().slice(0,6) : [];
+    const estadoCounts = ESTADOS.map(e=>({e,n:records.filter(r=>r.estado===e.id).length}));
+    const totalEstado=Math.max(records.length,1);
+
+    return `
+      <div class="crm-industrial view-fade">
+        <div class="crm-hero">
+          <div>
+            <div class="crm-pill green"><span class="crm-nav-dot"></span>Operación conectada</div>
+            <h2>CRM Industrial</h2>
+            <p>Centro de control para clientes, activos, mantenimiento, ventas, membresías, inventario y cobranza.</p>
+          </div>
+          <div class="crm-hero-actions">
+            <button class="btn-primary" id="ind-nuevo">+ Nueva orden</button>
+            <button class="btn-ghost" id="ind-oportunidad">+ Oportunidad</button>
+            <button class="btn-ghost" id="ind-respaldo">Exportar respaldo</button>
+          </div>
+        </div>
+
+        <div class="crm-section-title"><h3>Indicadores de operación</h3><span>Actualizado ${textoUltimaActualizacion()}</span></div>
+        <div class="crm-kpis-industrial">
+          <div class="crm-kpi" data-ind-view="listado"><div class="icon">🧯</div><div class="value">${records.length}</div><div class="label">Activos registrados</div><div class="hint">${taller.length} en taller</div></div>
+          <div class="crm-kpi ${vencidos.length?'critical':''}" data-ind-view="listado"><div class="icon">⚠️</div><div class="value">${vencidos.length}</div><div class="label">Recargas vencidas</div><div class="hint">${en30.length} vencen en 30 días</div></div>
+          <div class="crm-kpi" data-ind-view="clientes"><div class="icon">🏢</div><div class="value">${clientes.size}</div><div class="label">Clientes</div><div class="hint">${riesgo.length} en riesgo detectado</div></div>
+          <div class="crm-kpi" data-ind-view="crm"><div class="icon">📈</div><div class="value">${opsAbiertas.length}</div><div class="label">Oportunidades abiertas</div><div class="hint">${oportunidades.length} en total</div></div>
+          <div class="crm-kpi" data-ind-view="inventario"><div class="icon">📦</div><div class="value">${stockBajo.length}</div><div class="label">Stock bajo</div><div class="hint">${inventario.length} productos controlados</div></div>
+          <div class="crm-kpi" data-ind-view="caja"><div class="icon">₡</div><div class="value">₡${porCobrar.toLocaleString('es-CR',{maximumFractionDigits:0})}</div><div class="label">Por cobrar</div><div class="hint">${contratosActivos.length} membresías activas</div></div>
+        </div>
+
+        <div class="crm-section-title"><h3>Centro de alertas y agenda</h3><span>Lo que requiere atención hoy y en los próximos días</span></div>
+        <div class="crm-alerts-grid">
+          <div class="crm-panel crm-alert-panel">
+            <div class="crm-panel-head"><h4>🚨 Alertas</h4><span class="crm-alert-count">${vencidos.length + stockBajo.length + recPend.filter(r=>r.fecha && r.fecha < todayISO()).length}</span></div>
+            <div class="crm-alert-list">
+              ${vencidos.slice(0,4).map(r=>`
+                <button class="crm-alert-row danger" data-hoy-action="vencidos">
+                  <span class="crm-alert-icon">⚠</span><span><b>${esc(r.cliente||'Sin cliente')}</b><small>Recarga vencida · ${esc(r.fechaVencimiento||'')}</small></span><strong>Ver</strong>
+                </button>`).join('')}
+              ${stockBajo.slice(0,3).map(x=>`
+                <button class="crm-alert-row warning" data-ind-view="inventario">
+                  <span class="crm-alert-icon">📦</span><span><b>${esc(x.nombre)}</b><small>Stock bajo · ${x.cantidad||0} uds</small></span><strong>Ver</strong>
+                </button>`).join('')}
+              ${recPend.filter(r=>r.fecha && r.fecha < todayISO()).slice(0,3).map(r=>`
+                <button class="crm-alert-row warning" data-ind-view="crm">
+                  <span class="crm-alert-icon">🔔</span><span><b>${esc(r.texto)}</b><small>${esc(r.cliente||'General')} · vencido</small></span><strong>Ver</strong>
+                </button>`).join('')}
+              ${!vencidos.length && !stockBajo.length && !recPend.some(r=>r.fecha && r.fecha < todayISO()) ? '<div class="dash-empty">No hay alertas críticas pendientes.</div>' : ''}
+            </div>
+          </div>
+          <div class="crm-panel crm-agenda-panel">
+            <div class="crm-panel-head"><h4>📅 Agenda</h4><button class="btn-ghost crm-mini-btn" id="ind-agenda-rec">+ Recordatorio</button></div>
+            <div class="crm-agenda-list">
+              ${recPend.filter(r=>r.fecha && r.fecha >= todayISO()).slice(0,5).map(r=>`
+                <div class="crm-agenda-row">
+                  <span class="crm-agenda-date">${esc(r.fecha)}</span>
+                  <div><b>${esc(r.texto)}</b><small>${esc(r.cliente||'General')}</small></div>
+                  <button class="btn-ghost crm-mini-btn" data-ind-rec-id="${esc(r.id)}">✓</button>
+                </div>`).join('')}
+              ${en30.slice(0,5).map(r=>`
+                <div class="crm-agenda-row">
+                  <span class="crm-agenda-date">${esc(r.fechaVencimiento)}</span>
+                  <div><b>${esc(r.cliente||'Sin cliente')}</b><small>Próxima recarga · ${esc(r.tipo||'Extintor')}</small></div>
+                  <button class="btn-ghost crm-mini-btn" data-agenda-vencimiento="${esc(r.cliente||'')}" data-agenda-telefono="${esc(r.telefono||'')}">Contactar</button>
+                </div>`).join('')}
+              ${!recPend.filter(r=>r.fecha && r.fecha >= todayISO()).length && !en30.length ? '<div class="dash-empty">La agenda está libre por ahora.</div>' : ''}
+            </div>
+          </div>
+        </div>
+
+        <div class="crm-section-title"><h3>Mi día</h3><span>Prioridades calculadas automáticamente para hoy</span></div>
+        <div class="mi-dia-grid">
+          <div class="mi-dia-main">
+            <div class="mi-dia-header"><div><span class="module-kicker">HOY · ${todayISO()}</span><h3>Tu lista de trabajo</h3></div><span class="mi-dia-total">${vencidos.length + taller.length + recPend.filter(r=>r.fecha===todayISO()).length} pendientes</span></div>
+            <div class="mi-dia-list">
+              ${vencidos.slice(0,5).map(r=>`<div class="mi-dia-row urgent"><span>🔴</span><div><b>Recarga vencida · ${esc(r.cliente||'Sin cliente')}</b><small>${esc(r.tipo||'Extintor')} · ${esc(r.fechaVencimiento||'')}</small></div><button class="btn-ghost" data-ind-view="listado">Abrir</button></div>`).join('')}
+              ${taller.slice(0,5).map(r=>`<div class="mi-dia-row"><span>🔧</span><div><b>Orden en taller · ${esc(r.cliente||'Sin cliente')}</b><small>${esc(r.orden||'Sin orden')} · ${esc(estadoOf(r.estado).label)}</small></div><button class="btn-ghost" data-ind-view="listado">Abrir</button></div>`).join('')}
+              ${recPend.filter(r=>r.fecha===todayISO()).slice(0,5).map(r=>`<div class="mi-dia-row"><span>🔔</span><div><b>${esc(r.texto)}</b><small>${esc(r.cliente||'General')} · Hoy</small></div><button class="btn-ghost" data-ind-view="crm">Ver</button></div>`).join('')}
+              ${!vencidos.length&&!taller.length&&!recPend.some(r=>r.fecha===todayISO())?'<div class="dash-empty">No tienes tareas críticas para hoy. ¡Buen trabajo!</div>':''}
+            </div>
+          </div>
+          <div class="mi-dia-side">
+            <div class="mi-dia-stat"><span>🔴</span><b>${vencidos.length}</b><small>Vencidos</small></div>
+            <div class="mi-dia-stat"><span>🔧</span><b>${taller.length}</b><small>En taller</small></div>
+            <div class="mi-dia-stat"><span>🔔</span><b>${recPend.filter(r=>r.fecha===todayISO()).length}</b><small>Recordatorios hoy</small></div>
+            <div class="mi-dia-stat"><span>📅</span><b>${en30.length}</b><small>Próximos 30 días</small></div>
+          </div>
+        </div>
+
+        <div class="crm-section-title"><h3>Operación diaria</h3><span>Prioridades que requieren atención</span></div>
+        <div class="crm-industrial-grid">
+          <div class="crm-panel">
+            <h4>Próximos vencimientos</h4>
+            <div class="crm-list">
+              ${proximos.length ? proximos.map(r=>`
+                <div class="crm-list-row">
+                  <div class="crm-list-main"><b>${esc(r.cliente||'Sin cliente')}</b><span>${esc(r.tipo||'Extintor')} · ${esc(r.capacidad||'')} · ${esc(r.orden||'Sin orden')}</span></div>
+                  <span class="crm-pill amber">${esc(r.fechaVencimiento)}</span>
+                </div>`).join('') : '<div class="dash-empty">No hay vencimientos en los próximos 30 días.</div>'}
+            </div>
+          </div>
+          <div class="crm-panel">
+            <h4>Producción / taller</h4>
+            ${estadoCounts.map(x=>`
+              <div style="margin-bottom:12px">
+                <div style="display:flex;justify-content:space-between;font-size:11px"><b>${x.e.label}</b><span>${x.n}</span></div>
+                <div class="crm-progress"><i style="width:${Math.max(x.n?4:0,x.n/totalEstado*100)}%;${x.e.id==='listo'?'background:var(--green)':x.e.id==='proceso'?'background:var(--primary)':x.e.id==='recibido'?'background:var(--amber)':'background:#64748B'}"></i></div>
+              </div>`).join('')}
+            <button class="btn-ghost" style="width:100%;margin-top:4px" data-ind-view="listado">Abrir órdenes de trabajo</button>
+          </div>
+          <div class="crm-panel">
+            <h4>Acciones rápidas</h4>
+            <div class="crm-actions-grid">
+              <button class="crm-action" data-ind-view="clientes">👥 <span>Clientes<small>Ficha e historial</small></span></button>
+              <button class="crm-action" data-ind-view="crm">📈 <span>Ventas<small>Pipeline comercial</small></span></button>
+              <button class="crm-action" data-ind-view="inventario">📦 <span>Inventario<small>Repuestos y equipos</small></span></button>
+              <button class="crm-action" data-ind-view="caja">💳 <span>Caja<small>Ingresos y egresos</small></span></button>
+              <button class="crm-action" id="ind-rec">🔔 <span>Recordatorio<small>${recPend.length} pendientes</small></span></button>
+              <button class="crm-action" id="ind-print">🖨️ <span>Listado<small>Imprimir órdenes</small></span></button>
+            </div>
+          </div>
+
+          <div class="crm-panel">
+            <h4>Clientes en riesgo</h4>
+            <div class="crm-list">
+              ${riesgo.length ? riesgo.map(r=>`
+                <div class="crm-list-row">
+                  <div class="crm-list-main"><b>${esc(r.cliente||r.nombre||'Cliente')}</b><span>${esc(r.telefono||'')} · seguimiento recomendado</span></div>
+                  <span class="crm-pill red">Riesgo</span>
+                </div>`).join('') : '<div class="dash-empty">No se detectan clientes en riesgo.</div>'}
+            </div>
+          </div>
+          <div class="crm-panel">
+            <h4>Seguimientos pendientes</h4>
+            <div class="crm-list">
+              ${recPend.slice(0,6).length ? recPend.slice(0,6).map(r=>`
+                <div class="crm-list-row">
+                  <div class="crm-list-main"><b>${esc(r.texto)}</b><span>${esc(r.cliente||'General')}</span></div>
+                  <span class="crm-pill ${r.fecha && r.fecha<todayISO()?'red':'amber'}">${esc(r.fecha||'Sin fecha')}</span>
+                </div>`).join('') : '<div class="dash-empty">No hay recordatorios pendientes.</div>'}
+            </div>
+          </div>
+          <div class="crm-panel">
+            <h4>Inventario crítico</h4>
+            <div class="crm-list">
+              ${stockBajo.slice(0,6).length ? stockBajo.slice(0,6).map(x=>`
+                <div class="crm-list-row">
+                  <div class="crm-list-main"><b>${esc(x.nombre)}</b><span>${esc(x.tipo||'')} · mínimo ${x.cantidadMinima||0}</span></div>
+                  <span class="crm-pill red">${x.cantidad||0} uds</span>
+                </div>`).join('') : '<div class="dash-empty">No hay productos por debajo del mínimo.</div>'}
+            </div>
+          </div>
+
+          <div class="crm-panel full">
+            <h4>Resumen ejecutivo</h4>
+            <div class="crm-mini-grid">
+              <div class="crm-mini"><b>${listos.length}</b><span>Listos para entrega</span></div>
+              <div class="crm-mini"><b>${ventas.length}</b><span>Ventas registradas</span></div>
+              <div class="crm-mini"><b>${contratosActivos.length}</b><span>Membresías activas</span></div>
+              <div class="crm-mini"><b>₡${oportunidades.reduce((s,o)=>s+(parseFloat(o.montoEstimado)||0),0).toLocaleString('es-CR',{maximumFractionDigits:0})}</b><span>Pipeline estimado</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function capturarFocoActivo(){
+    // Antes de reescribir todo el HTML (render() reemplaza root.innerHTML completo),
+    // guardamos qué campo tenía el foco y dónde estaba el cursor, para poder devolvérselo
+    // después. Sin esto, escribir en cualquier buscador "expulsa" el foco en cada letra,
+    // porque el input viejo se destruye y aparece uno nuevo sin foco.
+    const activeEl = document.activeElement;
+    if(!activeEl || !activeEl.id || !root.contains(activeEl)) return null;
+    return {
+      id: activeEl.id,
+      selStart: (typeof activeEl.selectionStart === 'number') ? activeEl.selectionStart : null,
+      selEnd: (typeof activeEl.selectionEnd === 'number') ? activeEl.selectionEnd : null,
+    };
+  }
+
+  function restaurarFocoActivo(foco){
+    if(!foco) return;
+    const el = document.getElementById(foco.id);
+    if(!el) return;
+    el.focus();
+    if(foco.selStart !== null && typeof el.setSelectionRange === 'function'){
+      try { el.setSelectionRange(foco.selStart, foco.selEnd); } catch(e){}
+    }
+  }
+
+  function render(){
+    const focoPrevio = capturarFocoActivo();
+    if(loadError){
+      root.innerHTML = `
+        <div class="error-screen">
+          <div class="error-box">
+            <h2>No se pudo cargar la información</h2>
+            <p>${esc(loadError)}</p>
+            <button class="btn-primary" id="btn-retry">Reintentar</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('btn-retry').addEventListener('click', load);
+      return;
+    }
+    const counts = {
+      total: records.length,
+      activos: records.filter(r=>r.estado!=='entregado').length,
+      listos: records.filter(r=>r.estado==='listo').length,
+      vencidos: records.filter(r=>vencStatus(r.fechaVencimiento)==='vencido').length,
+      porCobrar: records.reduce((sum,r)=> sum + saldoOf(r).saldo, 0).toLocaleString('es-CR', {maximumFractionDigits:2}),
+    };
+    const filtered = getFiltered();
+
+    root.innerHTML = `
+      <div class="screen-view">
+      ${lastSaveFailedToCloud ? `<div class="storage-warning" style="font-weight:800;">🚨 El último registro NO se guardó en la nube compartida (Firebase) — solo quedó en este navegador. Si subes una versión nueva del sistema o cambias de dispositivo, se puede perder. Revisa tu conexión a internet y vuelve a editar/guardar ese registro para confirmar que quede en la nube.</div>` : ''}
+      ${!firebaseOK && !storageOK && !localBackupOK ? `<div class="storage-warning">⚠ No se detecta ninguna forma de guardar — lo que registres se perderá al cerrar.</div>` : ''}
+      ${!firebaseOK && !storageOK && localBackupOK ? `<div class="storage-warning storage-warning-info">💾 Guardando solo en este navegador/computadora — no se comparte con otros dispositivos ni empleados.</div>` : ''}
+      ${!firebaseOK && storageOK ? `<div class="storage-warning storage-warning-info">☁️ Guardando en la nube de Claude (no en Firebase) — funciona mientras uses esta app dentro de Claude.</div>` : ''}
+      <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <img src="${LOGO_DATA_URL}" alt="Extintores Seguridad" class="brand-logo"/>
+          <div>
+            <h1 class="head-font">Extintores<br>Seguridad</h1>
+            <span>Control · CRM</span>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <button class="nav-home ${view==='industrial'?'active':''}" data-view="industrial"><span class="snav-ico">⌂</span>Inicio</button>
+          <div class="nav-section-label">Operaciones</div>
+          <div class="nav-section">
+            <button data-view="listado" class="${view==='listado'?'active':''}"><span class="snav-ico">▤</span>Órdenes de trabajo</button>
+            <button data-view="clientes" class="${view==='clientes'?'active':''}"><span class="snav-ico">◔</span>Clientes · Ficha 360°</button>
+            <button data-view="cliente-seguro" class="${view==='cliente-seguro'?'active':''}"><span class="snav-ico">🛡</span>Cliente Seguro</button>
+            <button data-view="referidos" class="${view==='referidos'?'active':''}"><span class="snav-ico">🔥</span>Referidos</button>
+          </div>
+          <div class="nav-section-label">Ventas / CRM</div>
+          <div class="nav-section">
+            <button data-view="crm" class="${view==='crm'?'active':''}"><span class="snav-ico">◆</span>Embudo comercial</button>
+            <button data-view="panel" class="${view==='panel'?'active':''}"><span class="snav-ico">▲</span>Indicadores</button>
+            <button data-view="caja" class="${view==='caja'?'active':''}"><span class="snav-ico">$</span>Caja</button>
+          </div>
+          <div class="nav-section-label">Inventario</div>
+          <div class="nav-section nav-section-inventory">
+            <button data-view="inventario" class="${view==='inventario'?'active':''}"><span class="snav-ico">▣</span><span class="nav-main-text">Inventario</span><span class="nav-arrow">→</span></button>
+          </div>
+        </nav>
+        <div class="sidebar-foot">
+          <div class="sidebar-user" title="${esc(authUser ? authUser.email : '')}">${esc(authUser ? authUser.email : '')}</div>
+          <button class="sidebar-foot-btn" id="btn-papelera">Papelera${papelera.length ? ` (${papelera.length})` : ''}</button>
+          ${userRole === 'admin' ? `<button class="sidebar-foot-btn" id="btn-admin-panel">Panel de superadmin</button>` : ''}
+          <button class="sidebar-foot-btn" id="btn-logout">Cerrar sesión</button>
+        </div>
+      </aside>
+      <div class="main-area">
+      <div class="topbar">
+        <div class="stats">
+          <div class="stat"><b class="mono">${counts.total}</b><small>Total</small></div>
+          <div class="stat"><b class="mono">${counts.activos}</b><small>En taller</small></div>
+          <div class="stat"><b class="mono">${counts.listos}</b><small>Listos</small></div>
+          <div class="stat ${counts.vencidos>0?'stat-critical':''}"><b class="mono" style="color:${counts.vencidos>0?'#DC2626':'inherit'}">${counts.vencidos}</b><small>Vencidos</small></div>
+          <div class="stat"><b class="mono">₡${counts.porCobrar}</b><small>Por cobrar</small></div>
+        </div>
+        <button class="btn-primary" id="btn-quick-new">+ Nuevo ingreso</button>
+      </div>
+
+      <div class="${animateViewChange ? 'view-fade' : ''}">
+      ${view === 'industrial' ? renderIndustrial() : (view === 'listado' ? `
+      <div class="operations-view">
+      <div class="module-heading">
+        <div>
+          <span class="module-kicker">Operaciones</span>
+          <h2>Órdenes de trabajo</h2>
+          <p>Recepción, taller, entrega y control de recargas.</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="filters">
+          <button class="chip ${filter==='todos'?'active':''}" data-filter="todos">Todos</button>
+          ${ESTADOS.map(e=>`<button class="chip ${filter===e.id?'active':''}" data-filter="${e.id}">${e.label}</button>`).join('')}
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <input class="search" id="search-input" placeholder="Buscar cliente, teléfono, orden, tipo, capacidad o servicio..." value="${esc(query)}"/>
+          <button class="btn-ghost" id="btn-print">Imprimir consolidado</button>
+          <button class="btn-primary" id="btn-new">+ Nuevo ingreso</button>
+        </div>
+      </div>
+      <div class="toolbar" style="padding-top:0;">
+        <div class="filters">
+          <button class="chip ${venceFilter==='todos'?'active':''}" data-vence-filter="todos">Recarga: todas</button>
+          <button class="chip ${venceFilter==='vencidos'?'active':''}" data-vence-filter="vencidos">Vencidos</button>
+          <button class="chip ${venceFilter==='proximo'?'active':''}" data-vence-filter="proximo">Por vencer (30 días)</button>
+        </div>
+      </div>
+
+      <div class="content">
+        ${filtered.length === 0 ? `
+          <div class="empty">
+            <svg viewBox="0 0 64 64" fill="none">
+              <rect x="24" y="10" width="16" height="44" rx="6" stroke="#6B7280" stroke-width="2.5"/>
+              <rect x="28" y="4" width="8" height="8" rx="1.5" stroke="#6B7280" stroke-width="2.5"/>
+              <path d="M20 22 L24 22" stroke="#6B7280" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <p>${records.length===0 ? 'Aún no hay extintores registrados.' : 'Nada coincide con ese filtro o búsqueda.'}</p>
+          </div>` : `
+          <div class="linear-table-head operations-table-head">
+            <span>Cliente / Orden</span><span>Servicio / Recarga</span><span>Estado</span><span>Monto</span><span></span>
+          </div>
+          <div class="grid">${agruparPorOrden(filtered).map(orderCardHTML).join('')}</div>`
+        }
+      </div>
+      </div>
+      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : (view === 'cliente-seguro' ? renderClienteSeguro() : (view === 'referidos' ? renderReferidos() : renderIndustrial()))))))))}
+      </div>
+      </div>
+      </div>
+      </div>
+    `;
+
+    animateViewChange = false;
+
+    document.querySelectorAll('[data-view]').forEach(b=>{
+      b.addEventListener('click', ()=> setView(b.getAttribute('data-view')));
+    });
+    document.querySelectorAll('details[data-card-key]').forEach(d=>{
+      d.addEventListener('toggle', ()=>{
+        const key = d.getAttribute('data-card-key');
+        if(d.hasAttribute('data-default-open')){
+          // Tarjetas de orden: abiertas por defecto; solo registramos cuando el usuario las cierra.
+          if(d.open) tarjetasCerradas.delete(key); else tarjetasCerradas.add(key);
+          guardarSetLocal(TARJETAS_CERRADAS_KEY, tarjetasCerradas);
+        } else {
+          if(d.open) tarjetasAbiertas.add(key); else tarjetasAbiertas.delete(key);
+          guardarSetLocal(TARJETAS_ABIERTAS_KEY, tarjetasAbiertas);
+        }
+      });
+    });
+    document.getElementById('btn-logout').addEventListener('click', doSignOut);
+    const btnAdmin = document.getElementById('btn-admin-panel');
+    if(btnAdmin) btnAdmin.addEventListener('click', openAdminPanel);
+    const btnPapelera = document.getElementById('btn-papelera');
+    if(btnPapelera) btnPapelera.addEventListener('click', openPapeleraModal);
+    const quickNew = document.getElementById('btn-quick-new');
+    if(quickNew) quickNew.addEventListener('click', openNew);
+    const dashQuickNew = document.getElementById('dash-quick-new');
+    if(dashQuickNew) dashQuickNew.addEventListener('click', openNew);
+    const dashQuickOp = document.getElementById('dash-quick-oportunidad');
+    if(dashQuickOp) dashQuickOp.addEventListener('click', ()=> openNuevaOportunidad());
+    document.querySelectorAll('.quick-actions [data-view]').forEach(b=>{
+      b.addEventListener('click', ()=> setView(b.getAttribute('data-view')));
+    });
+    if(view === 'industrial'){
+      const indAgendaRec=document.getElementById('ind-agenda-rec');
+      if(indAgendaRec) indAgendaRec.addEventListener('click', ()=>{ view='crm'; crmSubvista='recordatorios'; oportunidadSeleccionada=null; animateViewChange=true; render(); });
+      document.querySelectorAll('[data-ind-rec-id]').forEach(b=>{
+        b.addEventListener('click', async ()=>{ await toggleRecordatorio(b.getAttribute('data-ind-rec-id')); });
+      });
+      document.querySelectorAll('[data-agenda-vencimiento]').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          abrirWhatsApp(b.getAttribute('data-agenda-vencimiento')||'', b.getAttribute('data-agenda-telefono')||'', 'Hola, le contactamos de Extintores Seguridad. Tenemos registrada una próxima recarga de sus extintores. ¿Desea que coordinemos el servicio?');
+        });
+      });
+      const indNuevo=document.getElementById('ind-nuevo'); if(indNuevo) indNuevo.addEventListener('click', openNew);
+      const indOp=document.getElementById('ind-oportunidad'); if(indOp) indOp.addEventListener('click', ()=>openNuevaOportunidad());
+      const indBackup=document.getElementById('ind-respaldo'); if(indBackup) indBackup.addEventListener('click', exportarRespaldoIndustrial);
+      const indRec=document.getElementById('ind-rec'); if(indRec) indRec.addEventListener('click', ()=>{ view='crm'; crmSubvista='recordatorios'; animateViewChange=true; render(); });
+      const indPrint=document.getElementById('ind-print'); if(indPrint) indPrint.addEventListener('click', ()=>printConsolidado());
+      document.querySelectorAll('[data-ind-view]').forEach(b=>{
+        b.addEventListener('click', ()=> setView(b.getAttribute('data-ind-view')));
+      });
+    }
+    document.querySelectorAll('[data-agregar-bitacora]').forEach(b=>{
+      b.addEventListener('click',()=>abrirBitacoraClienteModal(b.getAttribute('data-agregar-bitacora')));
+    });
+    document.querySelectorAll('[data-hoy-action]').forEach(b=>{
+      b.addEventListener('click',()=>{
+        const action=b.getAttribute('data-hoy-action');
+        if(action==='vencidos'){ view='listado'; venceFilter='vencidos'; query=''; animateViewChange=true; render(); return; }
+        if(action==='proximos'){ view='listado'; venceFilter='proximo'; query=''; animateViewChange=true; render(); return; }
+        if(action==='seguimientos'){ view='crm'; crmSubvista='recordatorios'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }
+        if(action==='cotizaciones'){ view='crm'; crmSubvista='pipeline'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }
+        if(action==='membresias'){ view='crm'; crmSubvista='contratos'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }
+        if(action==='clientes'){ view='clientes'; clienteSeleccionado=null; animateViewChange=true; render(); return; }
+      });
+    });
+    document.querySelectorAll('[data-vencimiento-whatsapp]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const cliente = b.getAttribute('data-vencimiento-whatsapp') || '';
+        const telefono = b.getAttribute('data-vencimiento-telefono') || '';
+        const tipo = b.getAttribute('data-vencimiento-tipo') || 'servicio';
+        abrirWhatsApp(cliente, telefono, 'Hola ' + cliente + ', le contactamos de Extintores Seguridad. Tenemos registrado un ' + tipo + ' próximo a vencer. ¿Desea que coordinemos el servicio?');
+      });
+    });
+    document.querySelectorAll('[data-vencimiento-seguimiento]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const cliente = b.getAttribute('data-vencimiento-seguimiento') || '';
+        const telefono = b.getAttribute('data-vencimiento-telefono') || '';
+        const tipo = b.getAttribute('data-vencimiento-tipo') || 'servicio';
+        abrirRecordatorioRapidoModal(cliente, telefono, 'Dar seguimiento a '+tipo+' de '+cliente);
+      });
+    });
+    document.querySelectorAll('[data-cliente-riesgo]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        view = 'clientes';
+        clienteSeleccionado = b.getAttribute('data-cliente-riesgo');
+        clienteSeleccionadoTipo = 'mantenimiento';
+        animateViewChange = true;
+        render();
+      });
+    });
+
+    if(view === 'caja'){
+      const btnAbrir = document.getElementById('btn-abrir-caja');
+      if(btnAbrir) btnAbrir.addEventListener('click', abrirCaja);
+      const btnAgregarMov = document.getElementById('btn-agregar-mov');
+      if(btnAgregarMov) btnAgregarMov.addEventListener('click', agregarMovimiento);
+      const btnCerrar = document.getElementById('btn-cerrar-caja');
+      if(btnCerrar) btnCerrar.addEventListener('click', cerrarCaja);
+      const btnReabrir = document.getElementById('btn-reabrir-caja');
+      if(btnReabrir) btnReabrir.addEventListener('click', reabrirCaja);
+      document.querySelectorAll('[data-mov-id]').forEach(b=>{
+        b.addEventListener('click', async ()=>{
+          const movId = b.getAttribute('data-mov-id');
+          await quitarMovimiento(movId);
+        });
+      });
+      const cajaFechaInput = document.getElementById('caja-fecha-input');
+      if(cajaFechaInput) cajaFechaInput.addEventListener('change', (e)=>{ irACajaFecha(e.target.value); });
+      const btnDiaAnterior = document.getElementById('btn-caja-dia-anterior');
+      if(btnDiaAnterior) btnDiaAnterior.addEventListener('click', ()=> irACajaFecha(addDays(cajaVistaFecha || todayISO(), -1)));
+      const btnDiaSiguiente = document.getElementById('btn-caja-dia-siguiente');
+      if(btnDiaSiguiente) btnDiaSiguiente.addEventListener('click', ()=> irACajaFecha(addDays(cajaVistaFecha || todayISO(), 1)));
+      const btnIrHoy = document.getElementById('btn-caja-ir-hoy');
+      if(btnIrHoy) btnIrHoy.addEventListener('click', ()=> irACajaFecha(todayISO()));
+      document.querySelectorAll('[data-ir-fecha]').forEach(row=>{
+        row.addEventListener('click', ()=> irACajaFecha(row.getAttribute('data-ir-fecha')));
+      });
+    }
+
+    if(view === 'referidos'){ const b=document.getElementById('ref-nuevo'); if(b) b.addEventListener('click',()=>window.CRMReferidos.abrirNuevoReferido({referidos,setReferidos:(v)=>{referidos=v;},persist,todayISO,showToast})); }
+    if(view === 'cliente-seguro'){
+      const btnNueva = document.getElementById('cs-nueva-membresia');
+      if(btnNueva) btnNueva.addEventListener('click', ()=> openNuevoContrato());
+      const btnVer = document.getElementById('cs-ver-membresias');
+      if(btnVer) btnVer.addEventListener('click', ()=>{ view='crm'; crmSubvista='contratos'; animateViewChange=true; render(); });
+    }
+
+    if(view === 'inventario'){
+      const btnNuevoProducto = document.getElementById('btn-nuevo-producto');
+      if(btnNuevoProducto) btnNuevoProducto.addEventListener('click', openNuevoProducto);
+      const inventarioSearchInput = document.getElementById('inventario-search-input');
+      if(inventarioSearchInput) inventarioSearchInput.addEventListener('input', (e)=> setInventarioQuery(e.target.value));
+      document.querySelectorAll('[data-inventario-filtro]').forEach(b=>{
+        b.addEventListener('click', ()=> setInventarioFiltro(b.getAttribute('data-inventario-filtro')));
+      });
+      document.querySelectorAll('[data-action="editar-producto"]').forEach(b=>{
+        b.addEventListener('click', ()=> openEditarProducto(b.getAttribute('data-id')));
+      });
+      document.querySelectorAll('[data-action="eliminar-producto"]').forEach(b=>{
+        b.addEventListener('click', ()=> removeProducto(b.getAttribute('data-id')));
+      });
+      document.querySelectorAll('[data-action="movimiento-producto"]').forEach(b=>{
+        b.addEventListener('click', ()=> abrirMovimientoInventarioModal(b.getAttribute('data-id')));
+      });
+    }
+
+    if(view === 'crm'){
+      document.querySelectorAll('[data-crm-subvista]').forEach(b=>{
+        b.addEventListener('click', ()=> setCrmSubvista(b.getAttribute('data-crm-subvista')));
+      });
+      const btnNuevaOp = document.getElementById('btn-nueva-oportunidad');
+      if(btnNuevaOp) btnNuevaOp.addEventListener('click', ()=> openNuevaOportunidad());
+
+      if(oportunidadSeleccionada){
+        const btnVolver = document.getElementById('btn-volver-pipeline');
+        if(btnVolver) btnVolver.addEventListener('click', volverPipeline);
+        document.querySelectorAll('[data-cambiar-etapa]').forEach(b=>{
+          b.addEventListener('click', ()=> cambiarEtapaOportunidad(b.getAttribute('data-oportunidad-etapa'), b.getAttribute('data-cambiar-etapa')));
+        });
+        document.querySelectorAll('[data-generar-cotizacion]').forEach(b=>{
+          b.addEventListener('click', ()=> printCotizacion(b.getAttribute('data-generar-cotizacion')));
+        });
+        document.querySelectorAll('[data-action="editar-oportunidad"]').forEach(b=>{
+          b.addEventListener('click', ()=> openEditarOportunidad(b.getAttribute('data-id')));
+        });
+        document.querySelectorAll('[data-action="eliminar-oportunidad"]').forEach(b=>{
+          b.addEventListener('click', async ()=>{
+            const id = b.getAttribute('data-id');
+            await removeOportunidad(id);
+          });
+        });
+        const btnAgregarBit = document.getElementById('btn-agregar-bitacora');
+        if(btnAgregarBit) btnAgregarBit.addEventListener('click', ()=> agregarBitacora(btnAgregarBit.getAttribute('data-oportunidad')));
+        const btnRecVinc = document.getElementById('btn-crear-recordatorio-vinculado');
+        if(btnRecVinc) btnRecVinc.addEventListener('click', ()=>{
+          const o = oportunidades.find(x=>x.id===btnRecVinc.getAttribute('data-oportunidad'));
+          crearRecordatorioRapido(o ? o.cliente : '', o ? o.telefono : '', o ? o.id : null);
+        });
+      } else if(crmSubvista === 'pipeline'){
+        document.querySelectorAll('[data-oportunidad-key]').forEach(card=>{
+          card.addEventListener('click', ()=> abrirOportunidad(card.getAttribute('data-oportunidad-key')));
+        });
+        // Arrastrar y soltar tarjetas entre columnas del embudo.
+        document.querySelectorAll('[data-drag-id]').forEach(card=>{
+          card.addEventListener('dragstart', (e)=>{ e.dataTransfer.setData('text/plain', card.getAttribute('data-drag-id')); e.stopPropagation(); });
+        });
+        document.querySelectorAll('[data-etapa-drop]').forEach(col=>{
+          col.addEventListener('dragover', (e)=> e.preventDefault());
+          col.addEventListener('drop', (e)=>{
+            e.preventDefault();
+            const id = e.dataTransfer.getData('text/plain');
+            const nuevaEtapa = col.getAttribute('data-etapa-drop');
+            if(id) cambiarEtapaOportunidad(id, nuevaEtapa);
+          });
+        });
+      } else if(crmSubvista === 'recordatorios'){
+        const btnCrearRec = document.getElementById('btn-crear-recordatorio');
+        if(btnCrearRec) btnCrearRec.addEventListener('click', ()=> crearRecordatorioRapido());
+      } else if(crmSubvista === 'clientes-contactar'){
+        document.querySelectorAll('[data-contactar-cliente]').forEach(b=>{
+          b.addEventListener('click', ()=>{
+            abrirWhatsApp(b.getAttribute('data-contactar-cliente'), b.getAttribute('data-contactar-telefono')||'', 'Hola, le contactamos de Extintores Seguridad para dar seguimiento a su servicio.');
+          });
+        });
+        document.querySelectorAll('[data-contactar-recordatorio]').forEach(b=>{
+          b.addEventListener('click', ()=> crearRecordatorioRapido(b.getAttribute('data-contactar-recordatorio'), b.getAttribute('data-contactar-telefono')||''));
+        });
+      } else if(crmSubvista === 'contratos'){
+        document.querySelectorAll('[data-contratos-filtro]').forEach(b=>{
+          b.addEventListener('click', ()=> setContratosFiltro(b.getAttribute('data-contratos-filtro')));
+        });
+        const btnNuevoContrato = document.getElementById('btn-nuevo-contrato');
+        if(btnNuevoContrato) btnNuevoContrato.addEventListener('click', ()=> openNuevoContrato());
+        document.querySelectorAll('[data-action="generar-membresia"]').forEach(b=>{
+          b.addEventListener('click', ()=> printMembresia(b.getAttribute('data-id')));
+        });
+        document.querySelectorAll('[data-action="editar-contrato"]').forEach(b=>{
+          b.addEventListener('click', ()=> openEditarContrato(b.getAttribute('data-id')));
+        });
+        document.querySelectorAll('[data-action="eliminar-contrato"]').forEach(b=>{
+          b.addEventListener('click', async ()=>{
+            const id = b.getAttribute('data-id');
+            await removeContrato(id);
+          });
+        });
+      }
+      document.querySelectorAll('[data-whatsapp-rec]').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          const rec = recordatorios.find(x=>x.id===b.getAttribute('data-whatsapp-rec'));
+          if(rec) abrirWhatsApp(rec.cliente, rec.telefono, rec.texto);
+        });
+      });
+      document.querySelectorAll('[data-toggle-rec]').forEach(chk=>{
+        chk.addEventListener('change', ()=> toggleRecordatorio(chk.getAttribute('data-toggle-rec')));
+      });
+      document.querySelectorAll('[data-del-rec]').forEach(b=>{
+        b.addEventListener('click', async ()=>{
+          const id = b.getAttribute('data-del-rec');
+          await removeRecordatorio(id);
+        });
+      });
+    }
+
+    if(view === 'clientes'){
+      if(clienteSeleccionado){
+        const btnVolver = document.getElementById('btn-volver-clientes');
+        if(btnVolver) btnVolver.addEventListener('click', volverClientes);
+        document.querySelectorAll('[data-nuevo-contacto]').forEach(b=>b.addEventListener('click',()=>{
+          const cliente=b.getAttribute('data-nuevo-contacto')||'';
+          const resultado=prompt('Resultado del contacto (ej. contactado, no responde, agendó):','Contactado');
+          if(resultado===null) return;
+          const nota=prompt('Nota del contacto:','');
+          const proximaFecha=prompt('Fecha de próxima acción (AAAA-MM-DD), opcional:','');
+          registrarContactoCliente(cliente,'',resultado,proximaFecha||'',nota||'').then(()=>{showToast('Contacto registrado.');render();});
+        }));
+        document.querySelectorAll('[data-seguimiento-whatsapp]').forEach(b=>b.addEventListener('click',()=>abrirWhatsApp(b.getAttribute('data-seguimiento-whatsapp'),b.getAttribute('data-seguimiento-telefono')||'','Hola, le contactamos de Extintores Seguridad para dar seguimiento a su servicio.')));
+        document.querySelectorAll('[data-seguimiento-recordatorio]').forEach(b=>b.addEventListener('click',()=>crearRecordatorioRapido(b.getAttribute('data-seguimiento-recordatorio'),b.getAttribute('data-seguimiento-telefono')||'')));
+        const btnSepararCliente = document.querySelector('[data-separar-cliente]');
+        if(btnSepararCliente) btnSepararCliente.addEventListener('click', ()=> abrirSepararCliente(btnSepararCliente.getAttribute('data-separar-cliente')));
+        const btnNuevaVenta = document.getElementById('btn-nueva-venta-cliente');
+        if(btnNuevaVenta) btnNuevaVenta.addEventListener('click', ()=> openNuevaVenta(btnNuevaVenta.getAttribute('data-cliente'), btnNuevaVenta.getAttribute('data-telefono')));
+        const btnNuevaOrdenCliente = document.getElementById('btn-nueva-orden-cliente');
+        if(btnNuevaOrdenCliente) btnNuevaOrdenCliente.addEventListener('click', ()=> openNuevaOrdenCliente(btnNuevaOrdenCliente.getAttribute('data-cliente'), btnNuevaOrdenCliente.getAttribute('data-telefono'), btnNuevaOrdenCliente.getAttribute('data-cliente-key')));
+        const btnNuevaOrdenClienteTop = document.getElementById('btn-nueva-orden-cliente-top');
+        if(btnNuevaOrdenClienteTop) btnNuevaOrdenClienteTop.addEventListener('click', ()=> openNuevaOrdenCliente(btnNuevaOrdenClienteTop.getAttribute('data-cliente'), btnNuevaOrdenClienteTop.getAttribute('data-telefono'), btnNuevaOrdenClienteTop.getAttribute('data-cliente-key')));
+        const btnAgregarExtintorCliente = document.getElementById('btn-agregar-extintor-cliente');
+        if(btnAgregarExtintorCliente) btnAgregarExtintorCliente.addEventListener('click', ()=> openEditarPerfilCliente(btnAgregarExtintorCliente.getAttribute('data-cliente-key')));
+        const btnNuevaOpCliente = document.getElementById('btn-nueva-oportunidad-cliente');
+        if(btnNuevaOpCliente) btnNuevaOpCliente.addEventListener('click', ()=> openNuevaOportunidad(btnNuevaOpCliente.getAttribute('data-cliente'), btnNuevaOpCliente.getAttribute('data-telefono')));
+        const btnNuevoContratoCliente = document.getElementById('btn-nuevo-contrato-cliente');
+        if(btnNuevoContratoCliente) btnNuevoContratoCliente.addEventListener('click', ()=> openNuevoContrato(btnNuevoContratoCliente.getAttribute('data-cliente'), btnNuevoContratoCliente.getAttribute('data-telefono')));
+        const btnRecCliente = document.getElementById('btn-recordatorio-cliente');
+        if(btnRecCliente) btnRecCliente.addEventListener('click', ()=> abrirRecordatorioRapidoModal(btnRecCliente.getAttribute('data-cliente'), btnRecCliente.getAttribute('data-telefono')));
+        document.querySelectorAll('[data-abrir-oportunidad]').forEach(b=>{
+          b.addEventListener('click', ()=>{
+            view = 'crm'; crmSubvista = 'pipeline';
+            oportunidadSeleccionada = b.getAttribute('data-abrir-oportunidad');
+            animateViewChange = true;
+            render();
+          });
+        });
+        document.querySelectorAll('[data-whatsapp-cliente]').forEach(b=>{
+          b.addEventListener('click', ()=>{
+            abrirWhatsApp(b.getAttribute('data-whatsapp-cliente') || '', b.getAttribute('data-whatsapp-telefono') || '');
+          });
+        });
+        document.querySelectorAll('[data-agregar-perfil]').forEach(b=>{
+          b.addEventListener('click', ()=> openEditarPerfilCliente(b.getAttribute('data-agregar-perfil'), b.getAttribute('data-nombre'), b.getAttribute('data-telefono')));
+        });
+        document.querySelectorAll('[data-editar-perfil]').forEach(b=>{
+          b.addEventListener('click', ()=> openEditarPerfilCliente(b.getAttribute('data-editar-perfil')));
+        });
+        document.querySelectorAll('[data-eliminar-perfil]').forEach(b=>{
+          b.addEventListener('click', ()=> removePerfilCliente(b.getAttribute('data-eliminar-perfil')));
+        });
+        document.querySelectorAll('[data-action="receipt"]').forEach(b=>{
+          b.addEventListener('click', ()=> printReceipt(b.getAttribute('data-id')));
+        });
+        document.querySelectorAll('[data-action="advance"]').forEach(b=>{
+          b.addEventListener('click', ()=> advance(b.getAttribute('data-id')));
+        });
+        document.querySelectorAll('[data-action="edit"]').forEach(b=>{
+          b.addEventListener('click', ()=> openEdit(b.getAttribute('data-id')));
+        });
+        document.querySelectorAll('[data-action="delete"]').forEach(b=>{
+          b.addEventListener('click', async ()=>{
+            const id = b.getAttribute('data-id');
+            await remove(id);
+          });
+        });
+        document.querySelectorAll('[data-action="editar-venta"]').forEach(b=>{
+          b.addEventListener('click', ()=> openEditarVenta(b.getAttribute('data-id')));
+        });
+        document.querySelectorAll('[data-action="eliminar-venta"]').forEach(b=>{
+          b.addEventListener('click', async ()=>{
+            const id = b.getAttribute('data-id');
+            await removeVenta(id);
+          });
+        });
+      } else {
+        const searchInput = document.getElementById('cliente-search-input');
+        if(searchInput) searchInput.addEventListener('input', (e)=> setClienteQuery(e.target.value));
+        document.querySelectorAll('[data-cliente-key]').forEach(b=>{
+          b.addEventListener('click', ()=> abrirCliente(b.getAttribute('data-cliente-key'), b.getAttribute('data-cliente-tipo')));
+        });
+        document.querySelectorAll('[data-clientes-subvista]').forEach(b=>{
+          b.addEventListener('click', ()=> setClientesSubvista(b.getAttribute('data-clientes-subvista')));
+        });
+        document.querySelectorAll('[data-etiqueta-filtro]').forEach(b=>{
+          b.addEventListener('click', ()=> setEtiquetaFiltro(b.getAttribute('data-etiqueta-filtro')));
+        });
+        const btnNuevaVentaListado = document.getElementById('btn-nueva-venta-listado');
+        if(btnNuevaVentaListado) btnNuevaVentaListado.addEventListener('click', ()=> openNuevaVenta());
+        const btnNuevoCliente = document.getElementById('btn-nuevo-cliente');
+        if(btnNuevoCliente) btnNuevoCliente.addEventListener('click', openNuevoPerfilCliente);
+      }
+    }
+
+    if(view === 'listado'){
+      document.querySelectorAll('[data-filter]').forEach(b=>{
+        b.addEventListener('click', ()=> setFilter(b.getAttribute('data-filter')));
+      });
+      document.querySelectorAll('[data-vence-filter]').forEach(b=>{
+        b.addEventListener('click', ()=> setVenceFilter(b.getAttribute('data-vence-filter')));
+      });
+      document.getElementById('search-input').addEventListener('input', (e)=> setQuery(e.target.value));
+      document.getElementById('btn-new').addEventListener('click', openNew);
+      document.getElementById('btn-print').addEventListener('click', ()=> printConsolidado());
+      document.querySelectorAll('[data-action="receipt"]').forEach(b=>{
+        b.addEventListener('click', ()=> printReceipt(b.getAttribute('data-id')));
+      });
+      document.querySelectorAll('[data-action="advance"]').forEach(b=>{
+        b.addEventListener('click', ()=> advance(b.getAttribute('data-id')));
+      });
+      document.querySelectorAll('[data-action="edit"]').forEach(b=>{
+        b.addEventListener('click', ()=> openEdit(b.getAttribute('data-id')));
+      });
+      document.querySelectorAll('[data-action="delete"]').forEach(b=>{
+        b.addEventListener('click', async ()=>{
+          const id = b.getAttribute('data-id');
+          await remove(id);
+        });
+      });
+    }
+
+    restaurarFocoActivo(focoPrevio);
+  }
+
+  const SERVICIO_GRUPOS = [
+    { titulo: 'Servicio principal', items: ['Recarga + Mantenimiento general','Prueba hidrostática'] },
+    { titulo: 'Repuestos', items: ['Cambio de manguera','Cambio de manómetro','Cambio de válvula'] },
+    { titulo: 'Acabado y reemplazo', items: ['Repintado','Reemplazo de unidad'] },
+  ];
+  const ICONOS_SERVICIO = {
+    'Recarga + Mantenimiento general': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 1 0-5.4 5.4l-6 6a1.5 1.5 0 0 0 2 2l6-6a4 4 0 0 0 5.4-5.4l-2.1 2.1-2-2z"/></svg>',
+    'Prueba hidrostática': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2s6 7 6 12a6 6 0 0 1-12 0c0-5 6-12 6-12z"/></svg>',
+    'Cambio de manguera': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/></svg>',
+    'Cambio de manómetro': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15a8 8 0 1 1 16 0"/><path d="M12 15l3-4"/></svg>',
+    'Cambio de válvula': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>',
+    'Repintado': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="12" height="6" rx="1"/><path d="M9 10v4M9 14h4a2 2 0 0 1 2 2v4"/></svg>',
+    'Reemplazo de unidad': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0 1 14-4M20 15a8 8 0 0 1-14 4"/></svg>',
+  };
+
+  function gruposServicioActuales(){
+    const extra = (configuracion.serviciosExtra || []).filter(Boolean);
+    return extra.length ? SERVICIO_GRUPOS.concat([{ titulo: 'Otros servicios', items: extra }]) : SERVICIO_GRUPOS;
+  }
+
+  function serviciosChecksHTML(idSuf, seleccionados, precios, checkClass){
+    precios = precios || {};
+    return gruposServicioActuales().map((grupo, gi) => {
+      const itemsHTML = grupo.items.map(s => {
+        const checked = (seleccionados||[]).includes(s);
+        return `
+        <label class="service-check service-check-priced">
+          <input type="checkbox" class="${checkClass}" data-servicio-check="${idSuf}" value="${esc(s)}" ${checked ? 'checked':''}/>
+          <span class="servicio-icon">${ICONOS_SERVICIO[s]||''}</span>
+          <span>${esc(s)}</span>
+          <input type="number" class="servicio-precio-input" data-servicio-precio="${idSuf}" data-servicio-nombre="${esc(s)}" min="0" step="0.01" placeholder="₡0" value="${precios[s] || ''}" style="${checked?'':'display:none;'}"/>
+        </label>`;
+      }).join('');
+      return `<div class="service-group-title"${gi===0?' style="margin-top:0;padding-top:0;border-top:none;"':''}>${esc(grupo.titulo)}</div>${itemsHTML}`;
+    }).join('');
+  }
+
+  function lineaHTML(l, idx){
+    const precios = l.servicioPrecios || {};
+    const sumaDetalle = (l.servicios||[]).reduce((s,nombre)=> s + (parseFloat(precios[nombre])||0), 0);
+    return `
+      <div class="linea-extintor">
+        <div class="linea-head">
+          <b>Extintor ${idx + 1}</b>
+          <button type="button" class="linea-remove" data-remove-linea="${l.lid}" ${formLineas.length<=1?'disabled':''}>Quitar</button>
+        </div>
+        <div class="form-row">
+          <div><label>Tipo de extintor</label>
+            <select id="f-tipo-${l.lid}">${TIPOS.map(t=>`<option ${t===l.tipo?'selected':''}>${t}</option>`).join('')}</select>
+          </div>
+          <div><label>Capacidad</label><input id="f-capacidad-${l.lid}" value="${esc(l.capacidad)}" placeholder="ej. 10 lb"/></div>
+        </div>
+        <div class="form-row">
+          <div><label>Cantidad</label><input type="number" id="f-cantidad-${l.lid}" min="1" step="1" value="${l.cantidad || 1}"/></div>
+          <div><label>Estado</label>
+            <select id="f-estado-${l.lid}">${ESTADOS.map(e=>`<option value="${e.id}" ${e.id===l.estado?'selected':''}>${e.label}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div><label>Servicios realizados (marca cada uno y anota su precio — se suman solos en el total)</label>
+            <div class="service-checks service-checks-priced">
+              ${serviciosChecksHTML(l.lid, l.servicios, precios, 'f-servicio-check-'+l.lid)}
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div><label>Precio total (suma automática, editable)</label><input type="number" id="f-precio-${l.lid}" min="0" step="0.01" value="${esc(l.precio)}" placeholder="0.00"/></div>
+          <div><label>Abono / adelanto</label><input type="number" id="f-abono-${l.lid}" min="0" step="0.01" value="${esc(l.abono)}" placeholder="0.00"/></div>
+        </div>
+        <div class="form-row">
+          <div><label>Estado de pago</label>
+            <select id="f-pagado-${l.lid}">
+              <option value="pendiente" ${l.pagado!=='pagado'?'selected':''}>Pendiente</option>
+              <option value="pagado" ${l.pagado==='pagado'?'selected':''}>Pagado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function capturarLineasDesdeDOM(recalcularTotal){
+    // Antes de re-renderizar (al agregar/quitar línea), guarda lo que el usuario ya escribió.
+    formLineas = formLineas.map(l => {
+      const tipoEl = document.getElementById(`f-tipo-${l.lid}`);
+      if(!tipoEl) return l; // línea nueva sin DOM todavía
+      const servicioPrecios = {};
+      document.querySelectorAll(`[data-servicio-precio="${l.lid}"]`).forEach(inp=>{
+        const nombre = inp.getAttribute('data-servicio-nombre');
+        if(inp.value) servicioPrecios[nombre] = inp.value;
+      });
+      const servicios = Array.from(document.querySelectorAll(`.f-servicio-check-${l.lid}:checked`)).map(el => el.value);
+      let precio = document.getElementById(`f-precio-${l.lid}`).value;
+      if(recalcularTotal){
+        const suma = servicios.reduce((s,nombre)=> s + (parseFloat(servicioPrecios[nombre])||0), 0);
+        if(suma > 0) precio = String(suma);
+      }
+      return {
+        ...l,
+        tipo: tipoEl.value,
+        capacidad: document.getElementById(`f-capacidad-${l.lid}`).value,
+        cantidad: document.getElementById(`f-cantidad-${l.lid}`).value,
+        estado: document.getElementById(`f-estado-${l.lid}`).value,
+        precio,
+        abono: document.getElementById(`f-abono-${l.lid}`).value,
+        pagado: document.getElementById(`f-pagado-${l.lid}`).value,
+        servicios,
+        servicioPrecios,
+      };
+    });
+  }
+
+  function extintoresOrdenHTML(cliente, selectedIds){
+    return window.CRMOrders.extintoresOrdenHTML(cliente, selectedIds, clientesPerfil, clienteKey, esc);
+  }
+
+  function actualizarHistorialExtintores(cliente, selectedIds, fechaServicio, fechaProximo, servicios, observaciones){
+    clientesPerfil = window.CRMOrders.actualizarHistorialExtintores(cliente, selectedIds, fechaServicio, fechaProximo, servicios, observaciones, clientesPerfil, clienteKey);
+  }
+
+  function renderModal(open, preserveLineas){
+    let overlay = document.querySelector('.overlay');
+    if(!open){
+      if(overlay) overlay.remove();
+      return;
+    }
+    if(overlay && preserveLineas){
+      capturarLineasDesdeDOM();
+    }
+    // Guarda la posición de scroll y qué campo tenía el foco, para restaurarlos después de redibujar.
+    let scrollTop = 0;
+    let focusedId = null;
+    let focusedSelStart = null;
+    if(overlay){      const bodyEl = overlay.querySelector('.modal-body');
+      if(bodyEl) scrollTop = bodyEl.scrollTop;
+      const activeEl = document.activeElement;
+      if(activeEl && activeEl.id && overlay.contains(activeEl)){
+        focusedId = activeEl.id;
+        if(typeof activeEl.selectionStart === 'number') focusedSelStart = activeEl.selectionStart;
+      }
+    }
+    if(overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.className = 'overlay';
+
+    const bodyHTML = editingId ? `
+          <div class="form-row">
+            <div><label>Cliente *</label><input id="f-cliente" value="${esc(form.cliente)}" placeholder="Nombre o empresa"/></div>
+            <div><label>Teléfono</label><input type="tel" id="f-telefono" value="${esc(form.telefono)}" placeholder="8888-8888"/></div>
+            <div><label>Dirección</label><input id="f-direccion" value="${esc(form.direccion||'')}" placeholder="Dirección del servicio"/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Orden</label><input id="f-orden" value="${esc(form.orden)}" placeholder="N° de orden"/></div>
+            <div><label>Tipo de extintor</label>
+              <select id="f-tipo">${TIPOS.map(t=>`<option ${t===form.tipo?'selected':''}>${t}</option>`).join('')}</select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div><label>Capacidad</label><input id="f-capacidad" value="${esc(form.capacidad)}" placeholder="ej. 10 lb"/></div>
+            <div><label>Cantidad</label><input type="number" id="f-cantidad" min="1" step="1" value="${form.cantidad || 1}"/></div>
+          </div>
+          <div class="form-row full">
+            <div><label>Servicios realizados (marca cada uno y anota su precio — se suman solos en el total)</label>
+              <div class="service-checks service-checks-priced">
+                ${serviciosChecksHTML('edit', form.servicios, form.servicioPrecios, 'f-servicio-check')}
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div><label>Fecha de ingreso</label><input type="date" id="f-fechaIngreso" value="${esc(form.fechaIngreso)}"/></div>
+            <div><label>Fecha estimada de entrega</label><input type="date" id="f-fechaEntrega" value="${esc(form.fechaEntrega)}"/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Próxima recarga</label><input type="date" id="f-fechaVencimiento" value="${esc(form.fechaVencimiento)}"/><small class="field-hint">Se calcula sola (12 meses después de la entrega); puedes cambiarla.</small></div>
+            <div><label>Estado</label>
+              <select id="f-estado">${ESTADOS.map(e=>`<option value="${e.id}" ${e.id===form.estado?'selected':''}>${e.label}</option>`).join('')}</select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div><label>Precio (suma automática, editable)</label><input type="number" id="f-precio" min="0" step="0.01" value="${esc(form.precio)}" placeholder="0.00"/></div>
+            <div><label>Abono / adelanto</label><input type="number" id="f-abono" min="0" step="0.01" value="${esc(form.abono)}" placeholder="0.00"/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Estado de pago</label>
+              <select id="f-pagado">
+                <option value="pendiente" ${form.pagado!=='pagado'?'selected':''}>Pendiente</option>
+                <option value="pagado" ${form.pagado==='pagado'?'selected':''}>Pagado</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div><label>Observaciones</label><textarea id="f-observaciones" placeholder="Notas adicionales...">${esc(form.observaciones)}</textarea></div>
+          </div>
+          <div class="form-row full">
+            <div><label>Extintores de la Ficha 360° incluidos en esta orden</label>
+              ${extintoresOrdenHTML(form.cliente, form.selectedExtintorIds)}
+              <small class="field-hint">Selecciona los equipos que realmente entraron a mantenimiento. Al guardar, su historial se actualizará automáticamente.</small>
+            </div>
+          </div>
+    ` : `
+          <div class="form-row">
+            <div><label>Cliente *</label><input id="f-cliente" value="${esc(form.cliente)}" placeholder="Nombre o empresa"/></div>
+            <div><label>Teléfono</label><input type="tel" id="f-telefono" value="${esc(form.telefono)}" placeholder="8888-8888"/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Orden</label><input id="f-orden" value="${esc(form.orden)}" placeholder="N° de orden (compartido por todos los extintores de esta visita)"/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Fecha de ingreso</label><input type="date" id="f-fechaIngreso" value="${esc(form.fechaIngreso)}"/></div>
+            <div><label>Fecha estimada de entrega</label><input type="date" id="f-fechaEntrega" value="${esc(form.fechaEntrega)}"/></div>
+          </div>
+          <div class="form-row">
+            <div><label>Próxima recarga</label><input type="date" id="f-fechaVencimiento" value="${esc(form.fechaVencimiento)}"/><small class="field-hint">Se calcula sola (12 meses después de la entrega); puedes cambiarla. Aplica a todos los extintores de esta orden.</small></div>
+          </div>
+          <div class="form-row full">
+            <div><label>Observaciones</label><textarea id="f-observaciones" placeholder="Notas adicionales de la orden...">${esc(form.observaciones)}</textarea></div>
+          </div>
+          <div class="form-row full">
+            <div><label>Extintores de la Ficha 360° incluidos en esta orden</label>
+              ${extintoresOrdenHTML(form.cliente, form.selectedExtintorIds)}
+              <small class="field-hint">Selecciona los equipos que realmente entraron a mantenimiento. Al guardar, su historial se actualizará automáticamente.</small>
+            </div>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--line);margin:18px 0 16px;"/>
+          <div id="lineas-container">
+            ${formLineas.map((l,i)=>lineaHTML(l,i)).join('')}
+          </div>
+          <button type="button" class="btn-add-linea" id="btn-add-linea">+ Agregar otro extintor a esta orden</button>
+    `;
+
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-head">
+          <h2>${editingId ? 'Editar registro' : 'Nuevo ingreso'}</h2>
+          <button id="modal-close">×</button>
+        </div>
+        <div class="modal-body">
+          ${bodyHTML}
+        </div>
+        <div class="modal-foot">
+          <button class="btn-ghost" id="modal-cancel">Cancelar</button>
+          <button class="btn-primary" id="modal-save">${editingId ? 'Guardar cambios' : (formLineas.length > 1 ? `Registrar ${formLineas.length} extintores` : 'Registrar')}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    // Restaura scroll y foco perdidos al redibujar (evita que el formulario "salte" al inicio).
+    const newBodyEl = overlay.querySelector('.modal-body');
+    if(newBodyEl && scrollTop) newBodyEl.scrollTop = scrollTop;
+    if(focusedId){
+      const toFocus = document.getElementById(focusedId);
+      if(toFocus){
+        toFocus.focus();
+        if(focusedSelStart !== null && typeof toFocus.setSelectionRange === 'function'){
+          try { toFocus.setSelectionRange(focusedSelStart, focusedSelStart); } catch(e){}
+        }
+      }
+    }
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeModal(); });
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    document.getElementById('modal-cancel').addEventListener('click', closeModal);
+    document.getElementById('modal-save').addEventListener('click', save);
+    document.getElementById('f-fechaEntrega').addEventListener('change', (e)=>{
+      const vencInput = document.getElementById('f-fechaVencimiento');
+      if(!vencInput.value && e.target.value){
+        vencInput.value = addMonths(e.target.value, 12);
+      }
+    });
+    if(!editingId){
+      document.getElementById('btn-add-linea').addEventListener('click', agregarLinea);
+      document.querySelectorAll('[data-remove-linea]').forEach(b=>{
+        b.addEventListener('click', ()=> { capturarDatosOrden(); capturarLineasDesdeDOM(); quitarLinea(b.getAttribute('data-remove-linea')); });
+      });
+      document.querySelectorAll('[data-servicio-check]').forEach(chk=>{
+        chk.addEventListener('change', ()=> {
+          const precioInput = chk.closest('.service-check-priced').querySelector('.servicio-precio-input');
+          precioInput.style.display = chk.checked ? '' : 'none';
+          if(!chk.checked) precioInput.value = '';
+          capturarDatosOrden();
+          capturarLineasDesdeDOM(true);
+          renderModal(true, true);
+        });
+      });
+      document.querySelectorAll('.servicio-precio-input').forEach(inp=>{
+        inp.addEventListener('input', ()=> {
+          // Recalcula el total en el DOM directamente, sin recrear el formulario (evita perder el foco/scroll).
+          const lid = inp.getAttribute('data-servicio-precio');
+          const totalInput = document.getElementById(`f-precio-${lid}`);
+          if(totalInput){
+            let suma = 0;
+            document.querySelectorAll(`[data-servicio-precio="${lid}"]`).forEach(precioEl=>{
+              const checkbox = document.querySelector(`.f-servicio-check-${lid}[value="${precioEl.getAttribute('data-servicio-nombre')}"]`);
+              if(checkbox && checkbox.checked && precioEl.value) suma += parseFloat(precioEl.value) || 0;
+            });
+            if(suma > 0) totalInput.value = suma;
+          }
+        });
+        inp.addEventListener('change', ()=> { capturarDatosOrden(); capturarLineasDesdeDOM(); });
+      });
+      formLineas.forEach(l=>{
+        const totalInput = document.getElementById(`f-precio-${l.lid}`);
+        if(totalInput) totalInput.addEventListener('change', ()=> { capturarDatosOrden(); capturarLineasDesdeDOM(); });
+      });
+    } else {
+      const capturarFormEdicion = (recalcularTotal)=>{
+        const servicioPrecios = {};
+        document.querySelectorAll('[data-servicio-precio="edit"]').forEach(inp=>{
+          const nombre = inp.getAttribute('data-servicio-nombre');
+          if(inp.value) servicioPrecios[nombre] = inp.value;
+        });
+        const servicios = Array.from(document.querySelectorAll('.f-servicio-check:checked')).map(el => el.value);
+        let precio = document.getElementById('f-precio').value;
+        if(recalcularTotal){
+          const suma = servicios.reduce((s,nombre)=> s + (parseFloat(servicioPrecios[nombre])||0), 0);
+          if(suma > 0) precio = String(suma);
+        }
+        form = { ...form, precio, servicios, servicioPrecios };
+      };
+      document.querySelectorAll('[data-servicio-check]').forEach(chk=>{
+        chk.addEventListener('change', ()=> {
+          const precioInput = chk.closest('.service-check-priced').querySelector('.servicio-precio-input');
+          precioInput.style.display = chk.checked ? '' : 'none';
+          if(!chk.checked) precioInput.value = '';
+          capturarFormEdicion(true);
+          renderModal(true);
+        });
+      });
+      document.querySelectorAll('.servicio-precio-input').forEach(inp=>{
+        inp.addEventListener('input', ()=> {
+          // Recalcula el total en el DOM directamente, sin recrear el formulario (evita perder el foco/scroll).
+          const totalInput = document.getElementById('f-precio');
+          if(totalInput){
+            let suma = 0;
+            document.querySelectorAll('[data-servicio-precio="edit"]').forEach(precioEl=>{
+              const checkbox = document.querySelector(`.f-servicio-check[value="${precioEl.getAttribute('data-servicio-nombre')}"]`);
+              if(checkbox && checkbox.checked && precioEl.value) suma += parseFloat(precioEl.value) || 0;
+            });
+            if(suma > 0) totalInput.value = suma;
+          }
+        });
+        inp.addEventListener('change', ()=> { capturarFormEdicion(); });
+      });
+      const totalInputEdit = document.getElementById('f-precio');
+      if(totalInputEdit) totalInputEdit.addEventListener('change', ()=> { capturarFormEdicion(); });
+    }
+  }
+
+  window.addEventListener('beforeunload', function(e){
+    if(!lastSaveVerified){
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  initAuth();
+})();
     const hoy=todayISO();
     const ult=c.registros && c.registros.length ? c.registros.slice().sort((a,b)=>(b.fechaIngreso||'').localeCompare(a.fechaIngreso||''))[0] : null;
     const fechaUlt=ult ? ult.fechaIngreso : '—';
