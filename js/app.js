@@ -5102,6 +5102,25 @@
           </div>
         </div>
 
+        <div class="crm-section-title"><h3>Mi día</h3><span>Prioridades calculadas automáticamente para hoy</span></div>
+        <div class="mi-dia-grid">
+          <div class="mi-dia-main">
+            <div class="mi-dia-header"><div><span class="module-kicker">HOY · ${todayISO()}</span><h3>Tu lista de trabajo</h3></div><span class="mi-dia-total">${vencidos.length + taller.length + recPend.filter(r=>r.fecha===todayISO()).length} pendientes</span></div>
+            <div class="mi-dia-list">
+              ${vencidos.slice(0,5).map(r=>`<div class="mi-dia-row urgent"><span>🔴</span><div><b>Recarga vencida · ${esc(r.cliente||'Sin cliente')}</b><small>${esc(r.tipo||'Extintor')} · ${esc(r.fechaVencimiento||'')}</small></div><button class="btn-ghost" data-ind-view="listado">Abrir</button></div>`).join('')}
+              ${taller.slice(0,5).map(r=>`<div class="mi-dia-row"><span>🔧</span><div><b>Orden en taller · ${esc(r.cliente||'Sin cliente')}</b><small>${esc(r.orden||'Sin orden')} · ${esc(estadoOf(r.estado).label)}</small></div><button class="btn-ghost" data-ind-view="listado">Abrir</button></div>`).join('')}
+              ${recPend.filter(r=>r.fecha===todayISO()).slice(0,5).map(r=>`<div class="mi-dia-row"><span>🔔</span><div><b>${esc(r.texto)}</b><small>${esc(r.cliente||'General')} · Hoy</small></div><button class="btn-ghost" data-ind-view="crm">Ver</button></div>`).join('')}
+              ${!vencidos.length&&!taller.length&&!recPend.some(r=>r.fecha===todayISO())?'<div class="dash-empty">No tienes tareas críticas para hoy. ¡Buen trabajo!</div>':''}
+            </div>
+          </div>
+          <div class="mi-dia-side">
+            <div class="mi-dia-stat"><span>🔴</span><b>${vencidos.length}</b><small>Vencidos</small></div>
+            <div class="mi-dia-stat"><span>🔧</span><b>${taller.length}</b><small>En taller</small></div>
+            <div class="mi-dia-stat"><span>🔔</span><b>${recPend.filter(r=>r.fecha===todayISO()).length}</b><small>Recordatorios hoy</small></div>
+            <div class="mi-dia-stat"><span>📅</span><b>${en30.length}</b><small>Próximos 30 días</small></div>
+          </div>
+        </div>
+
         <div class="crm-section-title"><h3>Operación diaria</h3><span>Prioridades que requieren atención</span></div>
         <div class="crm-industrial-grid">
           <div class="crm-panel">
