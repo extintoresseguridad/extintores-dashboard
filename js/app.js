@@ -2804,6 +2804,29 @@
     `;
   }
 
+  function renderClientesContactar(){
+    const mapa=new Map();
+    function agregar(cliente,telefono,motivo,fecha,prioridad){
+      if(!cliente) return;
+      const key=clienteKey({cliente,telefono});
+      const prev=mapa.get(key);
+      if(!prev || prioridad<prev.prioridad) mapa.set(key,{cliente,telefono,motivo,fecha,prioridad});
+    }
+    records.forEach(r=>{
+      if(!r.cliente||!r.fechaVencimiento) return;
+      const vs=vencStatus(r.fechaVencimiento);
+      if(vs==='vencido') agregar(r.cliente,r.telefono,'Recarga vencida',r.fechaVencimiento,1);
+      else if(vs==='proximo') agregar(r.cliente,r.telefono,'Recarga próxima a vencer',r.fechaVencimiento,2);
+    });
+    const limite=new Date(); limite.setHours(0,0,0,0); limite.setDate(limite.getDate()+30);
+    const limiteISO=limite.toISOString().slice(0,10);
+    contratos.filter(c=>c.estado==='activo'&&c.fechaRenovacion&&c.fechaRenovacion<=limiteISO).forEach(c=>agregar(c.cliente,c.telefono,'Renovación de membresía',c.fechaRenovacion,3));
+    oportunidades.filter(o=>o.etapa!=='perdido'&&o.etapa!=='ganado').forEach(o=>agregar(o.cliente,o.telefono,'Oportunidad abierta','',4));
+    const lista=Array.from(mapa.values()).sort((a,b)=>(a.prioridad-b.prioridad)||(a.fecha||'').localeCompare(b.fecha||''));
+    return '<div class="clientes-contactar-head"><div><span class="module-kicker">SEGUIMIENTO COMERCIAL</span><h3>Clientes por contactar</h3><p>Clientes que requieren seguimiento según la información registrada.</p></div><span class="clientes-contactar-count">'+lista.length+' clientes</span></div>'+
+      '<div class="clientes-contactar-list">'+(lista.length?lista.map(x=>'<div class="cliente-contactar-row"><div class="cliente-contactar-icon">👤</div><div class="cliente-contactar-main"><b>'+esc(x.cliente)+'</b><small>'+esc(x.motivo)+(x.fecha?' · '+esc(x.fecha):'')+'</small></div><button class="btn-ghost" data-contactar-recordatorio="'+esc(x.cliente)+'" data-contactar-telefono="'+esc(x.telefono||'')+'">+ Recordatorio</button><button class="btn-primary" data-contactar-cliente="'+esc(x.cliente)+'" data-contactar-telefono="'+esc(x.telefono||'')+'">WhatsApp</button></div>').join(''):'<div class="dash-empty">No hay clientes pendientes de contacto con la información disponible.</div>')+'</div>';
+  }
+
   let contratosFiltro = 'todos'; // 'todos' | 'activo' | 'cancelado'
   function setContratosFiltro(f){ contratosFiltro = f; render(); }
 
@@ -2938,8 +2961,9 @@
           <button data-crm-subvista="pipeline" class="${crmSubvista==='pipeline'?'active':''}">Embudo de ventas</button>
           <button data-crm-subvista="recordatorios" class="${crmSubvista==='recordatorios'?'active':''}">Recordatorios${recordatorios.filter(r=>!r.completado).length ? ' ('+recordatorios.filter(r=>!r.completado).length+')' : ''}</button>
           <button data-crm-subvista="contratos" class="${crmSubvista==='contratos'?'active':''}">Membresías${contratos.filter(c=>c.estado==='activo').length ? ' ('+contratos.filter(c=>c.estado==='activo').length+')' : ''}</button>
+          <button data-crm-subvista="clientes-contactar" class="${crmSubvista==='clientes-contactar'?'active':''}">Clientes por contactar</button>
         </div>
-        ${oportunidadSeleccionada ? renderOportunidadDetalle(oportunidadSeleccionada) : (crmSubvista==='pipeline' ? renderPipeline() : (crmSubvista==='recordatorios' ? renderRecordatorios() : renderContratos()))}
+        ${oportunidadSeleccionada ? renderOportunidadDetalle(oportunidadSeleccionada) : (crmSubvista==='pipeline' ? renderPipeline() : (crmSubvista==='recordatorios' ? renderRecordatorios() : (crmSubvista==='contratos' ? renderContratos() : renderClientesContactar())))}
       </div>
     `;
   }
@@ -5553,6 +5577,15 @@
       } else if(crmSubvista === 'recordatorios'){
         const btnCrearRec = document.getElementById('btn-crear-recordatorio');
         if(btnCrearRec) btnCrearRec.addEventListener('click', ()=> crearRecordatorioRapido());
+      } else if(crmSubvista === 'clientes-contactar'){
+        document.querySelectorAll('[data-contactar-cliente]').forEach(b=>{
+          b.addEventListener('click', ()=>{
+            abrirWhatsApp(b.getAttribute('data-contactar-cliente'), b.getAttribute('data-contactar-telefono')||'', 'Hola, le contactamos de Extintores Seguridad para dar seguimiento a su servicio.');
+          });
+        });
+        document.querySelectorAll('[data-contactar-recordatorio]').forEach(b=>{
+          b.addEventListener('click', ()=> crearRecordatorioRapido(b.getAttribute('data-contactar-recordatorio'), b.getAttribute('data-contactar-telefono')||''));
+        });
       } else if(crmSubvista === 'contratos'){
         document.querySelectorAll('[data-contratos-filtro]').forEach(b=>{
           b.addEventListener('click', ()=> setContratosFiltro(b.getAttribute('data-contratos-filtro')));
