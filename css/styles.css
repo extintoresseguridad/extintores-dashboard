@@ -1451,3 +1451,151 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
 .nav-section-inventory button.active .snav-ico{background:rgba(255,255,255,.16);}
 .nav-section-inventory button.active .nav-arrow{opacity:.9;}
 @media(max-width:800px){.nav-section-label{margin-top:10px;}.nav-section{margin-bottom:5px;}.nav-section button{padding:9px 10px;}}
+
+
+/* =========================================================
+   V9 — Vista por módulos: Operaciones / Ventas-CRM / Inventario
+   Cambio visual de los contenidos, sin tocar la lógica de datos.
+   ========================================================= */
+.module-heading{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:18px;
+  margin:0 0 16px;padding:2px 2px 4px;
+}
+.module-heading h2{
+  margin:2px 0 4px;font-size:22px;line-height:1.15;letter-spacing:-.03em;color:var(--ink);
+}
+.module-heading p{margin:0;color:#6B7280;font-size:12px;}
+.module-kicker{
+  display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;
+  letter-spacing:.12em;color:var(--primary);margin-bottom:2px;
+}
+
+/* OPERACIONES: tarjetas más informativas y claramente orientadas al trabajo */
+.operations-view .grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+}
+.operations-view .card-collapse{
+  background:#fff;border:1px solid #E2E7EF;border-left:4px solid #CBD5E1;
+  border-radius:14px;overflow:hidden;box-shadow:0 3px 12px rgba(17,24,39,.055);
+  transition:transform .16s,box-shadow .16s,border-color .16s;
+}
+.operations-view .card-collapse:hover{
+  transform:translateY(-2px);box-shadow:0 10px 24px rgba(17,24,39,.10);
+}
+.operations-view .card-collapse:has(.b-recibido){border-left-color:var(--amber);}
+.operations-view .card-collapse:has(.b-proceso){border-left-color:var(--primary);}
+.operations-view .card-collapse:has(.b-listo){border-left-color:var(--green);}
+.operations-view .card-collapse:has(.b-entregado){border-left-color:#94A3B8;}
+.operations-view .card-collapse summary{
+  min-height:82px;padding:15px 15px 13px;gap:12px;
+}
+.operations-view .summary-main h3{
+  font-size:14px;margin:0 0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.operations-view .summary-main .sub-line{font-size:10.5px;color:#64748B;}
+.operations-view .summary-side{gap:6px;align-items:flex-end;}
+.operations-view .summary-side .badge{
+  border-radius:999px;padding:4px 8px;font-size:9px;
+}
+.operations-view .summary-price{font-size:12px;font-weight:800;}
+.operations-view .card-inner-body{border-top:1px solid #EEF1F5;background:#FBFCFE;}
+.operations-view .card-body{padding:12px 15px;}
+.operations-view .meta-row{padding:5px 0;}
+.operations-view .card-actions{
+  padding:10px 15px;border-top:1px solid #EEF1F5;display:flex;gap:6px;flex-wrap:wrap;
+}
+.operations-view .card-actions button{border-radius:999px;padding:6px 10px;font-size:10px;}
+
+/* INVENTARIO: formato de catálogo, con la existencia como protagonista */
+.inventory-view .kpi-grid{
+  grid-template-columns:1.5fr 1fr;
+  gap:14px;
+}
+.inventory-view .kpi-card{border-radius:16px;min-height:108px;padding:18px 20px;}
+.inventory-view .kpi-value{font-size:30px;}
+.inventory-view .clientes-toolbar{
+  background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:12px !important;
+  box-shadow:0 3px 12px rgba(17,24,39,.04);
+}
+.inventory-view .filters{gap:6px;}
+.inventory-view .chip{border-radius:999px;padding:8px 12px;}
+.inventory-view .grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+}
+.inventory-view .card-collapse{
+  background:#fff;border:1px solid #E1E6ED;border-radius:16px;overflow:hidden;
+  box-shadow:0 3px 12px rgba(17,24,39,.055);
+  transition:transform .16s,box-shadow .16s,border-color .16s;
+}
+.inventory-view .card-collapse:hover{
+  transform:translateY(-2px);box-shadow:0 10px 24px rgba(17,24,39,.10);
+}
+.inventory-view .card-collapse summary{
+  min-height:92px;padding:16px;align-items:center;
+}
+.inventory-view .summary-main{
+  position:relative;padding-left:42px;min-width:0;
+}
+.inventory-view .summary-main:before{
+  content:'▣';position:absolute;left:0;top:0;width:32px;height:32px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;background:#EEF4FB;color:var(--primary);
+  font-size:15px;font-weight:800;
+}
+.inventory-view .summary-main h3{
+  font-size:13.5px;margin:0 0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.inventory-view .summary-main .sub-line{font-size:10.5px;color:#64748B;}
+.inventory-view .summary-side{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
+.inventory-view .summary-side .badge{border-radius:999px;padding:4px 8px;font-size:9px;}
+.inventory-view .summary-price{font-size:12px;font-weight:800;}
+.inventory-view .card-inner-body{border-top:1px solid #EEF1F5;background:#FBFCFE;}
+.inventory-view .card-body{padding:12px 16px;}
+.inventory-view .meta-row{padding:5px 0;}
+.inventory-view .card-actions{
+  padding:10px 16px;border-top:1px solid #EEF1F5;display:flex;gap:6px;
+}
+.inventory-view .card-actions button{border-radius:999px;padding:6px 10px;font-size:10px;}
+
+/* VENTAS / CRM: aspecto de tablero comercial, no de lista genérica */
+.crm-view .module-heading{margin-bottom:12px;}
+.crm-view .view-toggle{
+  background:#fff;border:1px solid #E1E6ED;border-radius:12px;padding:4px;display:flex;gap:4px;
+}
+.crm-view .view-toggle button{border-radius:9px;padding:9px 14px;}
+.crm-view .pipeline-toolbar{
+  background:#fff;border:1px solid #E1E6ED;border-radius:14px;padding:12px 14px;
+  margin-bottom:14px;box-shadow:0 3px 12px rgba(17,24,39,.04);
+}
+.crm-view .pipeline-board{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start;
+}
+.crm-view .pipeline-col{
+  background:#F7F9FC;border:1px solid #E1E6ED;border-radius:14px;padding:7px;
+  min-width:0;
+}
+.crm-view .pipeline-col-head{
+  border-radius:10px;padding:10px 11px;margin-bottom:7px;font-size:10.5px;font-weight:800;
+}
+.crm-view .pipeline-col-body{padding:2px;min-height:120px;}
+.crm-view .oportunidad-card{
+  background:#fff;border:1px solid #E1E6ED;border-radius:11px;padding:12px;
+  margin-bottom:8px;box-shadow:0 2px 8px rgba(17,24,39,.045);
+}
+.crm-view .oportunidad-card:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(17,24,39,.09);}
+.crm-view .oc-cliente{font-size:12px;font-weight:800;}
+.crm-view .oc-desc{font-size:10.5px;line-height:1.4;color:#64748B;margin-top:5px;}
+.crm-view .oc-foot{margin-top:10px;padding-top:8px;border-top:1px solid #EEF1F5;}
+.crm-view .oc-monto{font-size:12px;font-weight:800;}
+.crm-view .crm-panel,.crm-view .dash-panel{border-radius:14px;}
+
+@media(max-width:1150px){
+  .operations-view .grid,.inventory-view .grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .crm-view .pipeline-board{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:720px){
+  .operations-view .grid,.inventory-view .grid,.crm-view .pipeline-board{grid-template-columns:1fr;}
+  .inventory-view .kpi-grid{grid-template-columns:1fr;}
+  .module-heading h2{font-size:19px;}
+}
