@@ -2926,7 +2926,14 @@
 
   function renderCRM(){
     return `
-      <div class="dash-content">
+      <div class="dash-content crm-view">
+        <div class="module-heading">
+          <div>
+            <span class="module-kicker">Ventas y seguimiento</span>
+            <h2>CRM Comercial</h2>
+            <p>Oportunidades, recordatorios y membresías.</p>
+          </div>
+        </div>
         <div class="view-toggle" style="margin-bottom:16px;">
           <button data-crm-subvista="pipeline" class="${crmSubvista==='pipeline'?'active':''}">Embudo de ventas</button>
           <button data-crm-subvista="recordatorios" class="${crmSubvista==='recordatorios'?'active':''}">Recordatorios${recordatorios.filter(r=>!r.completado).length ? ' ('+recordatorios.filter(r=>!r.completado).length+')' : ''}</button>
@@ -4328,7 +4335,14 @@
     const bajoCount = productosStockBajo().length;
     const valorTotal = inventario.reduce((s,p)=> s + (parseFloat(p.cantidad)||0) * (parseFloat(p.precioUnitario)||0), 0);
     return `
-      <div class="dash-content">
+      <div class="dash-content inventory-view">
+        <div class="module-heading">
+          <div>
+            <span class="module-kicker">Control de inventario</span>
+            <h2>Inventario</h2>
+            <p>Productos, existencias y reposición en un solo lugar.</p>
+          </div>
+        </div>
         <div class="kpi-grid" style="margin-bottom:18px;">
           <div class="kpi-card">
             <div class="kpi-label">Productos en inventario</div>
@@ -5201,6 +5215,14 @@
 
       <div class="${animateViewChange ? 'view-fade' : ''}">
       ${view === 'industrial' ? renderIndustrial() : (view === 'listado' ? `
+      <div class="operations-view">
+      <div class="module-heading">
+        <div>
+          <span class="module-kicker">Operaciones</span>
+          <h2>Órdenes de trabajo</h2>
+          <p>Recepción, taller, entrega y control de recargas.</p>
+        </div>
+      </div>
       <div class="toolbar">
         <div class="filters">
           <button class="chip ${filter==='todos'?'active':''}" data-filter="todos">Todos</button>
@@ -5232,6 +5254,7 @@
           </div>` : `
           <div class="grid">${agruparPorOrden(filtered).map(orderCardHTML).join('')}</div>`
         }
+      </div>
       </div>
       ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : (view === 'cliente-seguro' ? renderClienteSeguro() : (view === 'referidos' ? renderReferidos() : renderIndustrial()))))))))}
       </div>
