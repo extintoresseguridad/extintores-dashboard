@@ -5062,6 +5062,46 @@
           <div class="crm-kpi" data-ind-view="caja"><div class="icon">₡</div><div class="value">₡${porCobrar.toLocaleString('es-CR',{maximumFractionDigits:0})}</div><div class="label">Por cobrar</div><div class="hint">${contratosActivos.length} membresías activas</div></div>
         </div>
 
+        <div class="crm-section-title"><h3>Centro de alertas y agenda</h3><span>Lo que requiere atención hoy y en los próximos días</span></div>
+        <div class="crm-alerts-grid">
+          <div class="crm-panel crm-alert-panel">
+            <div class="crm-panel-head"><h4>🚨 Alertas</h4><span class="crm-alert-count">${vencidos.length + stockBajo.length + recPend.filter(r=>r.fecha && r.fecha < todayISO()).length}</span></div>
+            <div class="crm-alert-list">
+              ${vencidos.slice(0,4).map(r=>`
+                <button class="crm-alert-row danger" data-hoy-action="vencidos">
+                  <span class="crm-alert-icon">⚠</span><span><b>${esc(r.cliente||'Sin cliente')}</b><small>Recarga vencida · ${esc(r.fechaVencimiento||'')}</small></span><strong>Ver</strong>
+                </button>`).join('')}
+              ${stockBajo.slice(0,3).map(x=>`
+                <button class="crm-alert-row warning" data-ind-view="inventario">
+                  <span class="crm-alert-icon">📦</span><span><b>${esc(x.nombre)}</b><small>Stock bajo · ${x.cantidad||0} uds</small></span><strong>Ver</strong>
+                </button>`).join('')}
+              ${recPend.filter(r=>r.fecha && r.fecha < todayISO()).slice(0,3).map(r=>`
+                <button class="crm-alert-row warning" data-ind-view="crm">
+                  <span class="crm-alert-icon">🔔</span><span><b>${esc(r.texto)}</b><small>${esc(r.cliente||'General')} · vencido</small></span><strong>Ver</strong>
+                </button>`).join('')}
+              ${!vencidos.length && !stockBajo.length && !recPend.some(r=>r.fecha && r.fecha < todayISO()) ? '<div class="dash-empty">No hay alertas críticas pendientes.</div>' : ''}
+            </div>
+          </div>
+          <div class="crm-panel crm-agenda-panel">
+            <div class="crm-panel-head"><h4>📅 Agenda</h4><button class="btn-ghost crm-mini-btn" id="ind-agenda-rec">+ Recordatorio</button></div>
+            <div class="crm-agenda-list">
+              ${recPend.filter(r=>r.fecha && r.fecha >= todayISO()).slice(0,5).map(r=>`
+                <div class="crm-agenda-row">
+                  <span class="crm-agenda-date">${esc(r.fecha)}</span>
+                  <div><b>${esc(r.texto)}</b><small>${esc(r.cliente||'General')}</small></div>
+                  <button class="btn-ghost crm-mini-btn" data-ind-rec-id="${esc(r.id)}">✓</button>
+                </div>`).join('')}
+              ${en30.slice(0,5).map(r=>`
+                <div class="crm-agenda-row">
+                  <span class="crm-agenda-date">${esc(r.fechaVencimiento)}</span>
+                  <div><b>${esc(r.cliente||'Sin cliente')}</b><small>Próxima recarga · ${esc(r.tipo||'Extintor')}</small></div>
+                  <button class="btn-ghost crm-mini-btn" data-agenda-vencimiento="${esc(r.cliente||'')}" data-agenda-telefono="${esc(r.telefono||'')}">Contactar</button>
+                </div>`).join('')}
+              ${!recPend.filter(r=>r.fecha && r.fecha >= todayISO()).length && !en30.length ? '<div class="dash-empty">La agenda está libre por ahora.</div>' : ''}
+            </div>
+          </div>
+        </div>
+
         <div class="crm-section-title"><h3>Operación diaria</h3><span>Prioridades que requieren atención</span></div>
         <div class="crm-industrial-grid">
           <div class="crm-panel">
@@ -5328,6 +5368,16 @@
       b.addEventListener('click', ()=> setView(b.getAttribute('data-view')));
     });
     if(view === 'industrial'){
+      const indAgendaRec=document.getElementById('ind-agenda-rec');
+      if(indAgendaRec) indAgendaRec.addEventListener('click', ()=>{ view='crm'; crmSubvista='recordatorios'; oportunidadSeleccionada=null; animateViewChange=true; render(); });
+      document.querySelectorAll('[data-ind-rec-id]').forEach(b=>{
+        b.addEventListener('click', async ()=>{ await toggleRecordatorio(b.getAttribute('data-ind-rec-id')); });
+      });
+      document.querySelectorAll('[data-agenda-vencimiento]').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          abrirWhatsApp(b.getAttribute('data-agenda-vencimiento')||'', b.getAttribute('data-agenda-telefono')||'', 'Hola, le contactamos de Extintores Seguridad. Tenemos registrada una próxima recarga de sus extintores. ¿Desea que coordinemos el servicio?');
+        });
+      });
       const indNuevo=document.getElementById('ind-nuevo'); if(indNuevo) indNuevo.addEventListener('click', openNew);
       const indOp=document.getElementById('ind-oportunidad'); if(indOp) indOp.addEventListener('click', ()=>openNuevaOportunidad());
       const indBackup=document.getElementById('ind-respaldo'); if(indBackup) indBackup.addEventListener('click', exportarRespaldoIndustrial);
@@ -5530,6 +5580,8 @@
         if(btnNuevaVenta) btnNuevaVenta.addEventListener('click', ()=> openNuevaVenta(btnNuevaVenta.getAttribute('data-cliente'), btnNuevaVenta.getAttribute('data-telefono')));
         const btnNuevaOrdenCliente = document.getElementById('btn-nueva-orden-cliente');
         if(btnNuevaOrdenCliente) btnNuevaOrdenCliente.addEventListener('click', ()=> openNuevaOrdenCliente(btnNuevaOrdenCliente.getAttribute('data-cliente'), btnNuevaOrdenCliente.getAttribute('data-telefono'), btnNuevaOrdenCliente.getAttribute('data-cliente-key')));
+        const btnNuevaOrdenClienteTop = document.getElementById('btn-nueva-orden-cliente-top');
+        if(btnNuevaOrdenClienteTop) btnNuevaOrdenClienteTop.addEventListener('click', ()=> openNuevaOrdenCliente(btnNuevaOrdenClienteTop.getAttribute('data-cliente'), btnNuevaOrdenClienteTop.getAttribute('data-telefono'), btnNuevaOrdenClienteTop.getAttribute('data-cliente-key')));
         const btnAgregarExtintorCliente = document.getElementById('btn-agregar-extintor-cliente');
         if(btnAgregarExtintorCliente) btnAgregarExtintorCliente.addEventListener('click', ()=> openEditarPerfilCliente(btnAgregarExtintorCliente.getAttribute('data-cliente-key')));
         const btnNuevaOpCliente = document.getElementById('btn-nueva-oportunidad-cliente');
