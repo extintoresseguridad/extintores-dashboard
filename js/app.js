@@ -27,7 +27,6 @@
   let ventas = []; // { id, cliente, telefono, marca, producto, cantidad, precio, abono, pagado, fechaCompra, fechaProximoMantenimiento, observaciones }
   let oportunidades = []; // { id, cliente, telefono, descripcion, montoEstimado, etapa:'contactado'|'cotizado'|'ganado'|'perdido', fechaCreacion, bitacora:[{id,fecha,tipo,nota}] }
   let recordatorios = [];
-  let contactosCRM = []; // { id, texto, fecha, cliente, telefono, oportunidadId, completado }
   let clientesPerfil = []; // { id, cliente, telefono, empresa, cedula, notas, etiquetas, fechaCreacion } — datos personales del cliente, independientes de sus órdenes/ventas
   let contratos = []; // membresías Cliente Seguro
   let referidos = []; // programa independiente de referidos
@@ -4414,18 +4413,6 @@
       .sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
     const contratosCliente = contratos.filter(c => clienteKey(c) === key);
     return { opsCliente, recsCliente, contratosCliente };
-  }
-
-  function registrarContactoCliente(nombre, telefono, resultado, proximaFecha, nota){
-    const historial = Array.isArray(contactosCRM) ? contactosCRM : [];
-    contactosCRM = [{id:uid(),fecha:todayISO(),hora:new Date().toLocaleTimeString('es-CR',{hour:'2-digit',minute:'2-digit'}),cliente:nombre,telefono,resultado,proximaFecha,nota}, ...historial];
-    return persist();
-  }
-
-  function crmHistorialContactoHTML(nombre){
-    const lista=(Array.isArray(contactosCRM)?contactosCRM:[]).filter(x=>clienteKey(x)===clienteKey({cliente:nombre})).slice(0,8);
-    return '<div class="ficha360-contactos"><div class="ficha360-contactos-head"><div><span class="ficha360-kicker">CRM</span><h3>Historial de contacto</h3></div><button class="btn-primary" data-nuevo-contacto="'+esc(nombre)+'">+ Registrar contacto</button></div>'+
-      (lista.length ? '<div class="ficha360-contactos-list">'+lista.map(x=>'<div class="ficha360-contacto-row"><div class="ficha360-contacto-date">'+esc(x.fecha)+'<small>'+esc(x.hora||'')+'</small></div><div><b>'+esc(x.resultado||'Contacto realizado')+'</b><small>'+esc(x.nota||'Sin nota')+(x.proximaFecha?' · Próxima acción: '+esc(x.proximaFecha):'')+'</small></div></div>').join('')+'</div>' : '<div class="dash-empty">Todavía no hay contactos registrados para este cliente.</div>')+'</div>';
   }
 
   function crmClienteSeguimientoHTML(key,c,perfil,contratoActivo,proximoMantenimiento){
