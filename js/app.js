@@ -4826,10 +4826,29 @@
           <div class="cliente-kpi"><b>${contratoActivo360 ? "Activo" : "No"}</b><small>Cliente Seguro</small></div>
           <div class="cliente-kpi"><b style="color:${totalPendiente360>0?"#DC2626":"inherit"}">₡${totalPendiente360.toLocaleString("es-CR",{maximumFractionDigits:0})}</b><small>Saldo pendiente</small></div>
         </div>
-        <div class="dash-panel" style="margin-bottom:16px;">
-          <div class="meta-row"><span class="k">Última actividad</span><span class="v">${esc(ultimoMovimiento)}</span></div>
-          <div class="meta-row"><span class="k">Próximo mantenimiento / recarga</span><span class="v">${esc(proximoMantenimiento360)}</span></div>
-          <div class="meta-row"><span class="k">Membresía</span><span class="v">${contratoActivo360 ? "Activa" : "Sin membresía activa"}</span></div>
+        <div class="ficha360-summary">
+          <div class="ficha360-summary-head">
+            <div>
+              <span class="ficha360-kicker">Ficha 360°</span>
+              <h3>Resumen del cliente</h3>
+              <div class="ficha360-contact">${esc(c.telefono || 'Sin teléfono')} · ${esc((perfil360 && perfil360.direccion) || 'Sin dirección registrada')}</div>
+            </div>
+            <div class="ficha360-quick-actions">
+              <button class="btn-primary" data-whatsapp-cliente="${esc(c.nombre)}" data-whatsapp-telefono="${esc(c.telefono || '')}">WhatsApp</button>
+              <button class="btn-ghost" id="btn-nueva-orden-cliente-top" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}" data-cliente-key="${esc(key)}">+ Nueva orden</button>
+            </div>
+          </div>
+          <div class="ficha360-stats">
+            <div><b>${c.registros.length}</b><span>Órdenes</span></div>
+            <div><b>${extintores360}</b><span>Extintores</span></div>
+            <div><b>${contratoActivo360 ? 'Activo' : 'No'}</b><span>Cliente Seguro</span></div>
+            <div><b class="${totalPendiente360>0?'danger-text':''}">₡${totalPendiente360.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><span>Saldo pendiente</span></div>
+          </div>
+          <div class="ficha360-dates">
+            <div><span>Última actividad</span><b>${esc(ultimoMovimiento)}</b></div>
+            <div><span>Próximo mantenimiento</span><b>${esc(proximoMantenimiento360)}</b></div>
+            <div><span>Membresía</span><b>${contratoActivo360 ? 'Activa' : 'Sin membresía activa'}</b></div>
+          </div>
         </div>
         ${perfilClienteHTML(key, c.nombre, c.telefono)}
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
@@ -5525,6 +5544,11 @@
             oportunidadSeleccionada = b.getAttribute('data-abrir-oportunidad');
             animateViewChange = true;
             render();
+          });
+        });
+        document.querySelectorAll('[data-whatsapp-cliente]').forEach(b=>{
+          b.addEventListener('click', ()=>{
+            abrirWhatsApp(b.getAttribute('data-whatsapp-cliente') || '', b.getAttribute('data-whatsapp-telefono') || '');
           });
         });
         document.querySelectorAll('[data-agregar-perfil]').forEach(b=>{
