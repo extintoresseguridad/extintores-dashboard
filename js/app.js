@@ -4897,7 +4897,6 @@
           <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
         </div>
         ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoMantenimiento360)}
-        ${crmHistorialContactoHTML(c.nombre)}
         ${crmClienteResumenHTML(key)}
         ${historialOrdenesClienteHTML(registrosOrdenados)}
         ${registrosOrdenados.length ? `<div class="grid">${registrosOrdenados.map(cardHTML).join('')}</div>` : ''}
@@ -5641,14 +5640,6 @@
       if(clienteSeleccionado){
         const btnVolver = document.getElementById('btn-volver-clientes');
         if(btnVolver) btnVolver.addEventListener('click', volverClientes);
-        document.querySelectorAll('[data-nuevo-contacto]').forEach(b=>b.addEventListener('click',()=>{
-          const cliente=b.getAttribute('data-nuevo-contacto')||'';
-          const resultado=prompt('Resultado del contacto (ej. contactado, no responde, agendó):','Contactado');
-          if(resultado===null) return;
-          const nota=prompt('Nota del contacto:','');
-          const proximaFecha=prompt('Fecha de próxima acción (AAAA-MM-DD), opcional:','');
-          registrarContactoCliente(cliente,'',resultado,proximaFecha||'',nota||'').then(()=>{showToast('Contacto registrado.');render();});
-        }));
         document.querySelectorAll('[data-seguimiento-whatsapp]').forEach(b=>b.addEventListener('click',()=>abrirWhatsApp(b.getAttribute('data-seguimiento-whatsapp'),b.getAttribute('data-seguimiento-telefono')||'','Hola, le contactamos de Extintores Seguridad para dar seguimiento a su servicio.')));
         document.querySelectorAll('[data-seguimiento-recordatorio]').forEach(b=>b.addEventListener('click',()=>crearRecordatorioRapido(b.getAttribute('data-seguimiento-recordatorio'),b.getAttribute('data-seguimiento-telefono')||'')));
         const btnSepararCliente = document.querySelector('[data-separar-cliente]');
