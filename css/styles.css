@@ -1808,3 +1808,50 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   .operations-view .card-body,
   .inventory-view .card-body{grid-template-columns:1fr 1fr;}
 }
+
+
+/* V11 — cabeceras de columnas fijas para listas lineales */
+.linear-table-head{
+  position:sticky;top:0;z-index:8;display:grid;align-items:center;
+  min-height:36px;margin:0 0 7px;padding:0 14px;
+  background:#E9EEF5;border:1px solid #D5DDE8;border-radius:9px;
+  color:#475569;font-size:9px;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;box-shadow:0 2px 8px rgba(15,23,42,.06);
+}
+.operations-table-head{
+  grid-template-columns:minmax(220px,1.7fr) minmax(180px,1fr) 110px 110px 28px;
+}
+.inventory-table-head{
+  grid-template-columns:minmax(250px,2fr) 150px 150px 110px 28px;
+}
+.linear-table-head span:last-child{text-align:center;}
+
+.operations-view .card-collapse summary{
+  grid-template-columns:minmax(220px,1.7fr) minmax(180px,1fr) 110px 110px 28px;
+}
+.operations-view .linear-service{
+  min-width:0;color:#334155;font-size:10.5px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.operations-view .linear-service small,
+.inventory-view .linear-category small{
+  display:block;margin-top:3px;color:#94A3B8;font-size:9px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.operations-view .summary-side,.inventory-view .summary-side{display:contents;}
+
+.inventory-view .card-collapse summary{
+  grid-template-columns:minmax(250px,2fr) 150px 150px 110px 28px;
+}
+.inventory-view .linear-category{
+  min-width:0;color:#334155;font-size:10.5px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+
+@media(max-width:900px){
+  .linear-table-head{display:none;}
+  .operations-view .card-collapse summary,
+  .inventory-view .card-collapse summary{display:flex;flex-wrap:wrap;}
+  .operations-view .linear-service,
+  .inventory-view .linear-category{flex:1 1 180px;}
+}
