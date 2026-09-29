@@ -1929,3 +1929,17 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
 .crm-mini-btn{padding:5px 8px!important;font-size:10px!important;white-space:nowrap}
 @media(max-width:850px){.crm-alerts-grid{grid-template-columns:1fr}}
 
+
+.mi-dia-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:16px;margin-bottom:20px}
+.mi-dia-main,.mi-dia-side{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+.mi-dia-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.mi-dia-header h3{margin:3px 0 0;font-size:18px}.mi-dia-total{font-size:11px;font-weight:800;background:#EFF6FF;color:#1D4ED8;border-radius:999px;padding:7px 10px}
+.mi-dia-list{display:flex;flex-direction:column}
+.mi-dia-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:9px;padding:11px 0;border-bottom:1px solid var(--line)}
+.mi-dia-row:last-child{border-bottom:0}.mi-dia-row.urgent{border-left:3px solid #DC2626;padding-left:8px}
+.mi-dia-row b{font-size:12px;color:#0F172A}.mi-dia-row small{display:block;color:#64748B;font-size:10.5px;margin-top:3px}
+.mi-dia-row .btn-ghost{padding:5px 9px;font-size:10px}
+.mi-dia-side{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+.mi-dia-stat{border:1px solid var(--line);border-radius:10px;padding:13px;text-align:center}
+.mi-dia-stat span{display:block;font-size:18px}.mi-dia-stat b{display:block;font-size:21px;margin-top:4px}.mi-dia-stat small{display:block;color:#64748B;font-size:10px;margin-top:3px}
+@media(max-width:850px){.mi-dia-grid{grid-template-columns:1fr}}
