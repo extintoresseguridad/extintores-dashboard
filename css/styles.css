@@ -1599,3 +1599,212 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   .inventory-view .kpi-grid{grid-template-columns:1fr;}
   .module-heading h2{font-size:19px;}
 }
+
+
+/* =========================================================
+   V10 — Vista lineal administrativa + sidebar de alto contraste
+   ========================================================= */
+
+/* Barra lateral más sólida y visible */
+.sidebar{
+  background:linear-gradient(180deg,#07152B 0%,#0B1F3A 58%,#102A4A 100%) !important;
+  border-right:1px solid rgba(255,255,255,.14) !important;
+}
+.sidebar-nav{background:transparent;}
+.nav-home{
+  background:rgba(255,255,255,.075) !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+}
+.nav-home:hover{background:rgba(255,255,255,.14) !important;}
+.nav-section-label{
+  color:#7DD3FC !important;
+  text-shadow:0 1px 5px rgba(0,0,0,.25);
+}
+.nav-section{
+  background:rgba(255,255,255,.055) !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+}
+.nav-section button{
+  color:#EAF2FF !important;
+}
+.nav-section button:hover{
+  background:rgba(255,255,255,.12) !important;
+  transform:translateX(2px);
+}
+.nav-section button.active{
+  background:#FFFFFF !important;
+  color:#0B3B78 !important;
+  box-shadow:0 5px 18px rgba(0,0,0,.28) !important;
+}
+.nav-section button.active .snav-ico{
+  background:#0B3B78 !important;
+  color:#fff !important;
+}
+.nav-section .snav-ico,.nav-home .snav-ico{
+  background:rgba(255,255,255,.13) !important;
+  color:#fff !important;
+}
+.nav-section-inventory{
+  background:linear-gradient(135deg,rgba(220,38,38,.30),rgba(255,255,255,.065)) !important;
+  border-color:rgba(248,113,113,.42) !important;
+}
+.nav-section-inventory button{color:#FFF !important;}
+.nav-section-inventory button.active{
+  background:#DC2626 !important;
+  color:#fff !important;
+}
+.nav-section-inventory button.active .snav-ico{background:rgba(255,255,255,.18) !important;}
+.sidebar-foot{
+  background:rgba(0,0,0,.16);
+  border-top:1px solid rgba(255,255,255,.12);
+}
+.sidebar-foot-btn{
+  background:rgba(255,255,255,.07) !important;
+  border-color:rgba(255,255,255,.12) !important;
+  color:#EAF2FF !important;
+}
+.sidebar-foot-btn:hover{background:rgba(255,255,255,.14) !important;}
+
+/* =========================================================
+   OPERACIONES — tabela linear
+   ========================================================= */
+.operations-view .grid{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.operations-view .card-collapse{
+  display:block;
+  border:1px solid #DCE3EC;
+  border-left:4px solid #64748B;
+  border-radius:10px;
+  box-shadow:0 2px 7px rgba(15,23,42,.045);
+}
+.operations-view .card-collapse summary{
+  display:grid;
+  grid-template-columns:minmax(220px,1.7fr) minmax(150px,1fr) 110px 28px;
+  align-items:center;
+  min-height:58px;
+  padding:9px 13px;
+}
+.operations-view .summary-main{min-width:0;}
+.operations-view .summary-main h3{font-size:12px;margin-bottom:3px;}
+.operations-view .summary-main .sub-line{font-size:10px;}
+.operations-view .summary-side{
+  display:contents;
+}
+.operations-view .summary-side .badge{
+  justify-self:start;
+  border-radius:6px;
+}
+.operations-view .summary-price{
+  justify-self:end;
+  font-size:12px;
+}
+.operations-view .card-collapse > summary:after{
+  justify-self:end;
+}
+.operations-view .card-inner-body{
+  margin:0;
+}
+.operations-view .card-body{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:0 18px;
+  padding:10px 14px;
+}
+.operations-view .meta-row{
+  border-bottom:1px solid #EEF2F7;
+}
+.operations-view .card-actions{
+  justify-content:flex-end;
+}
+
+/* Cabecera tipo tabla */
+.operations-view .toolbar + .toolbar{
+  margin-top:-1px;
+}
+.operations-view .toolbar{
+  border-radius:10px;
+}
+
+/* =========================================================
+   INVENTARIO — tabela linear
+   ========================================================= */
+.inventory-view .grid{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.inventory-view .card-collapse{
+  display:block;
+  border-radius:10px;
+  box-shadow:0 2px 7px rgba(15,23,42,.045);
+}
+.inventory-view .card-collapse summary{
+  display:grid;
+  grid-template-columns:minmax(250px,2fr) 150px 120px 110px 28px;
+  align-items:center;
+  min-height:60px;
+  padding:9px 14px;
+}
+.inventory-view .summary-main{
+  padding-left:42px;
+  min-width:0;
+}
+.inventory-view .summary-side{
+  display:contents;
+}
+.inventory-view .summary-side .badge{
+  justify-self:start;
+  border-radius:6px;
+}
+.inventory-view .summary-price{
+  justify-self:end;
+  font-size:12px;
+}
+.inventory-view .card-collapse > summary:after{
+  justify-self:end;
+}
+.inventory-view .card-inner-body{
+  margin:0;
+}
+.inventory-view .card-body{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:0 18px;
+  padding:10px 14px;
+}
+.inventory-view .meta-row{
+  border-bottom:1px solid #EEF2F7;
+}
+.inventory-view .card-actions{
+  justify-content:flex-end;
+}
+
+/* Mejor contraste para estados */
+.badge.b-recibido,.badge.recibido{background:#DBEAFE !important;color:#1D4ED8 !important;}
+.badge.b-proceso,.badge.proceso{background:#FEF3C7 !important;color:#92400E !important;}
+.badge.b-listo,.badge.listo{background:#DCFCE7 !important;color:#166534 !important;}
+.badge.b-entregado,.badge.entregado{background:#E2E8F0 !important;color:#334155 !important;}
+
+@media(max-width:900px){
+  .operations-view .card-collapse summary{
+    grid-template-columns:minmax(180px,1.5fr) 100px 95px 24px;
+  }
+  .inventory-view .card-collapse summary{
+    grid-template-columns:minmax(200px,1.7fr) 110px 100px 24px;
+  }
+}
+@media(max-width:650px){
+  .operations-view .card-collapse summary,
+  .inventory-view .card-collapse summary{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px 12px;
+  }
+  .operations-view .summary-side,
+  .inventory-view .summary-side{display:flex;align-items:center;margin-left:auto;}
+  .operations-view .card-body,
+  .inventory-view .card-body{grid-template-columns:1fr 1fr;}
+}
