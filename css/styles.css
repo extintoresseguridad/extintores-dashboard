@@ -1855,3 +1855,55 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   .operations-view .linear-service,
   .inventory-view .linear-category{flex:1 1 180px;}
 }
+
+
+/* ===== Ficha 360° conectada ===== */
+.ficha360-summary{
+  margin:0 0 16px;
+  background:linear-gradient(135deg,#0B2447 0%,#123B6D 100%);
+  color:#fff;border-radius:16px;padding:18px;
+  box-shadow:0 8px 22px rgba(11,36,71,.16);
+}
+.ficha360-summary-head{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:16px;flex-wrap:wrap;
+}
+.ficha360-kicker{
+  font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;
+  color:#7DD3FC;
+}
+.ficha360-summary h3{margin:3px 0 5px;font-size:18px;}
+.ficha360-contact{font-size:11px;color:rgba(255,255,255,.72);}
+.ficha360-quick-actions{display:flex;gap:7px;flex-wrap:wrap;}
+.ficha360-quick-actions .btn-primary{
+  background:#25D366;border-color:#25D366;color:#fff;
+}
+.ficha360-quick-actions .btn-primary:hover{background:#1DA851;}
+.ficha360-quick-actions .btn-ghost{
+  color:#fff;border-color:rgba(255,255,255,.28);
+  background:rgba(255,255,255,.07);
+}
+.ficha360-stats{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:8px;margin-top:16px;
+}
+.ficha360-stats>div{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);
+  border-radius:11px;padding:11px 12px;
+}
+.ficha360-stats b{display:block;font-size:18px;line-height:1.1;}
+.ficha360-stats span{display:block;margin-top:4px;font-size:9px;color:rgba(255,255,255,.66);}
+.ficha360-stats .danger-text{color:#FCA5A5;}
+.ficha360-dates{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;
+}
+.ficha360-dates>div{
+  padding:9px 11px;background:rgba(0,0,0,.13);border-radius:9px;
+}
+.ficha360-dates span{display:block;font-size:9px;color:rgba(255,255,255,.58);}
+.ficha360-dates b{display:block;margin-top:3px;font-size:10.5px;}
+@media(max-width:700px){
+  .ficha360-stats{grid-template-columns:repeat(2,1fr);}
+  .ficha360-dates{grid-template-columns:1fr;}
+  .ficha360-quick-actions{width:100%;}
+}
