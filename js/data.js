@@ -7,7 +7,9 @@
   const AUTH_SIGNUP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`;
   const AUTH_SIGNIN_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`;
   const AUTH_REFRESH_URL = `https://securetoken.googleapis.com/v1/token?key=${FIREBASE_API_KEY}`;
-  const OWNER_EMAIL = 'extintoresseguridad.cr@gmail.com';
+  const SUPER_ADMIN_EMAIL = 'luis.garciaq0404@gmail.com';
+  const OWNER_EMAIL = SUPER_ADMIN_EMAIL;
+  const ADMIN_CONTACT_EMAIL = 'extintoresseguridad.cr@gmail.com';
   const EMPRESA_TELEFONO = '2101-4399 / 8839-9134';
   const EMPRESA_CORREO = 'extintoresseguridad.cr@gmail.com';
   const DEFAULT_CONFIGURACION = {
@@ -31,7 +33,7 @@
 
   window.CRMData = {
     FIREBASE_PROJECT_ID, FIREBASE_API_KEY, FIRESTORE_DOC_URL, FIRESTORE_BASE,
-    AUTH_SIGNUP_URL, AUTH_SIGNIN_URL, AUTH_REFRESH_URL, OWNER_EMAIL,
+    AUTH_SIGNUP_URL, AUTH_SIGNIN_URL, AUTH_REFRESH_URL, OWNER_EMAIL, SUPER_ADMIN_EMAIL, ADMIN_CONTACT_EMAIL,
     EMPRESA_TELEFONO, EMPRESA_CORREO, DEFAULT_CONFIGURACION,
     EMPRESA_CEDULA_JURIDICA, EMPRESA_REPRESENTANTE, AUTH_SESSION_KEY,
     ESTADOS, TIPOS, SERVICIOS
