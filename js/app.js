@@ -9,6 +9,8 @@
   const AUTH_SIGNIN_URL = window.CRMData.AUTH_SIGNIN_URL;
   const AUTH_REFRESH_URL = window.CRMData.AUTH_REFRESH_URL;
   const OWNER_EMAIL = window.CRMData.OWNER_EMAIL;
+  const SUPER_ADMIN_EMAIL = window.CRMData.SUPER_ADMIN_EMAIL;
+  const ADMIN_CONTACT_EMAIL = window.CRMData.ADMIN_CONTACT_EMAIL;
   const EMPRESA_TELEFONO = window.CRMData.EMPRESA_TELEFONO;
   const EMPRESA_CORREO = window.CRMData.EMPRESA_CORREO;
   const DEFAULT_CONFIGURACION = window.CRMData.DEFAULT_CONFIGURACION;
@@ -766,7 +768,7 @@
   async function ensureUserDoc(uid, email){
     let doc = await fetchUserDoc(uid);
     if(doc) return doc;
-    const role = (email||'').toLowerCase() === OWNER_EMAIL ? 'admin' : 'pending';
+    const role = normalizarRolPorCorreo(email, 'pending');
     const url = `${FIRESTORE_BASE}/users/${uid}?key=${FIREBASE_API_KEY}`;
     const body = { fields: {
       email: { stringValue: email || '' },
@@ -808,7 +810,14 @@
     showToast('Perfil de usuario eliminado.');
   }
 
-  function esAdmin(){ return userRole === 'admin'; }
+  function esSuperAdmin(){ return (authUser?.email || '').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase(); }
+  function esAdmin(){ return userRole === 'admin' && esSuperAdmin(); }
+  function normalizarRolPorCorreo(email, role){
+    const e=(email||'').toLowerCase();
+    if(e===SUPER_ADMIN_EMAIL.toLowerCase()) return 'admin';
+    if(e===ADMIN_CONTACT_EMAIL.toLowerCase()) return 'approved';
+    return role;
+  }
 
   async function soloAdmin(accion){
     // Cualquiera puede mover algo a la papelera, pero el borrado DEFINITIVO (o vaciar la papelera)
@@ -868,7 +877,7 @@
       };
       saveSession();
       const profile = await ensureUserDoc(authUser.uid, authUser.email);
-      userRole = profile.role;
+      userRole = normalizarRolPorCorreo(authUser.email, profile.role);
       authBusy = false;
       afterAuthReady();
     }catch(e){
@@ -929,7 +938,7 @@
     if(authUser){
       try{
         const profile = await ensureUserDoc(authUser.uid, authUser.email);
-        userRole = profile.role;
+        userRole = normalizarRolPorCorreo(authUser.email, profile.role);
       }catch(e){ userRole = null; authUser = null; saveSession(); }
     }
     afterAuthReady();
