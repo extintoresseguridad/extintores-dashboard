@@ -4783,6 +4783,69 @@
       </div>`;
   }
 
+
+  function historialContactoClienteHTML(key){
+    const p = perfilDeCliente(key);
+    const bitacora = Array.isArray(p && p.bitacora) ? p.bitacora : [];
+    const contactos = bitacora.filter(x => x && (x.esContacto || ['Llamada','WhatsApp','Correo','Visita','Otro'].includes(x.tipo)));
+    return `
+      <div class="dash-panel ficha360-contactos" style="margin-bottom:16px;">
+        <div class="ficha360-contactos-head">
+          <div>
+            <span class="ficha360-kicker">Seguimiento</span>
+            <h3>Historial de contacto</h3>
+            <p>${contactos.length ? contactos.length + ' contacto(s) registrado(s)' : 'Aún no hay contactos registrados manualmente.'}</p>
+          </div>
+          <button class="btn-primary" data-registrar-contacto="${esc(key)}">+ Registrar contacto</button>
+        </div>
+        ${contactos.length ? `<div class="ficha360-contactos-list">${contactos.slice().sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||''))).map(x=>`
+          <div class="ficha360-contacto-item">
+            <div class="ficha360-contacto-main"><b>${esc(x.tipo || 'Contacto')}</b><span>${esc(x.nota || 'Sin nota')}</span></div>
+            <div class="ficha360-contacto-meta"><span>${esc(x.fecha || '—')}</span>${x.proximaFecha ? `<small>Próximo: ${esc(x.proximaFecha)}</small>` : ''}</div>
+          </div>`).join('')}</div>` : ''}
+      </div>`;
+  }
+
+  function abrirRegistrarContactoModal(key){
+    const p = perfilDeCliente(key);
+    if(!p){ showToast('Primero guarda la Ficha 360° del cliente.'); return; }
+    let overlay = document.querySelector('.contacto-overlay');
+    if(overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.className = 'overlay contacto-overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:520px;">
+        <div class="modal-head"><h2>Registrar contacto</h2><button id="contacto-close">×</button></div>
+        <div class="modal-body">
+          <p style="font-size:12.5px;color:#6B7280;margin-top:0;">${esc(p.cliente || 'Cliente')}</p>
+          <div class="form-row">
+            <div><label>Tipo de contacto</label><select id="contacto-tipo"><option>WhatsApp</option><option>Llamada</option><option>Correo</option><option>Visita</option><option>Otro</option></select></div>
+            <div><label>Fecha</label><input type="date" id="contacto-fecha" value="${todayISO()}"/></div>
+          </div>
+          <div class="form-row full"><div><label>Resultado / nota</label><textarea id="contacto-nota" placeholder="Ej. Cliente confirmó mantenimiento para la próxima semana."></textarea></div></div>
+          <div class="form-row full"><div><label>Próximo seguimiento (opcional)</label><input type="date" id="contacto-proxima"/></div></div>
+        </div>
+        <div class="modal-foot"><button class="btn-ghost" id="contacto-cancel">Cancelar</button><button class="btn-primary" id="contacto-save">Guardar contacto</button></div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const cerrar=()=>overlay.remove();
+    overlay.addEventListener('click',e=>{if(e.target===overlay)cerrar();});
+    document.getElementById('contacto-close').addEventListener('click',cerrar);
+    document.getElementById('contacto-cancel').addEventListener('click',cerrar);
+    document.getElementById('contacto-save').addEventListener('click',async()=>{
+      const nota=document.getElementById('contacto-nota').value.trim();
+      if(!nota){ showToast('Escribe el resultado o una nota del contacto.'); return; }
+      const idx=clientesPerfil.findIndex(x=>clienteKey(x)===key);
+      if(idx===-1){ showToast('No se encontró la Ficha 360° del cliente.'); return; }
+      const entrada={id:uid(),fecha:document.getElementById('contacto-fecha').value||todayISO(),tipo:document.getElementById('contacto-tipo').value,nota,proximaFecha:document.getElementById('contacto-proxima').value,esContacto:true};
+      clientesPerfil=clientesPerfil.map((x,i)=>i===idx?{...x,bitacora:[entrada,...(x.bitacora||[])]}:x);
+      const ok=await persist();
+      if(!ok) return;
+      cerrar(); showToast('Contacto registrado.'); render();
+    });
+  }
+
+
   function renderClienteDetalle(key){
     if(clienteSeleccionadoTipo === 'compras'){
       const clientes = agruparClientesCompras();
@@ -4896,7 +4959,8 @@
           <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
           <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
         </div>
-        ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoMantenimiento360)}
+${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoMantenimiento360)}
+        ${historialContactoClienteHTML(key)}
         ${crmClienteResumenHTML(key)}
         ${historialOrdenesClienteHTML(registrosOrdenados)}
         ${registrosOrdenados.length ? `<div class="grid">${registrosOrdenados.map(cardHTML).join('')}</div>` : ''}
@@ -5642,6 +5706,7 @@
         if(btnVolver) btnVolver.addEventListener('click', volverClientes);
         document.querySelectorAll('[data-seguimiento-whatsapp]').forEach(b=>b.addEventListener('click',()=>abrirWhatsApp(b.getAttribute('data-seguimiento-whatsapp'),b.getAttribute('data-seguimiento-telefono')||'','Hola, le contactamos de Extintores Seguridad para dar seguimiento a su servicio.')));
         document.querySelectorAll('[data-seguimiento-recordatorio]').forEach(b=>b.addEventListener('click',()=>crearRecordatorioRapido(b.getAttribute('data-seguimiento-recordatorio'),b.getAttribute('data-seguimiento-telefono')||'')));
+        document.querySelectorAll('[data-registrar-contacto]').forEach(b=>b.addEventListener('click',()=>abrirRegistrarContactoModal(b.getAttribute('data-registrar-contacto'))));
         const btnSepararCliente = document.querySelector('[data-separar-cliente]');
         if(btnSepararCliente) btnSepararCliente.addEventListener('click', ()=> abrirSepararCliente(btnSepararCliente.getAttribute('data-separar-cliente')));
         const btnNuevaVenta = document.getElementById('btn-nueva-venta-cliente');
