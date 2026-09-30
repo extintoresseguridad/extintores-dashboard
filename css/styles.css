@@ -1960,3 +1960,20 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
 .ficha360-followup-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ficha360-followup-grid>div{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:11px}.ficha360-followup-grid span{display:block;font-size:9.5px;color:#64748B;text-transform:uppercase;font-weight:700}.ficha360-followup-grid b{display:block;font-size:11px;color:#0F172A;margin-top:5px}
 .ficha360-followup-actions{display:flex;gap:8px;margin-top:12px}.ficha360-followup-actions button{font-size:11px;padding:7px 11px}
 @media(max-width:800px){.ficha360-followup-grid{grid-template-columns:1fr 1fr}}@media(max-width:480px){.ficha360-followup-grid{grid-template-columns:1fr}}
+
+
+/* Historial de contacto — Ficha 360° */
+.ficha360-contactos-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.ficha360-contactos-head h3{margin:3px 0 2px;font-size:15px}
+.ficha360-contactos-head p{margin:0;color:#6B7280;font-size:11.5px}
+.ficha360-contactos-list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.ficha360-contacto-item{display:flex;justify-content:space-between;gap:14px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.ficha360-contacto-main{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ficha360-contacto-main b{font-size:12px}
+.ficha360-contacto-main span{font-size:11.5px;color:#4B5563;white-space:pre-wrap}
+.ficha360-contacto-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;white-space:nowrap;font-size:10.5px;color:#6B7280}
+.ficha360-contacto-meta small{font-size:10px;color:var(--red);font-weight:700}
+@media(max-width:640px){
+  .ficha360-contacto-item{flex-direction:column}
+  .ficha360-contacto-meta{align-items:flex-start}
+}
