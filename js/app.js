@@ -4837,8 +4837,14 @@
       if(!nota){ showToast('Escribe el resultado o una nota del contacto.'); return; }
       const idx=clientesPerfil.findIndex(x=>clienteKey(x)===key);
       if(idx===-1){ showToast('No se encontró la Ficha 360° del cliente.'); return; }
-      const entrada={id:uid(),fecha:document.getElementById('contacto-fecha').value||todayISO(),tipo:document.getElementById('contacto-tipo').value,nota,proximaFecha:document.getElementById('contacto-proxima').value,esContacto:true};
+      const proximaFecha=document.getElementById('contacto-proxima').value;
+      const tipo=document.getElementById('contacto-tipo').value;
+      const entrada={id:uid(),fecha:document.getElementById('contacto-fecha').value||todayISO(),tipo,nota,proximaFecha,esContacto:true};
       clientesPerfil=clientesPerfil.map((x,i)=>i===idx?{...x,bitacora:[entrada,...(x.bitacora||[])]}:x);
+      if(proximaFecha){
+        const tel=p.telefono||'';
+        recordatorios=[{id:uid(),texto:'Seguimiento de contacto · '+tipo,fecha:proximaFecha,cliente:p.cliente||'',telefono:tel,oportunidadId:null,completado:false},...recordatorios];
+      }
       const ok=await persist();
       if(!ok) return;
       cerrar(); showToast('Contacto registrado.'); render();
