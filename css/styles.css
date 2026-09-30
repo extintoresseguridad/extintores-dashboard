@@ -1977,3 +1977,10 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
   .ficha360-contacto-item{flex-direction:column}
   .ficha360-contacto-meta{align-items:flex-start}
 }
+
+.ficha360-control{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:16px;box-shadow:0 3px 12px rgba(15,23,42,.04)}
+.ficha360-control-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.ficha360-control-head h3{margin:3px 0 0;font-size:16px}.ficha360-control-note{font-size:10.5px;color:#64748B}
+.ficha360-control-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}.ficha360-control-grid>div{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px;text-align:center}.ficha360-control-grid b{display:block;font-size:17px;color:#0F172A}.ficha360-control-grid b.warn{color:#B45309}.ficha360-control-grid span{display:block;margin-top:3px;font-size:9.5px;color:#64748B;text-transform:uppercase;font-weight:700}
+.ficha360-control-foot{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:11px;padding-top:10px;border-top:1px solid #E2E8F0;color:#64748B;font-size:10.5px}
+@media(max-width:760px){.ficha360-control-grid{grid-template-columns:repeat(3,1fr)}.ficha360-control-head{align-items:flex-start;flex-direction:column}}
+@media(max-width:460px){.ficha360-control-grid{grid-template-columns:repeat(2,1fr)}}
