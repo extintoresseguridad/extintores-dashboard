@@ -716,8 +716,8 @@
       showToast('Rol no válido.');
       return false;
     }
-    if(authUser && uid === authUser.uid && esSuperAdmin()){
-      showToast('La cuenta Super Admin está protegida.');
+    if(authUser && uid === authUser.uid){
+      showToast(esSuperAdmin() ? 'La cuenta Super Admin está protegida.' : 'No puedes modificar tu propio rol.');
       return false;
     }
     await refreshIdTokenIfNeeded();
