@@ -197,6 +197,84 @@ try {
     await assertFails(updateDoc(doc(db, 'backups/main'), { 'test.rejected': true }));
   });
 
+  // 20. approved no puede eliminar el documento principal.
+  await run('20 approved cannot delete backups/main', async () => {
+    const db = ctx('approved-1', 'approved@example.com').firestore();
+    await assertFails(deleteDoc(doc(db, 'backups/main')));
+  });
+
+  // 21. tecnico no puede eliminar el documento principal.
+  await run('21 tecnico cannot delete backups/main', async () => {
+    const db = ctx('tech-1', 'tech@example.com').firestore();
+    await assertFails(deleteDoc(doc(db, 'backups/main')));
+  });
+
+  // 22. admin sí puede eliminar el documento principal.
+  await run('22 admin can delete backups/main', async () => {
+    const db = ctx('admin-1', 'admin@example.com').firestore();
+    await assertSucceeds(deleteDoc(doc(db, 'backups/main')));
+  });
+
+  // 23. approved no puede crear el perfil de otro usuario.
+  await run('23 user cannot create another user profile', async () => {
+    const db = ctx('approved-1', 'approved@example.com').firestore();
+    await assertFails(setDoc(doc(db, 'users/fake-user'), {
+      email: 'fake@example.com',
+      role: 'pending',
+      createdAt: '2026-10-06T00:00:00.000Z'
+    }));
+  });
+
+  // 24. Un usuario no puede crear un perfil usando otro correo.
+  await run('24 user cannot create profile with another email', async () => {
+    const db = ctx('new-user-3', 'real@example.com').firestore();
+    await assertFails(setDoc(doc(db, 'users/new-user-3'), {
+      email: 'other@example.com',
+      role: 'pending',
+      createdAt: '2026-10-06T00:00:00.000Z'
+    }));
+  });
+
+  // 25. Un usuario nuevo no puede crear un perfil con campos extra.
+  await run('25 new user cannot create profile with extra fields', async () => {
+    const db = ctx('new-user-4', 'new4@example.com').firestore();
+    await assertFails(setDoc(doc(db, 'users/new-user-4'), {
+      email: 'new4@example.com',
+      role: 'pending',
+      createdAt: '2026-10-06T00:00:00.000Z',
+      isAdmin: true
+    }));
+  });
+
+  // 26. Admin no puede modificar el correo de otro usuario.
+  await run('26 admin cannot modify another user email', async () => {
+    const db = ctx('admin-1', 'admin@example.com').firestore();
+    await assertFails(updateDoc(doc(db, 'users/tech-1'), {
+      email: 'changed@example.com'
+    }));
+  });
+
+  // 27. Admin no puede modificar rol y correo simultáneamente.
+  await run('27 admin cannot modify role and email together', async () => {
+    const db = ctx('admin-1', 'admin@example.com').firestore();
+    await assertFails(updateDoc(doc(db, 'users/tech-1'), {
+      role: 'approved',
+      email: 'changed2@example.com'
+    }));
+  });
+
+  // 28. Un documento de backup distinto al principal permanece bloqueado.
+  await run('28 non-main backup document is denied', async () => {
+    const db = ctx('admin-1', 'admin@example.com').firestore();
+    await assertFails(setDoc(doc(db, 'backups/other'), { value: true }));
+  });
+
+  // 29. Una identidad autenticada sin perfil no obtiene acceso por estar logueada.
+  await run('29 authenticated user without profile is denied', async () => {
+    const db = ctx('orphan-1', 'orphan@example.com').firestore();
+    await assertFails(getDoc(doc(db, 'backups/main')));
+  });
+
   console.log('ALL SECURITY RULE TESTS PASSED');
 } finally {
   await testEnv?.cleanup();
