@@ -707,7 +707,7 @@
 
   async function setUserRole(uid, role){
     if(!esAdmin()) throw new Error('PERMISSION_DENIED');
-    if(!window.CRMAccess.ROLE_PERMISSIONS || !window.CRMAccess.ROLE_PERMISSIONS[role]) throw new Error('INVALID_ROLE');
+    if(!window.CRMAccess.isValidRole(role)) throw new Error('INVALID_ROLE');
     await refreshIdTokenIfNeeded();
     const url = `${FIRESTORE_BASE}/users/${uid}?key=${FIREBASE_API_KEY}&updateMask.fieldPaths=role`;
     await fetchConTimeout(url, {
