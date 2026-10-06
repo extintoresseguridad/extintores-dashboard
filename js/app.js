@@ -742,7 +742,7 @@
       showToast('No podés eliminar tu propia cuenta desde aquí.');
       return false;
     }
-    if(!confirm(`¿Eliminar el perfil de ${email || 'este usuario'}?\n\nPierde su rol y su acceso a los datos del sistema de inmediato. Si esa persona vuelve a iniciar sesión, va a aparecer de nuevo como "pendiente" — para bloquearle el correo por completo hay que borrar su cuenta desde la consola de Firebase (Authentication > Users).`)) return;
+    if(!confirm(`¿Eliminar el perfil de ${email || 'este usuario'}?\n\nPierde su rol y su acceso a los datos del sistema de inmediato. Si esa persona vuelve a iniciar sesión, va a aparecer de nuevo como "pendiente" — para bloquearle el correo por completo hay que borrar su cuenta desde la consola de Firebase (Authentication > Users).`)) return false;
     await refreshIdTokenIfNeeded();
     const url = `${FIRESTORE_BASE}/users/${uid}?key=${FIREBASE_API_KEY}`;
     await fetchConTimeout(url, { method: 'DELETE', headers: authHeaders() });
