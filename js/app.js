@@ -50,15 +50,8 @@
   let etiquetaFiltro = 'todas'; // 'todas' | una de ETIQUETAS_CLIENTE
   const TARJETAS_ABIERTAS_KEY = 'extintores:tarjetas_abiertas';
   const TARJETAS_CERRADAS_KEY = 'extintores:tarjetas_cerradas';
-  function cargarSetLocal(key){
-    try{
-      const raw = localStorage.getItem(key);
-      return raw ? new Set(JSON.parse(raw)) : new Set();
-    }catch(e){ return new Set(); }
-  }
-  function guardarSetLocal(key, set){
-    try{ localStorage.setItem(key, JSON.stringify([...set])); }catch(e){}
-  }
+  function cargarSetLocal(key){ return new Set(window.CRMStorage.getJSON(key, [])); }
+  function guardarSetLocal(key, set){ window.CRMStorage.setJSON(key, [...set]); }
   let tarjetasAbiertas = cargarSetLocal(TARJETAS_ABIERTAS_KEY); // Recuerda qué tarjetas (por id de orden o registro) el usuario dejó abiertas, incluso tras recargar la página.
   let tarjetasCerradas = cargarSetLocal(TARJETAS_CERRADAS_KEY); // Recuerda qué tarjetas de orden (abiertas por defecto) el usuario cerró, incluso tras recargar la página.
 
@@ -651,14 +644,7 @@
   let lastSaveVerified = true;
   let lastSaveFailedToCloud = false; // true si el último guardado NO llegó a Firebase (quedó solo local o falló del todo)
 
-  function localStorageTest(){
-    try{
-      const testKey = '__test__' + Date.now();
-      localStorage.setItem(testKey, '1');
-      localStorage.removeItem(testKey);
-      return true;
-    }catch(e){ return false; }
-  }
+  function localStorageTest(){ return window.CRMStorage.test(); }
 
   function fetchConTimeout(url, options, timeoutMs){ return window.CRMFirebase.fetchConTimeout(url, options, timeoutMs); }
 
@@ -681,18 +667,11 @@
   // ---------- Autenticación ----------
 
   function saveSession(){
-    try{
-      if(authUser) localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(authUser));
-      else localStorage.removeItem(AUTH_SESSION_KEY);
-    }catch(e){}
+    if(authUser) window.CRMStorage.setJSON(AUTH_SESSION_KEY, authUser);
+    else window.CRMStorage.remove(AUTH_SESSION_KEY);
   }
 
-  function loadSession(){
-    try{
-      const raw = localStorage.getItem(AUTH_SESSION_KEY);
-      return raw ? JSON.parse(raw) : null;
-    }catch(e){ return null; }
-  }
+  function loadSession(){ return window.CRMStorage.getJSON(AUTH_SESSION_KEY, null); }
 
   async function refreshIdTokenIfNeeded(){
     if(!authUser) return false;
