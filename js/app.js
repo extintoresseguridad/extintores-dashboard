@@ -703,6 +703,8 @@
       method: 'PATCH',
       headers: Object.assign({'Content-Type':'application/json'}, authHeaders()),
       body: JSON.stringify(body)
+    });
+    return { role, email };
   }
 
   async function setUserRole(uid, role){
