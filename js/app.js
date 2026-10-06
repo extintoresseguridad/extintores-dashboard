@@ -1592,6 +1592,7 @@
       recordatorios = [];
       clientesPerfil = [];
       contratos = [];
+      referidos = [];
       inventario = [];
     }
     migrarServicioCombinado();
