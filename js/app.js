@@ -706,9 +706,18 @@
   }
 
   async function setUserRole(uid, role){
-    if(!esAdmin()) throw new Error('PERMISSION_DENIED');
-    if(!window.CRMAccess.isValidRole(role)) throw new Error('INVALID_ROLE');
-    if(authUser && uid === authUser.uid && esSuperAdmin()) throw new Error('PROTECTED_SUPER_ADMIN');
+    if(!esAdmin()){
+      showToast('No tienes permisos para modificar roles.');
+      return false;
+    }
+    if(!window.CRMAccess.isValidRole(role)){
+      showToast('Rol no válido.');
+      return false;
+    }
+    if(authUser && uid === authUser.uid && esSuperAdmin()){
+      showToast('La cuenta Super Admin está protegida.');
+      return false;
+    }
     await refreshIdTokenIfNeeded();
     const url = `${FIRESTORE_BASE}/users/${uid}?key=${FIREBASE_API_KEY}&updateMask.fieldPaths=role`;
     await fetchConTimeout(url, {
@@ -716,6 +725,7 @@
       headers: Object.assign({'Content-Type':'application/json'}, authHeaders()),
       body: JSON.stringify({ fields: { role: { stringValue: role } } })
     });
+    return true;
   }
 
   // Elimina el PERFIL del usuario (su documento en users/, con su rol y acceso al sistema).
@@ -724,15 +734,20 @@
   // (Authentication > Users). Si esa persona vuelve a iniciar sesión después de esto, va a
   // reaparecer en la lista como "pendiente", igual que un usuario nuevo.
   async function eliminarUsuarioAdmin(uid, email){
+    if(!esAdmin()){
+      showToast('Solo el administrador puede eliminar perfiles.');
+      return false;
+    }
     if(authUser && uid === authUser.uid){
       showToast('No podés eliminar tu propia cuenta desde aquí.');
-      return;
+      return false;
     }
     if(!confirm(`¿Eliminar el perfil de ${email || 'este usuario'}?\n\nPierde su rol y su acceso a los datos del sistema de inmediato. Si esa persona vuelve a iniciar sesión, va a aparecer de nuevo como "pendiente" — para bloquearle el correo por completo hay que borrar su cuenta desde la consola de Firebase (Authentication > Users).`)) return;
     await refreshIdTokenIfNeeded();
     const url = `${FIRESTORE_BASE}/users/${uid}?key=${FIREBASE_API_KEY}`;
     await fetchConTimeout(url, { method: 'DELETE', headers: authHeaders() });
     showToast('Perfil de usuario eliminado.');
+    return true;
   }
 
   function esSuperAdmin(){ return window.CRMAccess.isSuperAdmin(authUser?.email); }
@@ -1113,7 +1128,8 @@
       b.addEventListener('click', async ()=>{
         const uid = b.getAttribute('data-uid');
         const role = b.getAttribute('data-role');
-        await setUserRole(uid, role);
+        const changed = await setUserRole(uid, role);
+        if(!changed) return;
         if(uid === authUser.uid) userRole = normalizarRolPorCorreo(authUser.email, role);
         usersList = await fetchAllUsers();
         renderAdminModal();
