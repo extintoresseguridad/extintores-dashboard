@@ -1,0 +1,85 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Roles permitidos por el CRM.
+    function validRole(role) {
+      return role in ['admin', 'approved', 'tecnico', 'pending', 'rejected'];
+    }
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userPath(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
+    function hasUserProfile() {
+      return signedIn() && exists(userPath(request.auth.uid));
+    }
+
+    function currentUserRole() {
+      return get(userPath(request.auth.uid)).data.get('role', 'pending');
+    }
+
+    function isStaff() {
+      return hasUserProfile()
+        && currentUserRole() in ['admin', 'approved', 'tecnico'];
+    }
+
+    function isAdmin() {
+      return hasUserProfile() && currentUserRole() == 'admin';
+    }
+
+    // Perfil de acceso de cada usuario.
+    //
+    // Un usuario nuevo solo puede crear SU propio perfil y únicamente como
+    // "pending". El cliente nunca puede autoasignarse admin/approved/tecnico.
+    // Los cambios de rol quedan reservados a un admin existente.
+    match /users/{userId} {
+      allow get: if signedIn()
+        && (request.auth.uid == userId || isAdmin());
+
+      // El panel de administración necesita listar toda la colección.
+      allow list: if isAdmin();
+
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasAll(['email', 'role', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['email', 'role', 'createdAt'])
+        && request.resource.data.email is string
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == 'pending'
+        && request.resource.data.createdAt is string;
+
+      // El usuario no puede cambiar su propio rol. Un admin solo puede
+      // modificar el campo role de otro usuario y únicamente a un rol válido.
+      allow update: if isAdmin()
+        && request.auth.uid != userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role'])
+        && request.resource.data.role is string
+        && validRole(request.resource.data.role);
+
+      allow delete: if isAdmin()
+        && request.auth.uid != userId;
+    }
+
+    // Documento principal actual del CRM.
+    //
+    // approved/tecnico/admin comparten el mismo espacio de trabajo, por lo
+    // que todos esos roles necesitan leer y guardar el documento completo.
+    // El borrado del documento queda reservado al admin.
+    match /backups/main {
+      allow get: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    // Cualquier otra ruta queda cerrada por defecto.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
