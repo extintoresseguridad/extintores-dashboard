@@ -1,6 +1,8 @@
 (function(window){
   'use strict';
 
+  const data = () => window.CRMData;
+
   const ROLES = Object.freeze({
     ADMIN: 'admin',
     APPROVED: 'approved',
@@ -28,8 +30,8 @@
 
   function normalizeRole(email, role){
     const e = (email || '').trim().toLowerCase();
-    if(e && e === (SUPER_ADMIN_EMAIL || '').trim().toLowerCase()) return ROLES.ADMIN;
-    if(e && e === (ADMIN_CONTACT_EMAIL || '').trim().toLowerCase()) return ROLES.APPROVED;
+    if(e && e === (data().SUPER_ADMIN_EMAIL || '').trim().toLowerCase()) return ROLES.ADMIN;
+    if(e && e === (data().ADMIN_CONTACT_EMAIL || '').trim().toLowerCase()) return ROLES.APPROVED;
     return ROLE_PERMISSIONS[role] ? role : ROLES.PENDING;
   }
 
@@ -38,7 +40,7 @@
   }
 
   function isSuperAdmin(email){
-    return (email || '').trim().toLowerCase() === (SUPER_ADMIN_EMAIL || '').trim().toLowerCase();
+    return (email || '').trim().toLowerCase() === (data().SUPER_ADMIN_EMAIL || '').trim().toLowerCase();
   }
 
   function isAdmin(role, email){
