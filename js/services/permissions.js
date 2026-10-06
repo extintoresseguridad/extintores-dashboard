@@ -49,6 +49,10 @@
     return can(role, PERMISSIONS.ACCESS_APP);
   }
 
+  function isValidRole(role){
+    return !!ROLE_PERMISSIONS[role];
+  }
+
   window.CRMAccess = Object.freeze({
     ROLES,
     PERMISSIONS,
@@ -56,6 +60,7 @@
     can,
     isSuperAdmin,
     isAdmin,
-    isAccessAllowed
+    isAccessAllowed,
+    isValidRole
   });
 })(window);
