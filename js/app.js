@@ -708,6 +708,7 @@
   async function setUserRole(uid, role){
     if(!esAdmin()) throw new Error('PERMISSION_DENIED');
     if(!window.CRMAccess.isValidRole(role)) throw new Error('INVALID_ROLE');
+    if(authUser && uid === authUser.uid && esSuperAdmin()) throw new Error('PROTECTED_SUPER_ADMIN');
     await refreshIdTokenIfNeeded();
     const url = `${FIRESTORE_BASE}/users/${uid}?key=${FIREBASE_API_KEY}&updateMask.fieldPaths=role`;
     await fetchConTimeout(url, {
@@ -803,7 +804,7 @@
     try{
       authUser = await window.CRMAuth.signIn(email, password);
       const profile = await ensureUserDoc(authUser.uid, authUser.email);
-      userRole = profile.role;
+      userRole = normalizarRolPorCorreo(authUser.email, profile.role);
       authBusy = false;
       afterAuthReady();
     }catch(e){
@@ -843,8 +844,13 @@
 
   function afterAuthReady(){
     if(!authUser){ authView = 'login'; authError=''; renderAuth(); return; }
+    userRole = normalizarRolPorCorreo(authUser.email, userRole);
     if(userRole === 'pending'){ renderPendingScreen(); return; }
-    if(userRole === 'rejected'){ renderRejectedScreen(); return; }
+    if(userRole === 'rejected' || !window.CRMAccess.isAccessAllowed(userRole)){
+      userRole = 'rejected';
+      renderRejectedScreen();
+      return;
+    }
     load();
   }
 
@@ -918,7 +924,7 @@
     document.getElementById('btn-logout-pending').addEventListener('click', doSignOut);
     document.getElementById('btn-recheck-pending').addEventListener('click', async ()=>{
       const profile = await fetchUserDoc(authUser.uid);
-      userRole = profile ? profile.role : 'pending';
+      userRole = normalizarRolPorCorreo(authUser.email, profile ? profile.role : 'pending');
       afterAuthReady();
     });
   }
@@ -1108,7 +1114,7 @@
         const uid = b.getAttribute('data-uid');
         const role = b.getAttribute('data-role');
         await setUserRole(uid, role);
-        if(uid === authUser.uid) userRole = role;
+        if(uid === authUser.uid) userRole = normalizarRolPorCorreo(authUser.email, role);
         usersList = await fetchAllUsers();
         renderAdminModal();
       });
