@@ -666,32 +666,12 @@
 
   // ---------- Autenticación ----------
 
-  function saveSession(){
-    if(authUser) window.CRMStorage.setJSON(AUTH_SESSION_KEY, authUser);
-    else window.CRMStorage.remove(AUTH_SESSION_KEY);
-  }
-
-  function loadSession(){ return window.CRMStorage.getJSON(AUTH_SESSION_KEY, null); }
-
+  function saveSession(){ return window.CRMAuth.saveSession(authUser); }
+  function loadSession(){ return window.CRMAuth.loadSession(); }
   async function refreshIdTokenIfNeeded(){
-    if(!authUser) return false;
-    if(authUser.expiresAt && Date.now() < authUser.expiresAt - 60000) return true; // aún válido
-    try{
-      const res = await fetchConTimeout(AUTH_REFRESH_URL, {
-        method: 'POST',
-        headers: {'Content-Type':'application/x-www-form-urlencoded'},
-        body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(authUser.refreshToken)
-      });
-      if(!res.ok) return false;
-      const data = await res.json();
-      authUser = Object.assign({}, authUser, {
-        idToken: data.id_token,
-        refreshToken: data.refresh_token,
-        expiresAt: Date.now() + (parseInt(data.expires_in,10) || 3600) * 1000,
-      });
-      saveSession();
-      return true;
-    }catch(e){ return false; }
+    const refreshed = await window.CRMAuth.refreshIdTokenIfNeeded(authUser);
+    if(refreshed) authUser = refreshed;
+    return !!refreshed;
   }
 
   async function fetchUserDoc(uid){
@@ -807,17 +787,7 @@
   async function doSignUp(email, password){
     authBusy = true; authError = ''; renderAuth();
     try{
-      const res = await fetchConTimeout(AUTH_SIGNUP_URL, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ email, password, returnSecureToken: true })
-      });
-      const data = await res.json();
-      if(!res.ok) throw new Error(data.error && data.error.message || 'Error al crear la cuenta');
-      authUser = {
-        uid: data.localId, email: data.email, idToken: data.idToken,
-        refreshToken: data.refreshToken, expiresAt: Date.now() + (parseInt(data.expiresIn,10)||3600)*1000,
-      };
-      saveSession();
+      authUser = await window.CRMAuth.signUp(email, password);
       const profile = await ensureUserDoc(authUser.uid, authUser.email);
       userRole = normalizarRolPorCorreo(authUser.email, profile.role);
       authBusy = false;
@@ -832,17 +802,7 @@
   async function doSignIn(email, password){
     authBusy = true; authError = ''; renderAuth();
     try{
-      const res = await fetchConTimeout(AUTH_SIGNIN_URL, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ email, password, returnSecureToken: true })
-      });
-      const data = await res.json();
-      if(!res.ok) throw new Error(data.error && data.error.message || 'Error al iniciar sesión');
-      authUser = {
-        uid: data.localId, email: data.email, idToken: data.idToken,
-        refreshToken: data.refreshToken, expiresAt: Date.now() + (parseInt(data.expiresIn,10)||3600)*1000,
-      };
-      saveSession();
+      authUser = await window.CRMAuth.signIn(email, password);
       const profile = await ensureUserDoc(authUser.uid, authUser.email);
       userRole = profile.role;
       authBusy = false;
@@ -855,9 +815,9 @@
   }
 
   function doSignOut(){
+    window.CRMAuth.signOut();
     authUser = null;
     userRole = null;
-    saveSession();
     authView = 'login';
     renderAuth();
   }
@@ -872,11 +832,7 @@
   }
 
   async function initAuth(){
-    authUser = loadSession();
-    if(authUser){
-      const ok = await refreshIdTokenIfNeeded();
-      if(!ok){ authUser = null; saveSession(); }
-    }
+    authUser = await window.CRMAuth.init();
     if(authUser){
       try{
         const profile = await ensureUserDoc(authUser.uid, authUser.email);
