@@ -197,6 +197,12 @@ try {
     await assertFails(updateDoc(doc(db, 'backups/main'), { 'test.rejected': true }));
   });
 
+  // 29. Una identidad autenticada sin perfil no obtiene acceso por estar logueada.
+  await run('29 authenticated user without profile is denied', async () => {
+    const db = ctx('orphan-1', 'orphan@example.com').firestore();
+    await assertFails(getDoc(doc(db, 'backups/main')));
+  });
+
   // 20. approved no puede eliminar el documento principal.
   await run('20 approved cannot delete backups/main', async () => {
     const db = ctx('approved-1', 'approved@example.com').firestore();
@@ -267,12 +273,6 @@ try {
   await run('28 non-main backup document is denied', async () => {
     const db = ctx('admin-1', 'admin@example.com').firestore();
     await assertFails(setDoc(doc(db, 'backups/other'), { value: true }));
-  });
-
-  // 29. Una identidad autenticada sin perfil no obtiene acceso por estar logueada.
-  await run('29 authenticated user without profile is denied', async () => {
-    const db = ctx('orphan-1', 'orphan@example.com').firestore();
-    await assertFails(getDoc(doc(db, 'backups/main')));
   });
 
   console.log('ALL SECURITY RULE TESTS PASSED');
