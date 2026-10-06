@@ -1497,7 +1497,7 @@
     // 3) Último respaldo: el navegador local.
     localBackupOK = localStorageTest();
     if(raw === null && localBackupOK){
-      try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){}
+      raw = window.CRMStorage.get(STORAGE_KEY);
     }
 
     const parsed = raw ? JSON.parse(raw) : null;
@@ -1573,7 +1573,7 @@
     try{ remoto = JSON.parse(remotoJson); }catch(e){ return; }
     if(!remoto || typeof remoto !== 'object' || Array.isArray(remoto)) return;
     ultimaActualizacion = new Date(); // se confirmó contacto con la nube, aunque no haya cambios
-    const actual = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario, configuracion });
+    const actual = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, referidos, inventario, configuracion });
     if(remotoJson === actual){ render(); return; } // nada cambió, pero refrescamos la hora mostrada
 
     records = remoto.records || [];
@@ -1584,6 +1584,7 @@
     recordatorios = remoto.recordatorios || [];
     clientesPerfil = remoto.clientesPerfil || [];
     contratos = remoto.contratos || [];
+    referidos = remoto.referidos || [];
     inventario = remoto.inventario || [];
     configuracion = Object.assign({}, DEFAULT_CONFIGURACION, remoto.configuracion || {});
     firebaseOK = true;
@@ -1806,8 +1807,7 @@
     let localOk = false;
     if(localBackupOK){
       try{
-        localStorage.setItem(STORAGE_KEY, json);
-        localOk = (localStorage.getItem(STORAGE_KEY) === json);
+        localOk = window.CRMStorage.set(STORAGE_KEY, json) && window.CRMStorage.get(STORAGE_KEY) === json;
       }catch(e){ localOk = false; }
     }
 
