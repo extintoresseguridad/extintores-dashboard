@@ -706,6 +706,8 @@
   }
 
   async function setUserRole(uid, role){
+    if(!esAdmin()) throw new Error('PERMISSION_DENIED');
+    if(!window.CRMAccess.ROLE_PERMISSIONS || !window.CRMAccess.ROLE_PERMISSIONS[role]) throw new Error('INVALID_ROLE');
     await refreshIdTokenIfNeeded();
     const url = `${FIRESTORE_BASE}/users/${uid}?key=${FIREBASE_API_KEY}&updateMask.fieldPaths=role`;
     await fetchConTimeout(url, {
@@ -732,13 +734,10 @@
     showToast('Perfil de usuario eliminado.');
   }
 
-  function esSuperAdmin(){ return (authUser?.email || '').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase(); }
-  function esAdmin(){ return userRole === 'admin' && esSuperAdmin(); }
+  function esSuperAdmin(){ return window.CRMAccess.isSuperAdmin(authUser?.email); }
+  function esAdmin(){ return window.CRMAccess.isAdmin(userRole, authUser?.email); }
   function normalizarRolPorCorreo(email, role){
-    const e=(email||'').toLowerCase();
-    if(e===SUPER_ADMIN_EMAIL.toLowerCase()) return 'admin';
-    if(e===ADMIN_CONTACT_EMAIL.toLowerCase()) return 'approved';
-    return role;
+    return window.CRMAccess.normalizeRole(email, role);
   }
 
   async function soloAdmin(accion){
@@ -1018,6 +1017,10 @@
   }
 
   function openAdminPanel(){
+    if(!esAdmin()){
+      showToast('No tienes permisos para abrir el panel de administración.');
+      return;
+    }
     showAdminPanel = true;
     usersList = [];
     adminSearchQuery = '';
