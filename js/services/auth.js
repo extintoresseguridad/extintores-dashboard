@@ -3,14 +3,15 @@
 
   const storage = () => window.CRMStorage;
   const firebase = () => window.CRMFirebase;
+  const data = () => window.CRMData;
 
   function saveSession(user){
-    if(user) storage().setJSON(AUTH_SESSION_KEY, user);
-    else storage().remove(AUTH_SESSION_KEY);
+    if(user) storage().setJSON(data().AUTH_SESSION_KEY, user);
+    else storage().remove(data().AUTH_SESSION_KEY);
   }
 
   function loadSession(){
-    return storage().getJSON(AUTH_SESSION_KEY, null);
+    return storage().getJSON(data().AUTH_SESSION_KEY, null);
   }
 
   function buildUser(data){
@@ -35,14 +36,14 @@
   }
 
   async function signUp(email, password){
-    const data = await request(AUTH_SIGNUP_URL, email, password);
+    const data = await request(data().AUTH_SIGNUP_URL, email, password);
     const user = buildUser(data);
     saveSession(user);
     return user;
   }
 
   async function signIn(email, password){
-    const data = await request(AUTH_SIGNIN_URL, email, password);
+    const data = await request(data().AUTH_SIGNIN_URL, email, password);
     const user = buildUser(data);
     saveSession(user);
     return user;
@@ -59,7 +60,7 @@
     if(!user.refreshToken) return null;
 
     try{
-      const res = await firebase().fetchConTimeout(AUTH_REFRESH_URL, {
+      const res = await firebase().fetchConTimeout(data().AUTH_REFRESH_URL, {
         method:'POST',
         headers:{'Content-Type':'application/x-www-form-urlencoded'},
         body:'grant_type=refresh_token&refresh_token=' + encodeURIComponent(user.refreshToken)
