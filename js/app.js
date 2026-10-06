@@ -1569,6 +1569,7 @@
       recordatorios = [];
       clientesPerfil = [];
       contratos = [];
+      referidos = [];
       inventario = [];
     } else if(parsed && typeof parsed === 'object'){
       records = parsed.records || [];
@@ -1579,6 +1580,7 @@
       recordatorios = parsed.recordatorios || [];
       clientesPerfil = parsed.clientesPerfil || [];
       contratos = parsed.contratos || [];
+      referidos = parsed.referidos || [];
       inventario = parsed.inventario || [];
       configuracion = Object.assign({}, DEFAULT_CONFIGURACION, parsed.configuracion || {});
     } else {
@@ -1824,7 +1826,7 @@
   async function persist(opts){
     opts = opts || {};
     if(opts.fusionar !== false) await fusionarConNube();
-    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario, configuracion });
+    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, referidos, inventario, configuracion });
 
     // El "pase" de acceso a Firebase (idToken) solo dura ~1 hora. Si el sistema se queda
     // abierto más tiempo sin recargar la página, ese pase vence y Firebase empieza a rechazar
