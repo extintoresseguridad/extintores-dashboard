@@ -1,0 +1,36 @@
+name: Firebase Security Rules
+
+on:
+  push:
+    branches:
+      - saneamiento-fase-1
+      - principal
+  pull_request:
+    branches:
+      - principal
+    paths:
+      - 'firestore.rules'
+      - 'firebase.json'
+      - 'tests/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/firebase-rules.yml'
+
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Firestore Security Rules tests
+        run: npm run test:rules
