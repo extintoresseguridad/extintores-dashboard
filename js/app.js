@@ -690,7 +690,9 @@
   async function ensureUserDoc(uid, email){
     let doc = await fetchUserDoc(uid);
     if(doc) return doc;
-    const role = normalizarRolPorCorreo(email, 'pending');
+    // Un perfil nuevo siempre nace como pending. El rol privilegiado se asigna
+    // después desde un admin mediante Security Rules; nunca por correo en el cliente.
+    const role = 'pending';
     const url = `${FIRESTORE_BASE}/users/${uid}?key=${FIREBASE_API_KEY}`;
     const body = { fields: {
       email: { stringValue: email || '' },
@@ -701,8 +703,6 @@
       method: 'PATCH',
       headers: Object.assign({'Content-Type':'application/json'}, authHeaders()),
       body: JSON.stringify(body)
-    });
-    return { role, email };
   }
 
   async function setUserRole(uid, role){
