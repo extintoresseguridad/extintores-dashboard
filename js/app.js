@@ -660,63 +660,23 @@
     }catch(e){ return false; }
   }
 
-  function fetchConTimeout(url, options, timeoutMs){
-    // Si la computadora/teléfono estuvo dormido o sin red por un buen rato, una petición
-    // puede quedarse "colgada" esperando una respuesta que nunca llega, en vez de fallar.
-    // Esto le pone un límite de tiempo (15s por defecto) para que falle rápido y el
-    // mecanismo de reintentos (conReintentos) pueda hacer un intento nuevo de verdad.
-    timeoutMs = timeoutMs || 15000;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    return fetch(url, Object.assign({}, options, { signal: controller.signal }))
-      .finally(() => clearTimeout(timer));
-  }
+  function fetchConTimeout(url, options, timeoutMs){ return window.CRMFirebase.fetchConTimeout(url, options, timeoutMs); }
 
   function authHeaders(){
     return authUser && authUser.idToken ? {'Authorization': 'Bearer ' + authUser.idToken} : {};
   }
 
   async function firestoreGet(){
-    // Antes de leer, nos aseguramos de que el token de sesión siga vigente. Si la pestaña
-    // llevaba mucho tiempo abierta sin usarse, el token (dura ~1 hora) puede haber vencido;
-    // sin este refresco, Firestore rechazaría la petición y el guardado fallaría en silencio.
-    await refreshIdTokenIfNeeded();
-    const res = await fetchConTimeout(FIRESTORE_DOC_URL, { headers: authHeaders() });
-    if(res.status === 404) return null; // documento aún no existe (primer uso)
-    if(!res.ok) throw new Error('firestore get failed: ' + res.status);
-    const data = await res.json();
-    const val = data && data.fields && data.fields.data && data.fields.data.stringValue;
-    return val || null;
+    return window.CRMFirebase.get({url:FIRESTORE_DOC_URL,getAuth:()=>authUser,refresh:refreshIdTokenIfNeeded});
   }
 
   async function firestoreSet(json){
-    await refreshIdTokenIfNeeded();
-    const body = { fields: { data: { stringValue: json } } };
-    const url = FIRESTORE_DOC_URL + '&updateMask.fieldPaths=data';
-    const res = await fetchConTimeout(url, {
-      method: 'PATCH',
-      headers: Object.assign({'Content-Type':'application/json'}, authHeaders()),
-      body: JSON.stringify(body)
-    });
-    if(!res.ok) throw new Error('firestore set failed: ' + res.status);
+    return window.CRMFirebase.set({url:FIRESTORE_DOC_URL,json,getAuth:()=>authUser,refresh:refreshIdTokenIfNeeded});
   }
 
   function esperar(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
 
-  async function conReintentos(fn, intentos){
-    // Reintenta una operación async hasta 'intentos' veces, con espera creciente entre cada una
-    // (300ms, luego 900ms). Devuelve el resultado si tiene éxito, o relanza el último error.
-    let ultimoError = null;
-    for(let i = 0; i < intentos; i++){
-      try{
-        return await fn();
-      }catch(e){
-        ultimoError = e;
-        if(i < intentos - 1) await esperar(300 * Math.pow(3, i));
-      }
-    }
-    throw ultimoError;
-  }
+  async function conReintentos(fn, intentos){ return window.CRMFirebase.conReintentos(fn, intentos); }
 
   // ---------- Autenticación ----------
 
