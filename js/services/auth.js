@@ -67,13 +67,13 @@
       if(!res.ok) return null;
 
       const data = await res.json();
-      const updated = Object.assign({}, user, {
+      Object.assign(user, {
         idToken: data.id_token,
         refreshToken: data.refresh_token,
         expiresAt: Date.now() + (parseInt(data.expires_in,10) || 3600) * 1000,
       });
-      saveSession(updated);
-      return updated;
+      saveSession(user);
+      return user;
     }catch(e){
       return null;
     }
