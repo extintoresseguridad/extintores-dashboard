@@ -576,7 +576,10 @@
     downloadPrintable(body, `boleta_${safeName}.html`, 'Boleta — ' + rec.cliente, TICKET_CSS);
   }
 
-  function uid(){ return 'ext_' + Date.now() + '_' + Math.floor(Math.random()*10000); }
+  function uid(){
+    if(window.crypto && typeof window.crypto.randomUUID === 'function') return 'ext_' + window.crypto.randomUUID();
+    return 'ext_' + Date.now() + '_' + Math.random().toString(36).slice(2, 12);
+  }
   function todayISO(){ return new Date().toISOString().slice(0,10); }
 
   function textoUltimaActualizacion(){
