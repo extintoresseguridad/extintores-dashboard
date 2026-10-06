@@ -22,7 +22,10 @@
     return auth && auth.idToken ? {'Authorization':'Bearer '+auth.idToken} : {};
   }
   async function get({url,getAuth,refresh}){
-    if(typeof refresh==='function') await refresh();
+    if(typeof refresh==='function'){
+      const refreshed = await refresh();
+      if(refreshed === false) throw new Error('AUTH_SESSION_EXPIRED');
+    }
     const res=await fetchConTimeout(url,{headers:authHeaders(getAuth)});
     if(res.status===404) return null;
     if(!res.ok) throw new Error('firestore get failed: '+res.status);
@@ -30,7 +33,10 @@
     return data && data.fields && data.fields.data && data.fields.data.stringValue || null;
   }
   async function set({url,json,getAuth,refresh}){
-    if(typeof refresh==='function') await refresh();
+    if(typeof refresh==='function'){
+      const refreshed = await refresh();
+      if(refreshed === false) throw new Error('AUTH_SESSION_EXPIRED');
+    }
     const body={fields:{data:{stringValue:json}}};
     const res=await fetchConTimeout(url+'&updateMask.fieldPaths=data',{method:'PATCH',headers:Object.assign({'Content-Type':'application/json'},authHeaders(getAuth)),body:JSON.stringify(body)});
     if(!res.ok) throw new Error('firestore set failed: '+res.status);
