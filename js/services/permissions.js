@@ -28,10 +28,9 @@
     rejected: Object.freeze([])
   });
 
+  // La fuente de verdad del rol es el documento users/{uid} de Firestore.
+  // El correo ya no puede elevar privilegios por sí solo en el cliente.
   function normalizeRole(email, role){
-    const e = (email || '').trim().toLowerCase();
-    if(e && e === (data().SUPER_ADMIN_EMAIL || '').trim().toLowerCase()) return ROLES.ADMIN;
-    if(e && e === (data().ADMIN_CONTACT_EMAIL || '').trim().toLowerCase()) return ROLES.APPROVED;
     return ROLE_PERMISSIONS[role] ? role : ROLES.PENDING;
   }
 
@@ -43,8 +42,8 @@
     return (email || '').trim().toLowerCase() === (data().SUPER_ADMIN_EMAIL || '').trim().toLowerCase();
   }
 
-  function isAdmin(role, email){
-    return role === ROLES.ADMIN && isSuperAdmin(email);
+  function isAdmin(role){
+    return role === ROLES.ADMIN;
   }
 
   function isAccessAllowed(role){
