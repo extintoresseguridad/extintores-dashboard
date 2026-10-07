@@ -541,7 +541,6 @@
   .etiqueta-corporativo{background:var(--brass);}
   .etiqueta-residencial{background:var(--green);}
   .etiqueta-moroso{background:var(--red);}
-  .etiqueta-membresia{background:var(--primary);}
   .etapa-contactado{background:var(--brass);}
   .etapa-cotizado{background:var(--amber);}
   .etapa-ganado{background:var(--green);}
@@ -1421,7 +1420,7 @@ details.card-collapse,.order-card,.cliente-card,.dash-panel,.caja-card,
 
 
   /* =========================================================
-     PROGRAMA CLIENTE SEGURO
+
      ========================================================= */
   .cliente-seguro-view{max-width:1450px;margin:0 auto;padding:24px 28px 70px;}
   .cs-hero{background:linear-gradient(135deg,#17243a 0%,#243b63 65%,#8b8168 140%);color:#fff;border-radius:18px;padding:28px;display:flex;justify-content:space-between;gap:22px;align-items:center;box-shadow:var(--shadow-md);margin-bottom:18px;}
