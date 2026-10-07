@@ -14,7 +14,7 @@ function barsHTML(data, colorCls, maxItems, esc){
   ).join('');
 }
 
-function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,,proximosVencimientos,esc,records,ventas,oportunidades,recordatorios,clientesPerfil,clientesEnRiesgo,tasaRenovacionAnual,todayISO,saldoOf,DIAS_RIESGO_CLIENTE,productosStockBajo,ETAPAS_EMBUDO,cajaDeHoy,calcularEsperado,resumenMes,resumenAnio,METODOS_PAGO,}){
+function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,proximosVencimientos,esc,records,ventas,oportunidades,recordatorios,clientesPerfil,clientesEnRiesgo,tasaRenovacionAnual,todayISO,saldoOf,DIAS_RIESGO_CLIENTE,productosStockBajo,ETAPAS_EMBUDO,cajaDeHoy,calcularEsperado,resumenMes,resumenAnio,METODOS_PAGO,}){
     const ingresos = ingresosPorMes();
     const maxIngreso = Math.max(...ingresos.map(m=>m.total), 1);
     const ventasMes = ventasPorMes();
@@ -55,8 +55,6 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
       const dias=Math.ceil((d-hoy)/86400000);
       if(dias<=60) centroVencimientos.push({tipo:'Orden',cliente:r.cliente||'Cliente',telefono:r.telefono||'',detalle:[r.orden?'Orden #'+r.orden:'Servicio',r.tipo||'',r.capacidad||''].filter(Boolean).join(' · '),fecha:r.fechaVencimiento,dias});
     });
-      const d=new Date(c.fechaRenovacion+'T00:00:00');
-      const dias=Number.isNaN(d.getTime())?9999:Math.ceil((d-hoy)/86400000);
     centroVencimientos.sort((a,b)=>a.dias-b.dias);
     const centroVencidos=centroVencimientos.filter(x=>x.dias<0).length;
     const centroProximos=centroVencimientos.filter(x=>x.dias>=0).length;
