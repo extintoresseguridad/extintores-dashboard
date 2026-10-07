@@ -3912,7 +3912,7 @@
             <div class="vence-item">
               <div><div class="v-name">${esReferidor?'Refirió a: ':'Fue referido por: '}${esc(esReferidor?(r.referido||''):(r.referidor||''))}</div>
               <div class="v-order">${esc(r.fecha||'Sin fecha')} · ${esc(r.servicio||'Sin servicio')} · Crédito ₡${(parseFloat(r.credito)||0).toLocaleString('es-CR')}</div></div>
-              <span class="cs-status">${esc(r.estado||'pendiente')}</span>
+              <span class="ref-status">${esc(r.estado||'pendiente')}</span>
             </div>`; }).join('')}
         </div>` : ''}
         ${opsCliente.length ? `
