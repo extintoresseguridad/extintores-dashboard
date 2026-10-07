@@ -3872,7 +3872,9 @@
     let estado='Al día', clase='green', accion='Seguimiento preventivo';
     if(prox!=='—' && prox<hoy){estado='Mantenimiento vencido';clase='red';accion='Contactar para programar servicio';}
     else if(prox===hoy){estado='Mantenimiento hoy';clase='amber';accion='Confirmar servicio';}
-    else if(prox!=='—'){const d=Math.ceil((new Date(prox+'T00:00:00')-new Date(hoy+'T00:00:00'))/86400000);if(d<=30){estado='Próximo mantenimiento';clase='amber';accion='Contactar y agendar';}}  }
+    else if(prox!=='—'){const d=Math.ceil((new Date(prox+'T00:00:00')-new Date(hoy+'T00:00:00'))/86400000);if(d<=30){estado='Próximo mantenimiento';clase='amber';accion='Contactar y agendar';}}
+    return '<div class="ficha360-followup"><div class="ficha360-followup-head"><div><span class="ficha360-kicker">SEGUIMIENTO</span><h3>Próxima acción</h3></div><span class="ficha360-followup-status '+clase+'">'+esc(estado)+'</span></div><div class="ficha360-followup-grid"><div><span>Último servicio</span><b>'+esc(fechaUlt)+'</b></div><div><span>Próximo mantenimiento</span><b>'+esc(prox)+'</b></div><div><span>Acción sugerida</span><b>'+esc(accion)+'</b></div></div><div class="ficha360-followup-actions"><button class="btn-primary" data-seguimiento-whatsapp="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">WhatsApp</button><button class="btn-ghost" data-seguimiento-recordatorio="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">+ Recordatorio</button></div></div>';
+  }
 
   function crmClienteResumenHTML(key){
     const { opsCliente, recsCliente } = crmDelCliente(key);
@@ -3906,7 +3908,7 @@
             <div class="vence-item">
               <div><div class="v-name">${esReferidor?'Refirió a: ':'Fue referido por: '}${esc(esReferidor?(r.referido||''):(r.referidor||''))}</div>
               <div class="v-order">${esc(r.fecha||'Sin fecha')} · ${esc(r.servicio||'Sin servicio')} · Crédito ₡${(parseFloat(r.credito)||0).toLocaleString('es-CR')}</div></div>
-              <span class="cs-status">${esc(r.estado||'pendiente')}</span>
+              <span class="ref-status">${esc(r.estado||'pendiente')}</span>
             </div>`; }).join('')}
         </div>` : ''}
         ${opsCliente.length ? `
