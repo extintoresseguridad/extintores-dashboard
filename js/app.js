@@ -977,7 +977,7 @@
       adminServiciosExtraTemp = (configuracion.serviciosExtra || []).slice();
     }
     return `
-      <p class="admin-section-desc">Estos datos se usan en las cotizaciones, membresías y boletas impresas, y en el cálculo del IVA. No hace falta tocar el código para cambiarlos.</p>
+      <p class="admin-section-desc">Estos datos se usan en las cotizaciones y boletas impresas, y en el cálculo del IVA. No hace falta tocar el código para cambiarlos.</p>
       <div class="form-row">
         <div>
           <label>Teléfono de contacto</label>
@@ -1439,7 +1439,7 @@
 
     records.forEach(agregarFuente);
     ventas.forEach(agregarFuente);
-    contratos.forEach(agregarFuente);
+
     oportunidades.forEach(agregarFuente);
     recordatorios.forEach(agregarFuente);
     cajas.forEach(caja => (caja.movimientos || []).forEach(agregarFuente));
@@ -2573,7 +2573,7 @@
     });
     const limite=new Date(); limite.setHours(0,0,0,0); limite.setDate(limite.getDate()+30);
     const limiteISO=limite.toISOString().slice(0,10);
-    contratos.filter(c=>c.estado==='activo'&&c.fechaRenovacion&&c.fechaRenovacion<=limiteISO).forEach(c=>agregar(c.cliente,c.telefono,'Renovación de membresía',c.fechaRenovacion,3));
+
     oportunidades.filter(o=>o.etapa!=='perdido'&&o.etapa!=='ganado').forEach(o=>agregar(o.cliente,o.telefono,'Oportunidad abierta','',4));
     const lista=Array.from(mapa.values()).sort((a,b)=>(a.prioridad-b.prioridad)||(a.fecha||'').localeCompare(b.fecha||''));
     return '<div class="clientes-contactar-head"><div><span class="module-kicker">SEGUIMIENTO COMERCIAL</span><h3>Clientes por contactar</h3><p>Clientes que requieren seguimiento según la información registrada.</p></div><span class="clientes-contactar-count">'+lista.length+' clientes</span></div>'+
@@ -3871,11 +3871,10 @@
     const opsCliente = oportunidades.filter(o => clienteKey(o) === key);
     const recsCliente = recordatorios.filter(r => clienteKey(r) === key && !r.completado)
       .sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
-    const contratosCliente = contratos.filter(c => clienteKey(c) === key);
-    return { opsCliente, recsCliente, contratosCliente };
+    return { opsCliente, recsCliente };
   }
 
-  function crmClienteSeguimientoHTML(key,c,perfil,contratoActivo,proximoMantenimiento){
+  function crmClienteSeguimientoHTML(key,c,perfil,proximoMantenimiento){
     const hoy=todayISO();
     const ult=c.registros && c.registros.length ? c.registros.slice().sort((a,b)=>(b.fechaIngreso||'').localeCompare(a.fechaIngreso||''))[0] : null;
     const fechaUlt=ult ? ult.fechaIngreso : '—';
@@ -3884,12 +3883,11 @@
     if(prox!=='—' && prox<hoy){estado='Mantenimiento vencido';clase='red';accion='Contactar para programar servicio';}
     else if(prox===hoy){estado='Mantenimiento hoy';clase='amber';accion='Confirmar servicio';}
     else if(prox!=='—'){const d=Math.ceil((new Date(prox+'T00:00:00')-new Date(hoy+'T00:00:00'))/86400000);if(d<=30){estado='Próximo mantenimiento';clase='amber';accion='Contactar y agendar';}}
-    if(contratoActivo && contratoActivo.fechaRenovacion && contratoActivo.fechaRenovacion<=hoy){estado='Renovación pendiente';clase='red';accion='Contactar para renovar Cliente Seguro';}
     return '<div class="ficha360-followup"><div class="ficha360-followup-head"><div><span class="ficha360-kicker">SEGUIMIENTO</span><h3>Próxima acción</h3></div><span class="ficha360-followup-status '+clase+'">'+esc(estado)+'</span></div><div class="ficha360-followup-grid"><div><span>Último servicio</span><b>'+esc(fechaUlt)+'</b></div><div><span>Próximo mantenimiento</span><b>'+esc(prox)+'</b></div><div><span>Cliente Seguro</span><b>'+esc(contratoActivo?'Activo':'Sin membresía')+'</b></div><div><span>Acción sugerida</span><b>'+esc(accion)+'</b></div></div><div class="ficha360-followup-actions"><button class="btn-primary" data-seguimiento-whatsapp="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">WhatsApp</button><button class="btn-ghost" data-seguimiento-recordatorio="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">+ Recordatorio</button></div></div>';
   }
 
   function crmClienteResumenHTML(key){
-    const { opsCliente, recsCliente, contratosCliente } = crmDelCliente(key);
+    const { opsCliente, recsCliente } = crmDelCliente(key);
     const ventasCliente = ventas.filter(v => clienteKey(v) === key)
       .sort((a,b)=>(b.fechaCompra||'').localeCompare(a.fechaCompra||''));
     const referidosCliente = referidos.filter(r => {
@@ -3897,20 +3895,10 @@
       const referidoKey = r.referido ? clienteKey({cliente:r.referido, telefono:r.telefonoReferido}) : '';
       return referidorKey === key || referidoKey === key;
     }).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
-    if(!opsCliente.length && !recsCliente.length && !contratosCliente.length && !ventasCliente.length && !referidosCliente.length) return '';
+    if(!opsCliente.length && !recsCliente.length && !ventasCliente.length && !referidosCliente.length) return '';
     const hoy = todayISO();
     return `
       <div class="dash-panel" style="margin-bottom:16px;">
-        ${contratosCliente.length ? `
-        <h3 style="margin-bottom:8px;">Membresías Cliente Seguro <span>${contratosCliente.length}</span></h3>
-        <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length||ventasCliente.length||referidosCliente.length)?'14px':'0'};">
-          ${contratosCliente.map(c=>`
-            <div class="vence-item">
-              <div><div class="v-name">${c.cantidadExtintores ? c.cantidadExtintores+' extintores' : 'Membresía'}${c.valorAnual ? ' · ₡'+parseFloat(c.valorAnual).toLocaleString('es-CR',{maximumFractionDigits:0})+'/año' : ''}</div>
-              <div class="v-order">${c.estado==='activo' ? 'Activo' : 'Cancelado'}${c.tipoMembresia ? ' · '+esc(c.tipoMembresia) : ''}</div></div>
-              <div class="v-date">${esc(c.fechaRenovacion||'—')}</div>
-            </div>`).join('')}
-        </div>` : ''}
         ${ventasCliente.length ? `
         <h3 style="margin-bottom:8px;">Ventas de equipos <span>${ventasCliente.length}</span></h3>
         <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length||referidosCliente.length)?'14px':'0'};">
@@ -4008,7 +3996,6 @@
         totalPendiente: totalPendienteRegistros,
         ultimaFecha,
         etiquetas: (perfil && perfil.etiquetas) || [],
-        membresiaActiva: contratos.some(ct => clienteKey(ct) === c.key && ct.estado === 'activo'),
       };
     }).sort((a,b)=> a.nombre.localeCompare(b.nombre));
   }
@@ -4037,7 +4024,6 @@
         totalEquiposComprados: c.compras.reduce((s,v)=>s+(v.cantidad||1),0),
         totalPagado, totalPendiente, ultimaFecha,
         etiquetas: (perfil && perfil.etiquetas) || [],
-        membresiaActiva: contratos.some(ct => clienteKey(ct) === c.key && ct.estado === 'activo'),
       };
     }).sort((a,b)=> a.nombre.localeCompare(b.nombre));
   }
@@ -4083,7 +4069,7 @@
             <div class="contact-row" data-cliente-key="${esc(c.key)}" data-cliente-tipo="${esCompras?'compras':'mantenimiento'}">
               <div class="contact-avatar-col"><div class="contact-avatar">${esc(inicialesDe(c.nombre))}</div></div>
               <div class="contact-main">
-                <div class="contact-name">${esc(c.nombre)}${c.membresiaActiva ? '<span class="etiqueta-badge etiqueta-membresia">Membresía</span>' : ''}${c.etiquetas && c.etiquetas.length ? etiquetasHTML(c.etiquetas) : ''}</div>
+                <div class="contact-name">${esc(c.nombre)}${c.etiquetas && c.etiquetas.length ? etiquetasHTML(c.etiquetas) : ''}</div>
                 <div class="contact-sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono'}${c.ultimaFecha ? ` · Última actividad ${esc(c.ultimaFecha)}` : ''}</div>
               </div>
               <div class="contact-metrics">
@@ -4326,7 +4312,7 @@
           <button class="back-link" id="btn-volver-clientes">← Volver a clientes</button>
           <div class="cliente-detail-head">
             <div>
-              <h2>${esc(c.nombre)}${c.membresiaActiva ? ' <span class="etiqueta-badge etiqueta-membresia">Membresía activa</span>' : ''}</h2>
+              <h2>${esc(c.nombre)}</h2>
               <div class="sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono registrado'}${c.telefonos && c.telefonos.length>1 ? ` <button class="link-btn" data-separar-cliente="${esc(key)}">¿Son dos personas distintas? Separar</button>` : ''}</div>
             </div>
             <div class="cliente-kpis">
@@ -4342,7 +4328,6 @@
             <button class="btn-primary" id="btn-nueva-orden-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}" data-cliente-key="${esc(key)}">+ Nueva orden de servicio</button>
           <button class="btn-ghost" id="btn-agregar-extintor-cliente" data-cliente-key="${esc(key)}">+ Agregar extintor</button>
           <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
-            <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
             <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
           </div>
           ${crmClienteResumenHTML(key)}
@@ -4360,7 +4345,6 @@
     const registrosOrdenados = [...c.registros].sort((a,b)=> (b.fechaIngreso||'').localeCompare(a.fechaIngreso||''));
     const informalesOrdenados = [...c.movimientosInformales].sort((a,b)=> (b.fechaCaja||'').localeCompare(a.fechaCaja||''));
     const ventas360 = ventas.filter(v=>clienteKey(v)===key);
-    const contratos360 = contratos.filter(x=>clienteKey(x)===key);
     const pendientes360 = [
       ...registrosOrdenados.filter(r=>(saldoOf(r).saldo||0)>0).map(r=>({fecha:r.fechaIngreso||'',monto:saldoOf(r).saldo||0})),
       ...ventas360.filter(v=>(saldoOf(v).saldo||0)>0).map(v=>({fecha:v.fechaCompra||'',monto:saldoOf(v).saldo||0}))
@@ -4370,13 +4354,12 @@
     const perfil360 = perfilDeCliente(key);
     const extintores360 = (perfil360?.extintores||[]).length;
     const proximoMantenimiento360 = (perfil360?.extintores||[]).map(e=>e.proximoMantenimiento).filter(Boolean).sort()[0] || registrosOrdenados.map(r=>r.fechaVencimiento).filter(Boolean).sort()[0] || '—';
-    const contratoActivo360 = contratos360.find(x=>x.estado==='activo');
     return `
       <div class="clientes-content">
         <button class="back-link" id="btn-volver-clientes">← Volver a clientes</button>
         <div class="cliente-detail-head">
           <div>
-            <h2>${esc(c.nombre)}${c.membresiaActiva ? ' <span class="etiqueta-badge etiqueta-membresia">Membresía activa</span>' : ''}</h2>
+            <h2>${esc(c.nombre)}</h2>
             <div class="sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono registrado'}${c.telefonos && c.telefonos.length>1 ? ` <button class="link-btn" data-separar-cliente="${esc(key)}">¿Son dos personas distintas? Separar</button>` : ''}</div>
           </div>
           <div class="cliente-kpis">
@@ -4389,7 +4372,6 @@
         <div class="cliente-kpis" style="margin-bottom:16px;">
           <div class="cliente-kpi"><b>${c.registros.length}</b><small>Órdenes / servicios</small></div>
           <div class="cliente-kpi"><b>${extintores360}</b><small>Extintores en ficha</small></div>
-          <div class="cliente-kpi"><b>${contratoActivo360 ? "Activo" : "No"}</b><small>Cliente Seguro</small></div>
           <div class="cliente-kpi"><b style="color:${totalPendiente360>0?"#DC2626":"inherit"}">₡${totalPendiente360.toLocaleString("es-CR",{maximumFractionDigits:0})}</b><small>Saldo pendiente</small></div>
         </div>
         <div class="ficha360-summary">
@@ -4407,13 +4389,11 @@
           <div class="ficha360-stats">
             <div><b>${c.registros.length}</b><span>Órdenes</span></div>
             <div><b>${extintores360}</b><span>Extintores</span></div>
-            <div><b>${contratoActivo360 ? 'Activo' : 'No'}</b><span>Cliente Seguro</span></div>
             <div><b class="${totalPendiente360>0?'danger-text':''}">₡${totalPendiente360.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><span>Saldo pendiente</span></div>
           </div>
           <div class="ficha360-dates">
             <div><span>Última actividad</span><b>${esc(ultimoMovimiento)}</b></div>
             <div><span>Próximo mantenimiento</span><b>${esc(proximoMantenimiento360)}</b></div>
-            <div><span>Membresía</span><b>${contratoActivo360 ? 'Activa' : 'Sin membresía activa'}</b></div>
           </div>
         </div>
         ${perfilClienteHTML(key, c.nombre, c.telefono)}
@@ -4597,7 +4577,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
     ]);
     const porCobrar = records.reduce((s,r)=>s+(saldoOf(r).saldo||0),0);
     const stockBajo = typeof productosStockBajo==='function' ? productosStockBajo() : [];
-    const contratosActivos = contratos.filter(c=>c.estado==='activo');
+
     const opsAbiertas = oportunidades.filter(o=>o.etapa!=='perdido' && o.etapa!=='ganado');
     const recPend = recordatorios.filter(r=>!r.completado).sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
     const proximos = [...en30].sort((a,b)=>(a.fechaVencimiento||'').localeCompare(b.fechaVencimiento||'')).slice(0,6);
@@ -4611,7 +4591,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
           <div>
             <div class="crm-pill green"><span class="crm-nav-dot"></span>Operación conectada</div>
             <h2>CRM Industrial</h2>
-            <p>Centro de control para clientes, activos, mantenimiento, ventas, membresías, inventario y cobranza.</p>
+            <p>Centro de control para clientes, activos, mantenimiento, ventas, inventario y cobranza.</p>
           </div>
           <div class="crm-hero-actions">
             <button class="btn-primary" id="ind-nuevo">+ Nueva orden</button>
@@ -4627,7 +4607,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
           <div class="crm-kpi" data-ind-view="clientes"><div class="icon">🏢</div><div class="value">${clientes.size}</div><div class="label">Clientes</div><div class="hint">${riesgo.length} en riesgo detectado</div></div>
           <div class="crm-kpi" data-ind-view="crm"><div class="icon">📈</div><div class="value">${opsAbiertas.length}</div><div class="label">Oportunidades abiertas</div><div class="hint">${oportunidades.length} en total</div></div>
           <div class="crm-kpi" data-ind-view="inventario"><div class="icon">📦</div><div class="value">${stockBajo.length}</div><div class="label">Stock bajo</div><div class="hint">${inventario.length} productos controlados</div></div>
-          <div class="crm-kpi" data-ind-view="caja"><div class="icon">₡</div><div class="value">₡${porCobrar.toLocaleString('es-CR',{maximumFractionDigits:0})}</div><div class="label">Por cobrar</div><div class="hint">${contratosActivos.length} membresías activas</div></div>
+          <div class="crm-kpi" data-ind-view="caja"><div class="icon">₡</div><div class="value">₡${porCobrar.toLocaleString('es-CR',{maximumFractionDigits:0})}</div><div class="label">Por cobrar</div><div class="hint">Servicios registrados</div></div>
         </div>
 
         <div class="crm-section-title"><h3>Centro de alertas y agenda</h3><span>Lo que requiere atención hoy y en los próximos días</span></div>
@@ -4758,7 +4738,6 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
             <div class="crm-mini-grid">
               <div class="crm-mini"><b>${listos.length}</b><span>Listos para entrega</span></div>
               <div class="crm-mini"><b>${ventas.length}</b><span>Ventas registradas</span></div>
-              <div class="crm-mini"><b>${contratosActivos.length}</b><span>Membresías activas</span></div>
               <div class="crm-mini"><b>₡${oportunidades.reduce((s,o)=>s+(parseFloat(o.montoEstimado)||0),0).toLocaleString('es-CR',{maximumFractionDigits:0})}</b><span>Pipeline estimado</span></div>
             </div>
           </div>
