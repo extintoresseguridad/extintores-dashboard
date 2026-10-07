@@ -14,7 +14,7 @@ function barsHTML(data, colorCls, maxItems, esc){
   ).join('');
 }
 
-function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,contratos,proximosVencimientos,esc,records,ventas,oportunidades,recordatorios,clientesPerfil,clientesEnRiesgo,tasaRenovacionAnual,todayISO,saldoOf,DIAS_RIESGO_CLIENTE,productosStockBajo,ETAPAS_EMBUDO,cajaDeHoy,calcularEsperado,resumenMes,resumenAnio,METODOS_PAGO,planClienteSeguro}){
+function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,,proximosVencimientos,esc,records,ventas,oportunidades,recordatorios,clientesPerfil,clientesEnRiesgo,tasaRenovacionAnual,todayISO,saldoOf,DIAS_RIESGO_CLIENTE,productosStockBajo,ETAPAS_EMBUDO,cajaDeHoy,calcularEsperado,resumenMes,resumenAnio,METODOS_PAGO,}){
     const ingresos = ingresosPorMes();
     const maxIngreso = Math.max(...ingresos.map(m=>m.total), 1);
     const ventasMes = ventasPorMes();
@@ -27,7 +27,6 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
     const maxEstado = Math.max(...estados.map(e=>e.count), 1);
     const referidosConfirmados=referidos.filter(r=>r.estado==='confirmado'), referidosPendientes=referidos.filter(r=>r.estado==='pendiente');
     const creditosReferidos=referidosConfirmados.reduce((s,r)=>s+(parseFloat(r.credito)||0),0);
-    const membresiasActivas=contratos.filter(c=>c.estado==='activo');
     const vencimientos = proximosVencimientos();
     const vencidosCount = vencimientos.filter(x=>x.vs==='vencido').length;
     const proximoCount = vencimientos.filter(x=>x.vs==='proximo').length;
@@ -56,17 +55,12 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
       const dias=Math.ceil((d-hoy)/86400000);
       if(dias<=60) centroVencimientos.push({tipo:'Orden',cliente:r.cliente||'Cliente',telefono:r.telefono||'',detalle:[r.orden?'Orden #'+r.orden:'Servicio',r.tipo||'',r.capacidad||''].filter(Boolean).join(' · '),fecha:r.fechaVencimiento,dias});
     });
-    const renovacionesCentro=(contratos||[]).filter(c=>c.estado==='activo' && c.fechaRenovacion).map(c=>{
       const d=new Date(c.fechaRenovacion+'T00:00:00');
       const dias=Number.isNaN(d.getTime())?9999:Math.ceil((d-hoy)/86400000);
-      return {tipo:'Cliente Seguro',cliente:c.cliente||'Cliente',telefono:c.telefono||'',detalle:'Renovación · '+((planClienteSeguro(c.tipoMembresia)||{}).nombre||'Membresía'),fecha:c.fechaRenovacion,dias};
-    }).filter(x=>x.dias<=60);
-    centroVencimientos.push(...renovacionesCentro);
     centroVencimientos.sort((a,b)=>a.dias-b.dias);
     const centroVencidos=centroVencimientos.filter(x=>x.dias<0).length;
     const centroProximos=centroVencimientos.filter(x=>x.dias>=0).length;
     function addDaysLocal(iso,n){ const d=new Date((iso||hoyISO)+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
-    const renovaciones30 = contratos.filter(c=>c.estado==='activo' && c.fechaRenovacion && c.fechaRenovacion>=hoyISO && c.fechaRenovacion<=addDaysLocal(hoyISO,30)).length;
     const cotizacionesPendientes = oportunidades.filter(o=>o.etapa==='contactado' || o.etapa==='cotizado').length;
     const whatsappAutorizados = clientesPerfil.filter(p=>p.whatsappConsent && !p.whatsappNoContactar).length;
 
@@ -82,8 +76,7 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
           <button class="btn-ghost" data-view="caja">Abrir caja</button>
           <button class="btn-ghost" data-view="inventario">Ver inventario</button>
         </div>
-
-        <div class="kpi-grid" style="margin-bottom:18px;"><div class="kpi-card"><div class="kpi-label">🛡️ Cliente Seguro</div><div class="kpi-value">${membresiasActivas.length}</div><div class="kpi-sub">Membresías activas</div></div><div class="kpi-card"><div class="kpi-label">🔥 Referidos</div><div class="kpi-value">${referidosConfirmados.length}</div><div class="kpi-sub">${referidosPendientes.length} pendientes · ₡${creditosReferidos.toLocaleString('es-CR')}</div></div></div>
+         <div class="kpi-grid" style="margin-bottom:18px;"><div class="kpi-card"><div class="kpi-label">🔥 Referidos</div><div class="kpi-value">${referidosConfirmados.length}</div><div class="kpi-sub">${referidosPendientes.length} pendientes · ₡${creditosReferidos.toLocaleString('es-CR')}</div></div></div>
         <div class="dash-panel full" style="margin:0 0 18px;">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
             <div><h3 style="margin-bottom:3px;">📌 Hoy</h3><div class="caja-hint" style="margin:0;">Lo que merece atención primero en la jornada.</div></div>
@@ -92,8 +85,7 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
             <div class="kpi-card kpi-red ${centroVencidos>0?'kpi-critical':''}"><div class="kpi-label">🔴 Vencidos</div><div class="kpi-value">${centroVencidos}</div><button class="btn-ghost" data-hoy-action="vencidos" style="margin-top:8px;padding:5px 9px;font-size:10px;">Ver vencidos</button></div>
             <div class="kpi-card kpi-amber ${centroProximos>0?'kpi-critical':''}"><div class="kpi-label">🟡 Próximos</div><div class="kpi-value">${centroProximos}</div><button class="btn-ghost" data-hoy-action="proximos" style="margin-top:8px;padding:5px 9px;font-size:10px;">Ver próximos</button></div>
             <div class="kpi-card kpi-amber ${seguimientosHoyCount>0?'kpi-critical':''}"><div class="kpi-label">📞 Seguimientos</div><div class="kpi-value">${seguimientosHoyCount}</div><button class="btn-ghost" data-hoy-action="seguimientos" style="margin-top:8px;padding:5px 9px;font-size:10px;">Abrir</button></div>
-            <div class="kpi-card"><div class="kpi-label">💰 Cotizaciones abiertas</div><div class="kpi-value">${cotizacionesPendientes}</div><button class="btn-ghost" data-hoy-action="cotizaciones" style="margin-top:8px;padding:5px 9px;font-size:10px;">Ver embudo</button></div>
-            <div class="kpi-card"><div class="kpi-label">🛡️ Renovaciones 30 días</div><div class="kpi-value">${renovaciones30}</div><button class="btn-ghost" data-hoy-action="membresias" style="margin-top:8px;padding:5px 9px;font-size:10px;">Ver membresías</button></div>
+            <div class="kpi-card"><div class="kpi-label">💰 Cotizaciones abiertas</div><div class="kpi-value">${cotizacionesPendientes}</div><button class="btn-ghost" data-hoy-action="cotizaciones" style="margin-top:8px;padding:5px 9px;font-size:10px;">Ver embudo</button></div></div>
             <div class="kpi-card"><div class="kpi-label">📲 WhatsApp autorizado</div><div class="kpi-value">${whatsappAutorizados}</div><button class="btn-ghost" data-hoy-action="clientes" style="margin-top:8px;padding:5px 9px;font-size:10px;">Ver clientes</button></div>
           </div>
         </div>
@@ -101,7 +93,7 @@ function renderDashboard({ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparP
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
             <div>
               <h3 style="margin-bottom:3px;">🗓️ Centro de vencimientos</h3>
-              <div class="caja-hint" style="margin:0;">Extintores de Ficha 360°, órdenes de trabajo y renovaciones de Cliente Seguro · próximos 60 días</div>
+              <div class="caja-hint" style="margin:0;">Extintores de Ficha 360° y órdenes de trabajo · próximos 60 días</div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
               <span class="badge" style="background:var(--red);color:#fff;">${centroVencidos} vencidos</span>
