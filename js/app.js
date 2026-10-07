@@ -1295,6 +1295,7 @@
     }
 
     const parsed = raw ? JSON.parse(raw) : null;
+    const legacyClienteSeguroData = !!(parsed && typeof parsed === 'object' && !Array.isArray(parsed) && Object.prototype.hasOwnProperty.call(parsed, 'contratos'));
     if(Array.isArray(parsed)){
       // Formato antiguo: el JSON guardado era solo el array de records.
       records = parsed;
@@ -1337,7 +1338,7 @@
     limpiarPapeleraVieja();
     ultimaActualizacion = new Date();
     const nuevasOportunidades = generarOportunidadesRenovacion();
-    if(nuevasOportunidades > 0 || migracionClientes.creados > 0 || migracionClientes.actualizados > 0){
+    if(legacyClienteSeguroData || nuevasOportunidades > 0 || migracionClientes.creados > 0 || migracionClientes.actualizados > 0){
       await persist(); // persist() ya llama a render() al final
       if(migracionClientes.creados > 0) showToast(`Se incorporaron ${migracionClientes.creados} cliente(s) a la Ficha 360°.`);
     } else {
