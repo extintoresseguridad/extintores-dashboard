@@ -30,6 +30,7 @@
   let oportunidades = []; // { id, cliente, telefono, descripcion, montoEstimado, etapa:'contactado'|'cotizado'|'ganado'|'perdido', fechaCreacion, bitacora:[{id,fecha,tipo,nota}] }
   let recordatorios = []; // { id, texto, fecha, cliente, telefono, oportunidadId, completado }
   let clientesPerfil = []; // { id, cliente, telefono, empresa, cedula, notas, etiquetas, fechaCreacion } — datos personales del cliente, independientes de sus órdenes/ventas
+  let contratos = []; // membresías Cliente Seguro
   let referidos = []; // programa independiente de referidos
   let inventario = []; // { id, nombre, categoria:'extintor'|'repuesto'|'servicio', tipo, capacidad, cantidad, cantidadMinima, precioUnitario, notas, movimientos:[{id,tipo,cantidad,fecha,nota}] }
   let loadError = null;
@@ -37,8 +38,8 @@
   let venceFilter = 'todos';
   let query = '';
   let editingId = null;
-  let view = 'industrial'; // ... | 'referidos'
-  let crmSubvista = 'pipeline'; // 'pipeline' | 'recordatorios' | 'clientes-contactar'
+  let view = 'industrial'; // ... | 'cliente-seguro' | 'referidos'
+  let crmSubvista = 'pipeline'; // 'pipeline' | 'recordatorios' | 'contratos'
   let pipelineQuery = '';
   let oportunidadSeleccionada = null;
   let animateViewChange = false; // true justo antes de un render() que debe entrar con fade-in (cambio de pestaña o de cliente)
@@ -806,7 +807,10 @@
             } else if(item.tipo === 'perfil_cliente'){
               titulo = item.data.cliente || 'Cliente sin nombre';
               sub = `Datos personales · eliminado ${fecha}`;
-    } else if(item.tipo === 'producto_inventario'){
+            } else if(item.tipo === 'contrato'){
+              titulo = item.data.cliente || 'Cliente sin nombre';
+              sub = `Membresía de mantenimiento · eliminado ${fecha}`;
+            } else if(item.tipo === 'producto_inventario'){
               titulo = item.data.nombre || 'Producto sin nombre';
               sub = `Inventario · eliminado ${fecha}`;
             } else {
@@ -973,7 +977,7 @@
       adminServiciosExtraTemp = (configuracion.serviciosExtra || []).slice();
     }
     return `
-      <p class="admin-section-desc">Estos datos se usan en las cotizaciones y boletas impresas, y en el cálculo del IVA. No hace falta tocar el código para cambiarlos.</p>
+      <p class="admin-section-desc">Estos datos se usan en las cotizaciones, membresías y boletas impresas, y en el cálculo del IVA. No hace falta tocar el código para cambiarlos.</p>
       <div class="form-row">
         <div>
           <label>Teléfono de contacto</label>
@@ -1045,7 +1049,7 @@
   }
 
   function tamanoDatosKB(){
-    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, referidos, inventario, configuracion });
+    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, referidos, inventario, configuracion });
     try{ return (new Blob([json]).size / 1024).toFixed(1); }
     catch(e){ return (json.length / 1024).toFixed(1); }
   }
@@ -1084,6 +1088,7 @@
         <div class="admin-health-item"><div class="lbl">Ventas de equipo</div><div class="val">${ventas.length}</div></div>
         <div class="admin-health-item"><div class="lbl">Cajas registradas</div><div class="val">${cajas.length}</div></div>
         <div class="admin-health-item"><div class="lbl">Oportunidades</div><div class="val">${oportunidades.length}</div></div>
+        <div class="admin-health-item"><div class="lbl">Membresías</div><div class="val">${contratos.length}</div></div>
         <div class="admin-health-item"><div class="lbl">Productos en inventario</div><div class="val">${inventario.length}</div></div>
       </div>
     `;
@@ -1104,7 +1109,7 @@
         .filter(Boolean)
     ).size;
     const cotizacionesGanadas = oportunidades.filter(o=>o.etapa==='ganado').length;
-
+    const membresiasActivas = contratos.filter(c=>c.estado==='activo').length;
     const porAnio = {};
     cajas.forEach(c=>{
       const anio = (c.fecha||'').slice(0,4);
@@ -1112,7 +1117,7 @@
       const total = (c.movimientos||[]).filter(m=>m.tipo==='entrada').reduce((s,m)=>s+(parseFloat(m.monto)||0),0);
       porAnio[anio] = (porAnio[anio]||0) + total;
     });
-    return { ingresosCaja, ingresosVentas, totalOrdenes: records.length, totalExtintoresVendidos, clientesUnicos, cotizacionesGanadas, porAnio };
+    return { ingresosCaja, ingresosVentas, totalOrdenes: records.length, totalExtintoresVendidos, clientesUnicos, cotizacionesGanadas, membresiasActivas, porAnio };
   }
 
   function renderAdminTabEstadisticas(){
@@ -1128,6 +1133,7 @@
         <div class="admin-stat"><b>${st.totalExtintoresVendidos}</b><small>Extintores vendidos</small></div>
         <div class="admin-stat"><b>${st.clientesUnicos}</b><small>Clientes únicos</small></div>
         <div class="admin-stat"><b>${st.cotizacionesGanadas}</b><small>Cotizaciones ganadas</small></div>
+        <div class="admin-stat"><b>${st.membresiasActivas}</b><small>Membresías activas</small></div>
       </div>
       ${anios.length ? `
         <div class="admin-group-title">Ingresos de caja por año</div>
@@ -1197,7 +1203,7 @@
         oportunidades = parsed.oportunidades || [];
         recordatorios = parsed.recordatorios || [];
         clientesPerfil = parsed.clientesPerfil || [];
-
+        contratos = parsed.contratos || [];
         inventario = parsed.inventario || [];
         configuracion = Object.assign({}, DEFAULT_CONFIGURACION, parsed.configuracion || {});
         await persist({ fusionar:false });
@@ -1303,7 +1309,7 @@
       oportunidades = [];
       recordatorios = [];
       clientesPerfil = [];
-
+      contratos = [];
       referidos = [];
       inventario = [];
     } else if(parsed && typeof parsed === 'object'){
@@ -1314,7 +1320,7 @@
       oportunidades = parsed.oportunidades || [];
       recordatorios = parsed.recordatorios || [];
       clientesPerfil = parsed.clientesPerfil || [];
-
+      contratos = parsed.contratos || [];
       referidos = parsed.referidos || [];
       inventario = parsed.inventario || [];
       configuracion = Object.assign({}, DEFAULT_CONFIGURACION, parsed.configuracion || {});
@@ -1326,7 +1332,7 @@
       oportunidades = [];
       recordatorios = [];
       clientesPerfil = [];
-
+      contratos = [];
       referidos = [];
       inventario = [];
     }
@@ -1366,7 +1372,7 @@
     try{ remoto = JSON.parse(remotoJson); }catch(e){ return; }
     if(!remoto || typeof remoto !== 'object' || Array.isArray(remoto)) return;
     ultimaActualizacion = new Date(); // se confirmó contacto con la nube, aunque no haya cambios
-    const actual = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, referidos, inventario, configuracion });
+    const actual = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, referidos, inventario, configuracion });
     if(remotoJson === actual){ render(); return; } // nada cambió, pero refrescamos la hora mostrada
 
     records = remoto.records || [];
@@ -1376,7 +1382,7 @@
     oportunidades = remoto.oportunidades || [];
     recordatorios = remoto.recordatorios || [];
     clientesPerfil = remoto.clientesPerfil || [];
-
+    contratos = remoto.contratos || [];
     referidos = remoto.referidos || [];
     inventario = remoto.inventario || [];
     configuracion = Object.assign({}, DEFAULT_CONFIGURACION, remoto.configuracion || {});
@@ -1408,6 +1414,7 @@
   function limpiarTarjetasObsoletas(){
     // Evita que las listas de tarjetas abiertas/cerradas crezcan sin límite con registros ya eliminados.
     const idsVigentes = new Set(
+      records.map(r => 'card-' + r.id).concat(records.map(r => 'item-' + r.id)).concat(ventas.map(v => 'venta-' + v.id)).concat(contratos.map(c => 'contrato-' + c.id)).concat(inventario.map(p => 'producto-' + p.id))
     );
     const ordenesVigentes = new Set(records.filter(r=>r.orden).map(r => 'order-' + ordenKey(r)));
     tarjetasAbiertas = new Set([...tarjetasAbiertas].filter(k => idsVigentes.has(k)));
@@ -1432,7 +1439,7 @@
 
     records.forEach(agregarFuente);
     ventas.forEach(agregarFuente);
-
+    contratos.forEach(agregarFuente);
     oportunidades.forEach(agregarFuente);
     recordatorios.forEach(agregarFuente);
     cajas.forEach(caja => (caja.movimientos || []).forEach(agregarFuente));
@@ -1552,7 +1559,7 @@
     oportunidades = mergeArrayPorId(oportunidades, remoto.oportunidades, idsEnPapeleraPorTipo('oportunidad'));
     recordatorios = mergeArrayPorId(recordatorios, remoto.recordatorios, idsEnPapeleraPorTipo('recordatorio'));
     clientesPerfil = mergeArrayPorId(clientesPerfil, remoto.clientesPerfil, idsEnPapeleraPorTipo('perfil_cliente'));
-
+    contratos = mergeArrayPorId(contratos, remoto.contratos, idsEnPapeleraPorTipo('contrato'));
     referidos = mergeArrayPorId(referidos, remoto.referidos, idsEnPapeleraPorTipo('referido'));
     inventario = mergeArrayConSubcoleccion(inventario, remoto.inventario, 'movimientos', idsEnPapeleraPorTipo('producto_inventario'), new Set());
     cajas = mergeArrayConSubcoleccion(cajas, remoto.cajas, 'movimientos', new Set(), idsEnPapeleraPorTipo('movimiento_caja'));
@@ -1562,7 +1569,7 @@
   async function persist(opts){
     opts = opts || {};
     if(opts.fusionar !== false) await fusionarConNube();
-    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, referidos, inventario, configuracion });
+    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, referidos, inventario, configuracion });
 
     // El "pase" de acceso a Firebase (idToken) solo dura ~1 hora. Si el sistema se queda
     // abierto más tiempo sin recargar la página, ese pase vence y Firebase empieza a rechazar
@@ -2566,7 +2573,7 @@
     });
     const limite=new Date(); limite.setHours(0,0,0,0); limite.setDate(limite.getDate()+30);
     const limiteISO=limite.toISOString().slice(0,10);
-
+    contratos.filter(c=>c.estado==='activo'&&c.fechaRenovacion&&c.fechaRenovacion<=limiteISO).forEach(c=>agregar(c.cliente,c.telefono,'Renovación de membresía',c.fechaRenovacion,3));
     oportunidades.filter(o=>o.etapa!=='perdido'&&o.etapa!=='ganado').forEach(o=>agregar(o.cliente,o.telefono,'Oportunidad abierta','',4));
     const lista=Array.from(mapa.values()).sort((a,b)=>(a.prioridad-b.prioridad)||(a.fecha||'').localeCompare(b.fecha||''));
     return '<div class="clientes-contactar-head"><div><span class="module-kicker">SEGUIMIENTO COMERCIAL</span><h3>Clientes por contactar</h3><p>Clientes que requieren seguimiento según la información registrada.</p></div><span class="clientes-contactar-count">'+lista.length+' clientes</span></div>'+
@@ -2641,6 +2648,7 @@
           <div>
             <span class="module-kicker">Ventas y seguimiento</span>
             <h2>CRM Comercial</h2>
+            <p>Oportunidades, recordatorios y membresías.</p>
           </div>
         </div>
         <div class="view-toggle" style="margin-bottom:16px;">
@@ -2648,7 +2656,7 @@
           <button data-crm-subvista="recordatorios" class="${crmSubvista==='recordatorios'?'active':''}">Recordatorios${recordatorios.filter(r=>!r.completado).length ? ' ('+recordatorios.filter(r=>!r.completado).length+')' : ''}</button>
           <button data-crm-subvista="clientes-contactar" class="${crmSubvista==='clientes-contactar'?'active':''}">Clientes por contactar</button>
         </div>
-        ${oportunidadSeleccionada ? renderOportunidadDetalle(oportunidadSeleccionada) : (crmSubvista==='pipeline' ? renderPipeline() : (crmSubvista==='recordatorios' ? renderRecordatorios() : renderClientesContactar())))}
+        ${oportunidadSeleccionada ? renderOportunidadDetalle(oportunidadSeleccionada) : (crmSubvista==='pipeline' ? renderPipeline() : (crmSubvista==='recordatorios' ? renderRecordatorios() : renderClientesContactar()))}
       </div>
     `;
   }
@@ -2668,7 +2676,7 @@
     } else if(item.tipo === 'perfil_cliente'){
       clientesPerfil = [item.data, ...clientesPerfil];
     } else if(item.tipo === 'contrato'){
-
+      contratos = [item.data, ...contratos];
     } else if(item.tipo === 'producto_inventario'){
       inventario = [item.data, ...inventario];
     } else if(item.tipo === 'movimiento_caja'){
@@ -3245,7 +3253,7 @@
 
     records = records.map(r => coincide(r) ? { ...r, cliente: nuevoNombre } : r);
     ventas = ventas.map(v => coincide(v) ? { ...v, cliente: nuevoNombre } : v);
-
+    contratos = contratos.map(c => coincide(c) ? { ...c, cliente: nuevoNombre } : c);
     oportunidades = oportunidades.map(o => coincide(o) ? { ...o, cliente: nuevoNombre } : o);
     recordatorios = recordatorios.map(r => coincide(r) ? { ...r, cliente: nuevoNombre } : r);
     clientesPerfil = clientesPerfil.map(p => coincide(p) ? { ...p, cliente: nuevoNombre } : p);
@@ -3858,13 +3866,16 @@
   }
 
   function crmDelCliente(key){
+    // Reúne las oportunidades, recordatorios y contratos cuyo nombre+teléfono coincide con el cliente
+    // actual, para mostrarlos directo en su ficha (vista 360) en vez de solo verlos desde el tab de CRM.
     const opsCliente = oportunidades.filter(o => clienteKey(o) === key);
     const recsCliente = recordatorios.filter(r => clienteKey(r) === key && !r.completado)
       .sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
-    return { opsCliente, recsCliente };
+    const contratosCliente = contratos.filter(c => clienteKey(c) === key);
+    return { opsCliente, recsCliente, contratosCliente };
   }
 
-  function crmClienteSeguimientoHTML(key,c,perfil,proximoMantenimiento){
+  function crmClienteSeguimientoHTML(key,c,perfil,contratoActivo,proximoMantenimiento){
     const hoy=todayISO();
     const ult=c.registros && c.registros.length ? c.registros.slice().sort((a,b)=>(b.fechaIngreso||'').localeCompare(a.fechaIngreso||''))[0] : null;
     const fechaUlt=ult ? ult.fechaIngreso : '—';
@@ -3873,11 +3884,12 @@
     if(prox!=='—' && prox<hoy){estado='Mantenimiento vencido';clase='red';accion='Contactar para programar servicio';}
     else if(prox===hoy){estado='Mantenimiento hoy';clase='amber';accion='Confirmar servicio';}
     else if(prox!=='—'){const d=Math.ceil((new Date(prox+'T00:00:00')-new Date(hoy+'T00:00:00'))/86400000);if(d<=30){estado='Próximo mantenimiento';clase='amber';accion='Contactar y agendar';}}
-    return '<div class="ficha360-followup"><div class="ficha360-followup-head"><div><span class="ficha360-kicker">SEGUIMIENTO</span><h3>Próxima acción</h3></div><span class="ficha360-followup-status '+clase+'">'+esc(estado)+'</span></div><div class="ficha360-followup-grid"><div><span>Último servicio</span><b>'+esc(fechaUlt)+'</b></div><div><span>Próximo mantenimiento</span><b>'+esc(prox)+'</b></div><div><span>Acción sugerida</span><b>'+esc(accion)+'</b></div></div><div class="ficha360-followup-actions"><button class="btn-primary" data-seguimiento-whatsapp="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">WhatsApp</button><button class="btn-ghost" data-seguimiento-recordatorio="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">+ Recordatorio</button></div></div>';
+    if(contratoActivo && contratoActivo.fechaRenovacion && contratoActivo.fechaRenovacion<=hoy){estado='Renovación pendiente';clase='red';accion='Contactar para renovar Cliente Seguro';}
+    return '<div class="ficha360-followup"><div class="ficha360-followup-head"><div><span class="ficha360-kicker">SEGUIMIENTO</span><h3>Próxima acción</h3></div><span class="ficha360-followup-status '+clase+'">'+esc(estado)+'</span></div><div class="ficha360-followup-grid"><div><span>Último servicio</span><b>'+esc(fechaUlt)+'</b></div><div><span>Próximo mantenimiento</span><b>'+esc(prox)+'</b></div><div><span>Cliente Seguro</span><b>'+esc(contratoActivo?'Activo':'Sin membresía')+'</b></div><div><span>Acción sugerida</span><b>'+esc(accion)+'</b></div></div><div class="ficha360-followup-actions"><button class="btn-primary" data-seguimiento-whatsapp="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">WhatsApp</button><button class="btn-ghost" data-seguimiento-recordatorio="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">+ Recordatorio</button></div></div>';
   }
 
   function crmClienteResumenHTML(key){
-    const { opsCliente, recsCliente } = crmDelCliente(key);
+    const { opsCliente, recsCliente, contratosCliente } = crmDelCliente(key);
     const ventasCliente = ventas.filter(v => clienteKey(v) === key)
       .sort((a,b)=>(b.fechaCompra||'').localeCompare(a.fechaCompra||''));
     const referidosCliente = referidos.filter(r => {
@@ -3885,10 +3897,20 @@
       const referidoKey = r.referido ? clienteKey({cliente:r.referido, telefono:r.telefonoReferido}) : '';
       return referidorKey === key || referidoKey === key;
     }).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
-    if(!opsCliente.length && !recsCliente.length && !ventasCliente.length && !referidosCliente.length) return '';
+    if(!opsCliente.length && !recsCliente.length && !contratosCliente.length && !ventasCliente.length && !referidosCliente.length) return '';
     const hoy = todayISO();
     return `
       <div class="dash-panel" style="margin-bottom:16px;">
+        ${contratosCliente.length ? `
+        <h3 style="margin-bottom:8px;">Membresías Cliente Seguro <span>${contratosCliente.length}</span></h3>
+        <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length||ventasCliente.length||referidosCliente.length)?'14px':'0'};">
+          ${contratosCliente.map(c=>`
+            <div class="vence-item">
+              <div><div class="v-name">${c.cantidadExtintores ? c.cantidadExtintores+' extintores' : 'Membresía'}${c.valorAnual ? ' · ₡'+parseFloat(c.valorAnual).toLocaleString('es-CR',{maximumFractionDigits:0})+'/año' : ''}</div>
+              <div class="v-order">${c.estado==='activo' ? 'Activo' : 'Cancelado'}${c.tipoMembresia ? ' · '+esc(c.tipoMembresia) : ''}</div></div>
+              <div class="v-date">${esc(c.fechaRenovacion||'—')}</div>
+            </div>`).join('')}
+        </div>` : ''}
         ${ventasCliente.length ? `
         <h3 style="margin-bottom:8px;">Ventas de equipos <span>${ventasCliente.length}</span></h3>
         <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length||referidosCliente.length)?'14px':'0'};">
@@ -3908,7 +3930,7 @@
             <div class="vence-item">
               <div><div class="v-name">${esReferidor?'Refirió a: ':'Fue referido por: '}${esc(esReferidor?(r.referido||''):(r.referidor||''))}</div>
               <div class="v-order">${esc(r.fecha||'Sin fecha')} · ${esc(r.servicio||'Sin servicio')} · Crédito ₡${(parseFloat(r.credito)||0).toLocaleString('es-CR')}</div></div>
-              <span class="ref-status">${esc(r.estado||'pendiente')}</span>
+              <span class="cs-status">${esc(r.estado||'pendiente')}</span>
             </div>`; }).join('')}
         </div>` : ''}
         ${opsCliente.length ? `
@@ -3986,6 +4008,7 @@
         totalPendiente: totalPendienteRegistros,
         ultimaFecha,
         etiquetas: (perfil && perfil.etiquetas) || [],
+        membresiaActiva: contratos.some(ct => clienteKey(ct) === c.key && ct.estado === 'activo'),
       };
     }).sort((a,b)=> a.nombre.localeCompare(b.nombre));
   }
@@ -4014,6 +4037,7 @@
         totalEquiposComprados: c.compras.reduce((s,v)=>s+(v.cantidad||1),0),
         totalPagado, totalPendiente, ultimaFecha,
         etiquetas: (perfil && perfil.etiquetas) || [],
+        membresiaActiva: contratos.some(ct => clienteKey(ct) === c.key && ct.estado === 'activo'),
       };
     }).sort((a,b)=> a.nombre.localeCompare(b.nombre));
   }
@@ -4059,7 +4083,7 @@
             <div class="contact-row" data-cliente-key="${esc(c.key)}" data-cliente-tipo="${esCompras?'compras':'mantenimiento'}">
               <div class="contact-avatar-col"><div class="contact-avatar">${esc(inicialesDe(c.nombre))}</div></div>
               <div class="contact-main">
-                <div class="contact-name">${esc(c.nombre)}${c.etiquetas && c.etiquetas.length ? etiquetasHTML(c.etiquetas) : ''}</div>
+                <div class="contact-name">${esc(c.nombre)}${c.membresiaActiva ? '<span class="etiqueta-badge etiqueta-membresia">Membresía</span>' : ''}${c.etiquetas && c.etiquetas.length ? etiquetasHTML(c.etiquetas) : ''}</div>
                 <div class="contact-sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono'}${c.ultimaFecha ? ` · Última actividad ${esc(c.ultimaFecha)}` : ''}</div>
               </div>
               <div class="contact-metrics">
@@ -4302,7 +4326,7 @@
           <button class="back-link" id="btn-volver-clientes">← Volver a clientes</button>
           <div class="cliente-detail-head">
             <div>
-              <h2>${esc(c.nombre)}</h2>
+              <h2>${esc(c.nombre)}${c.membresiaActiva ? ' <span class="etiqueta-badge etiqueta-membresia">Membresía activa</span>' : ''}</h2>
               <div class="sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono registrado'}${c.telefonos && c.telefonos.length>1 ? ` <button class="link-btn" data-separar-cliente="${esc(key)}">¿Son dos personas distintas? Separar</button>` : ''}</div>
             </div>
             <div class="cliente-kpis">
@@ -4318,6 +4342,7 @@
             <button class="btn-primary" id="btn-nueva-orden-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}" data-cliente-key="${esc(key)}">+ Nueva orden de servicio</button>
           <button class="btn-ghost" id="btn-agregar-extintor-cliente" data-cliente-key="${esc(key)}">+ Agregar extintor</button>
           <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
+            <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
             <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
           </div>
           ${crmClienteResumenHTML(key)}
@@ -4335,6 +4360,7 @@
     const registrosOrdenados = [...c.registros].sort((a,b)=> (b.fechaIngreso||'').localeCompare(a.fechaIngreso||''));
     const informalesOrdenados = [...c.movimientosInformales].sort((a,b)=> (b.fechaCaja||'').localeCompare(a.fechaCaja||''));
     const ventas360 = ventas.filter(v=>clienteKey(v)===key);
+    const contratos360 = contratos.filter(x=>clienteKey(x)===key);
     const pendientes360 = [
       ...registrosOrdenados.filter(r=>(saldoOf(r).saldo||0)>0).map(r=>({fecha:r.fechaIngreso||'',monto:saldoOf(r).saldo||0})),
       ...ventas360.filter(v=>(saldoOf(v).saldo||0)>0).map(v=>({fecha:v.fechaCompra||'',monto:saldoOf(v).saldo||0}))
@@ -4344,12 +4370,13 @@
     const perfil360 = perfilDeCliente(key);
     const extintores360 = (perfil360?.extintores||[]).length;
     const proximoMantenimiento360 = (perfil360?.extintores||[]).map(e=>e.proximoMantenimiento).filter(Boolean).sort()[0] || registrosOrdenados.map(r=>r.fechaVencimiento).filter(Boolean).sort()[0] || '—';
+    const contratoActivo360 = contratos360.find(x=>x.estado==='activo');
     return `
       <div class="clientes-content">
         <button class="back-link" id="btn-volver-clientes">← Volver a clientes</button>
         <div class="cliente-detail-head">
           <div>
-            <h2>${esc(c.nombre)}</h2>
+            <h2>${esc(c.nombre)}${c.membresiaActiva ? ' <span class="etiqueta-badge etiqueta-membresia">Membresía activa</span>' : ''}</h2>
             <div class="sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono registrado'}${c.telefonos && c.telefonos.length>1 ? ` <button class="link-btn" data-separar-cliente="${esc(key)}">¿Son dos personas distintas? Separar</button>` : ''}</div>
           </div>
           <div class="cliente-kpis">
@@ -4362,6 +4389,7 @@
         <div class="cliente-kpis" style="margin-bottom:16px;">
           <div class="cliente-kpi"><b>${c.registros.length}</b><small>Órdenes / servicios</small></div>
           <div class="cliente-kpi"><b>${extintores360}</b><small>Extintores en ficha</small></div>
+          <div class="cliente-kpi"><b>${contratoActivo360 ? "Activo" : "No"}</b><small>Cliente Seguro</small></div>
           <div class="cliente-kpi"><b style="color:${totalPendiente360>0?"#DC2626":"inherit"}">₡${totalPendiente360.toLocaleString("es-CR",{maximumFractionDigits:0})}</b><small>Saldo pendiente</small></div>
         </div>
         <div class="ficha360-summary">
@@ -4379,11 +4407,13 @@
           <div class="ficha360-stats">
             <div><b>${c.registros.length}</b><span>Órdenes</span></div>
             <div><b>${extintores360}</b><span>Extintores</span></div>
+            <div><b>${contratoActivo360 ? 'Activo' : 'No'}</b><span>Cliente Seguro</span></div>
             <div><b class="${totalPendiente360>0?'danger-text':''}">₡${totalPendiente360.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><span>Saldo pendiente</span></div>
           </div>
           <div class="ficha360-dates">
             <div><span>Última actividad</span><b>${esc(ultimoMovimiento)}</b></div>
             <div><span>Próximo mantenimiento</span><b>${esc(proximoMantenimiento360)}</b></div>
+            <div><span>Membresía</span><b>${contratoActivo360 ? 'Activa' : 'Sin membresía activa'}</b></div>
           </div>
         </div>
         ${perfilClienteHTML(key, c.nombre, c.telefono)}
@@ -4392,9 +4422,10 @@
           <button class="btn-ghost" id="btn-agregar-extintor-cliente" data-cliente-key="${esc(key)}">+ Agregar extintor</button>
           <button class="btn-ghost" id="btn-nueva-venta-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva venta</button>
           <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
+          <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
           <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
         </div>
-${crmClienteSeguimientoHTML(key, c, perfil360, proximoMantenimiento360)}
+${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoMantenimiento360)}
         ${historialContactoClienteHTML(key)}
         ${crmClienteResumenHTML(key)}
         ${historialOrdenesClienteHTML(registrosOrdenados)}
@@ -4508,6 +4539,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, proximoMantenimiento360)}
   }
 
   function renderDashboard(){
+    const deps = {ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,contratos,proximosVencimientos,esc,records,ventas,oportunidades,recordatorios,clientesPerfil,clientesEnRiesgo,tasaRenovacionAnual,todayISO,saldoOf,DIAS_RIESGO_CLIENTE,productosStockBajo,ETAPAS_EMBUDO,cajaDeHoy,calcularEsperado,resumenMes,resumenAnio,METODOS_PAGO};
     if(window.CRMDashboard && typeof window.CRMDashboard.renderDashboard==='function'){
       try{
         return window.CRMDashboard.renderDashboard(deps);
@@ -4527,7 +4559,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, proximoMantenimiento360)}
     const payload = {
       version:'CRM Industrial Extintores Seguridad 3.0',
       exportedAt:new Date().toISOString(),
-      records,cajas,papelera,ventas,oportunidades,recordatorios,clientesPerfil,inventario,configuracion
+      records,cajas,papelera,ventas,oportunidades,recordatorios,clientesPerfil,contratos,inventario,configuracion
     };
     const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
     const url = URL.createObjectURL(blob);
@@ -4565,7 +4597,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, proximoMantenimiento360)}
     ]);
     const porCobrar = records.reduce((s,r)=>s+(saldoOf(r).saldo||0),0);
     const stockBajo = typeof productosStockBajo==='function' ? productosStockBajo() : [];
-
+    const contratosActivos = contratos.filter(c=>c.estado==='activo');
     const opsAbiertas = oportunidades.filter(o=>o.etapa!=='perdido' && o.etapa!=='ganado');
     const recPend = recordatorios.filter(r=>!r.completado).sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
     const proximos = [...en30].sort((a,b)=>(a.fechaVencimiento||'').localeCompare(b.fechaVencimiento||'')).slice(0,6);
@@ -4579,7 +4611,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, proximoMantenimiento360)}
           <div>
             <div class="crm-pill green"><span class="crm-nav-dot"></span>Operación conectada</div>
             <h2>CRM Industrial</h2>
-            <p>Centro de control para clientes, activos, mantenimiento, ventas, inventario y cobranza.</p>
+            <p>Centro de control para clientes, activos, mantenimiento, ventas, membresías, inventario y cobranza.</p>
           </div>
           <div class="crm-hero-actions">
             <button class="btn-primary" id="ind-nuevo">+ Nueva orden</button>
@@ -4595,7 +4627,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, proximoMantenimiento360)}
           <div class="crm-kpi" data-ind-view="clientes"><div class="icon">🏢</div><div class="value">${clientes.size}</div><div class="label">Clientes</div><div class="hint">${riesgo.length} en riesgo detectado</div></div>
           <div class="crm-kpi" data-ind-view="crm"><div class="icon">📈</div><div class="value">${opsAbiertas.length}</div><div class="label">Oportunidades abiertas</div><div class="hint">${oportunidades.length} en total</div></div>
           <div class="crm-kpi" data-ind-view="inventario"><div class="icon">📦</div><div class="value">${stockBajo.length}</div><div class="label">Stock bajo</div><div class="hint">${inventario.length} productos controlados</div></div>
-          <div class="crm-kpi" data-ind-view="caja"><div class="icon">₡</div><div class="value">₡${porCobrar.toLocaleString('es-CR',{maximumFractionDigits:0})}</div><div class="label">Por cobrar</div><div class="hint">Ventas y servicios</div></div>
+          <div class="crm-kpi" data-ind-view="caja"><div class="icon">₡</div><div class="value">₡${porCobrar.toLocaleString('es-CR',{maximumFractionDigits:0})}</div><div class="label">Por cobrar</div><div class="hint">${contratosActivos.length} membresías activas</div></div>
         </div>
 
         <div class="crm-section-title"><h3>Centro de alertas y agenda</h3><span>Lo que requiere atención hoy y en los próximos días</span></div>
@@ -4726,6 +4758,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, proximoMantenimiento360)}
             <div class="crm-mini-grid">
               <div class="crm-mini"><b>${listos.length}</b><span>Listos para entrega</span></div>
               <div class="crm-mini"><b>${ventas.length}</b><span>Ventas registradas</span></div>
+              <div class="crm-mini"><b>${contratosActivos.length}</b><span>Membresías activas</span></div>
               <div class="crm-mini"><b>₡${oportunidades.reduce((s,o)=>s+(parseFloat(o.montoEstimado)||0),0).toLocaleString('es-CR',{maximumFractionDigits:0})}</b><span>Pipeline estimado</span></div>
             </div>
           </div>
@@ -4881,7 +4914,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, proximoMantenimiento360)}
         }
       </div>
       </div>
-      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : (view === 'referidos' ? renderReferidos() : renderIndustrial()))))))))}
+      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : (view === 'referidos' ? renderReferidos() : renderIndustrial())))))))}
       </div>
       </div>
       </div>
@@ -4949,7 +4982,9 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, proximoMantenimiento360)}
         if(action==='vencidos'){ view='listado'; venceFilter='vencidos'; query=''; animateViewChange=true; render(); return; }
         if(action==='proximos'){ view='listado'; venceFilter='proximo'; query=''; animateViewChange=true; render(); return; }
         if(action==='seguimientos'){ view='crm'; crmSubvista='recordatorios'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }
-        if(action==='cotizaciones'){ view='crm'; crmSubvista='pipeline'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }        if(action==='clientes'){ view='clientes'; clienteSeleccionado=null; animateViewChange=true; render(); return; }
+        if(action==='cotizaciones'){ view='crm'; crmSubvista='pipeline'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }
+        if(action==='membresias'){ view='crm'; crmSubvista='contratos'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }
+        if(action==='clientes'){ view='clientes'; clienteSeleccionado=null; animateViewChange=true; render(); return; }
       });
     });
     document.querySelectorAll('[data-vencimiento-whatsapp]').forEach(b=>{
@@ -5087,9 +5122,14 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, proximoMantenimiento360)}
         document.querySelectorAll('[data-contactar-recordatorio]').forEach(b=>{
           b.addEventListener('click', ()=> crearRecordatorioRapido(b.getAttribute('data-contactar-recordatorio'), b.getAttribute('data-contactar-telefono')||''));
         });
+      } else if(crmSubvista === 'contratos'){
+        document.querySelectorAll('[data-contratos-filtro]').forEach(b=>{
+          b.addEventListener('click', ()=> setContratosFiltro(b.getAttribute('data-contratos-filtro')));
         });
         const btnNuevoContrato = document.getElementById('btn-nuevo-contrato');
         if(btnNuevoContrato) btnNuevoContrato.addEventListener('click', ()=> openNuevoContrato());
+        document.querySelectorAll('[data-action="generar-membresia"]').forEach(b=>{
+          b.addEventListener('click', ()=> printMembresia(b.getAttribute('data-id')));
         });
         document.querySelectorAll('[data-action="editar-contrato"]').forEach(b=>{
           b.addEventListener('click', ()=> openEditarContrato(b.getAttribute('data-id')));
@@ -5136,7 +5176,9 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, proximoMantenimiento360)}
         const btnAgregarExtintorCliente = document.getElementById('btn-agregar-extintor-cliente');
         if(btnAgregarExtintorCliente) btnAgregarExtintorCliente.addEventListener('click', ()=> openEditarPerfilCliente(btnAgregarExtintorCliente.getAttribute('data-cliente-key')));
         const btnNuevaOpCliente = document.getElementById('btn-nueva-oportunidad-cliente');
-        if(btnNuevaOpCliente) btnNuevaOpCliente.addEventListener('click', ()=> openNuevaOportunidad(btnNuevaOpCliente.getAttribute('data-cliente'), btnNuevaOpCliente.getAttribute('data-telefono')));if(btnNuevoContratoCliente) btnNuevoContratoCliente.addEventListener('click', ()=> openNuevoContrato(btnNuevoContratoCliente.getAttribute('data-cliente'), btnNuevoContratoCliente.getAttribute('data-telefono')));
+        if(btnNuevaOpCliente) btnNuevaOpCliente.addEventListener('click', ()=> openNuevaOportunidad(btnNuevaOpCliente.getAttribute('data-cliente'), btnNuevaOpCliente.getAttribute('data-telefono')));
+
+        if(btnNuevoContratoCliente) btnNuevoContratoCliente.addEventListener('click', ()=> openNuevoContrato(btnNuevoContratoCliente.getAttribute('data-cliente'), btnNuevoContratoCliente.getAttribute('data-telefono')));
         const btnRecCliente = document.getElementById('btn-recordatorio-cliente');
         if(btnRecCliente) btnRecCliente.addEventListener('click', ()=> abrirRecordatorioRapidoModal(btnRecCliente.getAttribute('data-cliente'), btnRecCliente.getAttribute('data-telefono')));
         document.querySelectorAll('[data-abrir-oportunidad]').forEach(b=>{
