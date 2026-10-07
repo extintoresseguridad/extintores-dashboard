@@ -38,7 +38,7 @@
   let venceFilter = 'todos';
   let query = '';
   let editingId = null;
-  let view = 'industrial'; // ... | 'cliente-seguro' | 'referidos'
+  let view = 'industrial'; // ... | 'referidos'
   let crmSubvista = 'pipeline'; // 'pipeline' | 'recordatorios' | 'contratos'
   let pipelineQuery = '';
   let oportunidadSeleccionada = null;
@@ -5385,7 +5385,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
           <div class="nav-section">
             <button data-view="listado" class="${view==='listado'?'active':''}"><span class="snav-ico">▤</span>Órdenes de trabajo</button>
             <button data-view="clientes" class="${view==='clientes'?'active':''}"><span class="snav-ico">◔</span>Clientes · Ficha 360°</button>
-            <button data-view="cliente-seguro" class="${view==='cliente-seguro'?'active':''}"><span class="snav-ico">🛡</span>Cliente Seguro</button>
+
             <button data-view="referidos" class="${view==='referidos'?'active':''}"><span class="snav-ico">🔥</span>Referidos</button>
           </div>
           <div class="nav-section-label">Ventas / CRM</div>
@@ -5464,7 +5464,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
         }
       </div>
       </div>
-      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : (view === 'cliente-seguro' ? renderClienteSeguro() : (view === 'referidos' ? renderReferidos() : renderIndustrial()))))))))}
+      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : (view === 'referidos' ? renderReferidos() : renderIndustrial())))))))}
       </div>
       </div>
       </div>
