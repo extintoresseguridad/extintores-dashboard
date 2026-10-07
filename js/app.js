@@ -30,7 +30,6 @@
   let oportunidades = []; // { id, cliente, telefono, descripcion, montoEstimado, etapa:'contactado'|'cotizado'|'ganado'|'perdido', fechaCreacion, bitacora:[{id,fecha,tipo,nota}] }
   let recordatorios = []; // { id, texto, fecha, cliente, telefono, oportunidadId, completado }
   let clientesPerfil = []; // { id, cliente, telefono, empresa, cedula, notas, etiquetas, fechaCreacion } — datos personales del cliente, independientes de sus órdenes/ventas
-  let contratos = []; // membresías Cliente Seguro
   let referidos = []; // programa independiente de referidos
   let inventario = []; // { id, nombre, categoria:'extintor'|'repuesto'|'servicio', tipo, capacidad, cantidad, cantidadMinima, precioUnitario, notas, movimientos:[{id,tipo,cantidad,fecha,nota}] }
   let loadError = null;
@@ -38,8 +37,8 @@
   let venceFilter = 'todos';
   let query = '';
   let editingId = null;
-  let view = 'industrial'; // ... | 'cliente-seguro' | 'referidos'
-  let crmSubvista = 'pipeline'; // 'pipeline' | 'recordatorios' | 'contratos'
+  let view = 'industrial'; // ... | 'referidos'
+  let crmSubvista = 'pipeline'; // 'pipeline' | 'recordatorios' | 'clientes-contactar'
   let pipelineQuery = '';
   let oportunidadSeleccionada = null;
   let animateViewChange = false; // true justo antes de un render() que debe entrar con fade-in (cambio de pestaña o de cliente)
@@ -50,15 +49,8 @@
   let etiquetaFiltro = 'todas'; // 'todas' | una de ETIQUETAS_CLIENTE
   const TARJETAS_ABIERTAS_KEY = 'extintores:tarjetas_abiertas';
   const TARJETAS_CERRADAS_KEY = 'extintores:tarjetas_cerradas';
-  function cargarSetLocal(key){
-    try{
-      const raw = localStorage.getItem(key);
-      return raw ? new Set(JSON.parse(raw)) : new Set();
-    }catch(e){ return new Set(); }
-  }
-  function guardarSetLocal(key, set){
-    try{ localStorage.setItem(key, JSON.stringify([...set])); }catch(e){}
-  }
+  function cargarSetLocal(key){ return new Set(window.CRMStorage.getJSON(key, [])); }
+  function guardarSetLocal(key, set){ window.CRMStorage.setJSON(key, [...set]); }
   let tarjetasAbiertas = cargarSetLocal(TARJETAS_ABIERTAS_KEY); // Recuerda qué tarjetas (por id de orden o registro) el usuario dejó abiertas, incluso tras recargar la página.
   let tarjetasCerradas = cargarSetLocal(TARJETAS_CERRADAS_KEY); // Recuerda qué tarjetas de orden (abiertas por defecto) el usuario cerró, incluso tras recargar la página.
 
@@ -159,51 +151,6 @@
     .cot-foot{ margin-top:30px; text-align:center; font-size:10px; color:#6B7280; border-top:1px solid #E5E7EB; padding-top:10px; }
   `;
 
-  const MEMBRESIA_CSS = `
-    @page{ size:letter; margin:16mm; }
-    * { box-sizing:border-box; }
-    body{ font-family:Arial,Helvetica,sans-serif; color:#1B1F23; margin:0; padding:0; font-size:19px; line-height:1.65; }
-    .mem-head{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1E2F4E; padding-bottom:14px; margin-bottom:18px; }
-    .mem-logo{ max-width:150px; height:auto; }
-    .mem-empresa{ text-align:right; font-size:17px; color:#444; }
-    .mem-empresa b{ display:block; font-size:21px; color:#1B1F23; margin-bottom:2px; }
-    .mem-titulo{ text-align:center; margin:0 0 18px; }
-    .mem-titulo h1{ font-size:29px; letter-spacing:.05em; text-transform:uppercase; margin:0 0 4px; color:#1E2F4E; }
-    .mem-titulo div{ font-size:17px; color:#666; }
-    .mem-parties{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px; break-inside:avoid; page-break-inside:avoid; }
-    .mem-party{ border:1px solid #E5E7EB; border-radius:4px; padding:14px 16px; break-inside:avoid; page-break-inside:avoid; }
-    .mem-party h3{ margin:0 0 8px; font-size:15.5px; text-transform:uppercase; letter-spacing:.05em; color:#6B7280; }
-    .mem-party .row{ margin-bottom:6px; font-size:18px; }
-    .mem-party .row b{ font-weight:600; }
-    .mem-party .mem-field{ display:block; margin-bottom:12px; }
-    .mem-party .mem-field .fl{ display:block; min-width:0; margin-bottom:5px; font-size:14.5px; color:#6B7280; }
-    .mem-party .mem-field .mem-blank{ min-width:36px; }
-    .mem-party .mem-field .mem-blank-lg{ display:block; width:100%; min-width:0; }
-    .mem-blank-year{ min-width:56px; }
-    .mem-no-break{ break-inside:avoid; page-break-inside:avoid; }
-    .mem-section-title{ font-size:18.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.04em; color:#1E2F4E; margin:20px 0 9px; border-bottom:1px solid #E5E7EB; padding-bottom:4px; }
-    .mem-clause{ margin:0 0 11px; text-align:justify; }
-    .mem-clause b{ margin-right:3px; }
-    .mem-blank{ display:inline-block; border-bottom:1px solid #1B1F23; min-width:90px; padding:0 2px; }
-    .mem-blank-lg{ min-width:280px; }
-    .mem-value{ display:inline-block; font-weight:700; padding:0 2px; }
-    .mem-check{ display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; border:1px solid #1B1F23; margin-right:5px; vertical-align:middle; font-size:14px; line-height:1; font-weight:bold; }
-    .mem-field{ display:flex; align-items:baseline; gap:10px; margin-bottom:10px; font-size:18px; }
-    .mem-field .fl{ flex-shrink:0; min-width:250px; color:#444; }
-    .mem-field .mem-blank{ flex:1; }
-    .mem-field .mem-value{ flex:0 1 auto; }
-    .mem-list{ margin:6px 0 10px; padding-left:20px; }
-    .mem-list li{ margin-bottom:4px; }
-    .mem-list-cols{ columns:2; column-gap:24px; }
-    .mem-list-cols li{ break-inside:avoid; }
-    .mem-notas{ background:#f7f4ec; border:1px solid #E5E7EB; border-radius:4px; padding:12px 14px; margin:14px 0; font-size:18px; }
-    .mem-notas h3{ margin:0 0 6px; font-size:15.5px; text-transform:uppercase; letter-spacing:.04em; color:#6B7280; }
-    .mem-firmas{ display:flex; justify-content:space-between; gap:40px; margin-top:46px; }
-    .mem-firma{ flex:1; text-align:center; font-size:17px; }
-    .mem-firma .linea{ border-top:1px solid #1B1F23; margin-bottom:6px; padding-top:6px; }
-    .mem-firma .sub{ color:#6B7280; font-size:16px; margin-top:2px; }
-    .mem-foot{ margin-top:26px; text-align:center; font-size:16px; color:#6B7280; border-top:1px solid #E5E7EB; padding-top:10px; }
-  `;
 
 
   function tagOpen(name){ return '<' + name + '>'; }
@@ -373,145 +320,6 @@
     downloadPrintable(body, `cotizacion_${safeName}.html`, 'Cotización — ' + o.cliente, COTIZACION_CSS);
   }
 
-  function printMembresia(contratoId){
-    const c = contratos.find(x => x.id === contratoId);
-    if(!c) return;
-    const blank = (min)=> `<span class="mem-blank${min?' mem-blank-lg':''}">&nbsp;</span>`;
-    // Cuando el dato ya viene lleno, se muestra como texto subrayado del tamaño de su contenido
-    // (sin la línea en blanco estirándose de más); si falta, se deja el espacio largo para escribir a mano.
-    const campo = (val)=> val ? `<span class="mem-value">${esc(val)}</span>` : `<span class="mem-blank mem-blank-lg">&nbsp;</span>`;
-    const fechaDMA = (iso)=>{
-      if(iso){
-        const p = iso.split('-');
-        if(p.length===3) return `<span class="mem-value">${esc(p[2])}</span> / <span class="mem-value">${esc(p[1])}</span> / <span class="mem-value">${esc(p[0])}</span>`;
-      }
-      return `<span class="mem-blank">&nbsp;</span> / <span class="mem-blank">&nbsp;</span> / <span class="mem-blank mem-blank-year">&nbsp;</span>`;
-    };
-    const duracionTexto = (()=>{
-      if(!c.fechaInicio || !c.fechaRenovacion) return null;
-      const d1 = new Date(c.fechaInicio+'T00:00:00');
-      const d2 = new Date(c.fechaRenovacion+'T00:00:00');
-      if(isNaN(d1) || isNaN(d2) || d2<=d1) return null;
-      const meses = Math.round((d2-d1)/(1000*60*60*24*30.44));
-      if(meses>=11 && meses<=13) return '1 año';
-      if(meses>0 && meses%12===0) return (meses/12)+' años';
-      return meses>0 ? meses+' meses' : null;
-    })();
-    const body = `
-      <div class="mem-head">
-        <img src="${LOGO_DATA_URL}" alt="Extintores Seguridad" class="mem-logo"/>
-        <div class="mem-empresa">
-          <b>Extintores Seguridad</b>
-          Cédula jurídica: ${EMPRESA_CEDULA_JURIDICA}<br/>
-          Tel: ${esc(configuracion.telefono)}<br/>
-          ${esc(configuracion.correo)}
-        </div>
-      </div>
-      <div class="mem-titulo">
-        <h1>Programa Cliente Seguro — Acuerdo de Membresía</h1>
-      </div>
-
-      <div class="mem-clause" style="text-align:right;">Fecha: ${fechaDMA(todayISO())}</div>
-
-      <div class="mem-section-title">1. Datos del cliente</div>
-      <div class="mem-field"><span class="fl">Nombre de la empresa</span>${campo(c.cliente)}</div>
-      <div class="mem-field"><span class="fl">Cédula jurídica / identificación</span>${campo(c.cedulaCliente)}</div>
-      <div class="mem-field"><span class="fl">Nombre del encargado</span>${campo(c.encargado)}</div>
-      <div class="mem-field"><span class="fl">Teléfono / WhatsApp</span>${campo(c.telefono)}</div>
-      <div class="mem-field"><span class="fl">Correo electrónico</span>${campo(c.correo)}</div>
-      <div class="mem-field"><span class="fl">Dirección</span>${campo(c.direccion)}</div>
-
-      <div class="mem-section-title">2. Datos de la membresía</div>
-      <div class="mem-clause">
-        Tipo de membresía:
-        <span class="mem-check">${c.tipoMembresia==='seguridad'?'✓':''}</span> Seguridad&nbsp;&nbsp;
-        <span class="mem-check">${c.tipoMembresia==='seguridad_pro'?'✓':''}</span> Seguridad Pro&nbsp;&nbsp;
-        <span class="mem-check">${c.tipoMembresia==='seguridad_corporativa'?'✓':''}</span> Seguridad Corporativa
-      </div>
-      <div class="mem-field"><span class="fl">Cantidad de extintores registrados</span>${campo(c.cantidadExtintores ? String(c.cantidadExtintores) : '')}</div>
-      <div class="mem-field"><span class="fl">Fecha de inicio</span>${fechaDMA(c.fechaInicio)}</div>
-      <div class="mem-field"><span class="fl">Fecha de renovación</span>${fechaDMA(c.fechaRenovacion)}</div>
-
-      <div class="mem-section-title">3. Objeto de la membresía</div>
-      <div class="mem-clause">Por medio del presente documento, el cliente acepta formar parte del Programa Cliente Seguro de Extintores Seguridad, cuyo objetivo es brindar seguimiento y beneficios especiales relacionados con el mantenimiento de sus equipos de protección contra incendios.</div>
-      <div class="mem-clause">La membresía tiene una vigencia de 12 meses a partir de la fecha de contratación y permite acceder a los beneficios correspondientes al plan contratado.</div>
-
-      <div class="mem-section-title">4. Beneficios</div>
-      <div class="mem-clause">De acuerdo con el nivel de membresía asignado, el cliente podrá recibir:</div>
-      <ul class="mem-list">
-        <li>Tarifas preferenciales en mantenimiento y servicios.</li>
-        <li>Registro y control de sus equipos.</li>
-        <li>Recordatorios de próximas fechas de mantenimiento.</li>
-        <li>Atención preferencial, según disponibilidad.</li>
-        <li>Condiciones especiales en la compra de nuevos equipos.</li>
-        <li>Beneficios adicionales por volumen de equipos.</li>
-        <li>Seguimiento de los equipos registrados.</li>
-      </ul>
-      <div class="mem-clause">Los beneficios podrán variar según la cantidad, tipo y ubicación de los equipos, así como las condiciones comerciales acordadas entre las partes.</div>
-
-      <div class="mem-section-title">5. Registro de los equipos</div>
-      <div class="mem-clause">El cliente autoriza a Extintores Seguridad a mantener un registro de los equipos incluidos en el programa, con información necesaria para facilitar su identificación y seguimiento.</div>
-      <div class="mem-clause">El registro podrá incluir:</div>
-      <ul class="mem-list mem-list-cols">
-        <li>Tipo de extintor.</li>
-        <li>Capacidad.</li>
-        <li>Marca.</li>
-        <li>Número de serie o identificación.</li>
-        <li>Ubicación.</li>
-        <li>Fecha de compra.</li>
-        <li>Fecha del último mantenimiento.</li>
-        <li>Próxima fecha recomendada de mantenimiento.</li>
-        <li>Estado del equipo.</li>
-      </ul>
-
-      <div class="mem-section-title">6. Recordatorios y seguimiento</div>
-      <div class="mem-clause">El cliente autoriza a Extintores Seguridad a comunicarse con los contactos proporcionados para enviar recordatorios relacionados con mantenimiento, recarga, inspección, renovación o sustitución de los equipos registrados.</div>
-      <div class="mem-clause">Los recordatorios constituyen un servicio de apoyo y no sustituyen las obligaciones del propietario, administrador o responsable del establecimiento de mantener sus equipos conforme a la normativa y requisitos aplicables.</div>
-
-      <div class="mem-section-title">7. Servicios y pagos</div>
-      <div class="mem-clause">La membresía no implica que los servicios de mantenimiento, recarga, reparación, instalación o sustitución de equipos sean gratuitos, salvo que exista una promoción o condición comercial escrita que indique lo contrario.</div>
-      <div class="mem-clause">Los servicios realizados serán cotizados y cobrados de acuerdo con las tarifas y condiciones vigentes o previamente acordadas con el cliente.</div>
-      <div class="mem-clause">Los descuentos o tarifas preferenciales correspondientes a la membresía estarán sujetos al nivel asignado y a las condiciones comerciales establecidas por Extintores Seguridad.</div>
-
-      <div class="mem-section-title">8. Vigencia y cancelación</div>
-      <div class="mem-clause">La membresía tendrá una vigencia de ${duracionTexto ? esc(duracionTexto) : blank()} a partir de la fecha de inscripción.</div>
-      <div class="mem-clause">El cliente podrá solicitar la cancelación de su membresía en cualquier momento.</div>
-      <div class="mem-clause">Extintores Seguridad podrá modificar, suspender o cancelar una membresía cuando existan razones comerciales, incumplimiento de las condiciones acordadas o cualquier otra circunstancia que lo justifique, procurando comunicarlo previamente al cliente cuando corresponda.</div>
-
-      <div class="mem-section-title">9. Responsabilidad del cliente</div>
-      <div class="mem-clause">El cliente se compromete a proporcionar información correcta sobre sus equipos y a permitir, cuando sea necesario, el acceso a los mismos para realizar los servicios contratados.</div>
-      <div class="mem-clause">La membresía y los recordatorios proporcionados por Extintores Seguridad no constituyen una garantía de funcionamiento del equipo ni sustituyen las inspecciones, mantenimientos o servicios técnicamente requeridos.</div>
-
-      ${c.notas ? `<div class="mem-notas"><h3>Condiciones especiales / notas</h3>${esc(c.notas)}</div>` : ''}
-
-      <div class="mem-no-break">
-        <div class="mem-section-title">10. Aceptación</div>
-        <div class="mem-clause">El cliente manifiesta que ha leído y comprendido las condiciones del Programa Cliente Seguro, acepta sus términos y solicita voluntariamente su incorporación al programa.</div>
-
-        <div class="mem-parties" style="margin-top:14px;">
-          <div class="mem-party">
-            <h3>El cliente</h3>
-            <div class="mem-field"><span class="fl">Nombre del cliente o representante</span>${blank(true)}</div>
-            <div class="mem-field"><span class="fl">Cédula</span>${blank(true)}</div>
-            <div class="mem-field"><span class="fl">Firma</span>${blank(true)}</div>
-            <div class="mem-field"><span class="fl">Fecha</span>${fechaDMA('')}</div>
-          </div>
-          <div class="mem-party">
-            <h3>Por Extintores Seguridad</h3>
-            <div class="mem-field"><span class="fl">Nombre</span>${campo(EMPRESA_REPRESENTANTE)}</div>
-            <div class="mem-field"><span class="fl">Cargo</span>${campo('Representante Legal')}</div>
-            <div class="mem-field"><span class="fl">Firma</span>${blank(true)}</div>
-            <div class="mem-field"><span class="fl">Fecha</span>${fechaDMA('')}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mem-foot">Extintores Seguridad · Protección, mantenimiento y seguimiento para su tranquilidad.<br/>${esc(configuracion.telefono)} · ${esc(configuracion.correo)}</div>
-    `;
-    const safeName = (c.cliente||'membresia').toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,30);
-    downloadPrintable(body, `membresia_${safeName}.html`, 'Membresía — ' + c.cliente, MEMBRESIA_CSS);
-  }
-
   function printReceipt(id){
     const rec = records.find(r => r.id === id);
     if(!rec) return;
@@ -576,7 +384,10 @@
     downloadPrintable(body, `boleta_${safeName}.html`, 'Boleta — ' + rec.cliente, TICKET_CSS);
   }
 
-  function uid(){ return 'ext_' + Date.now() + '_' + Math.floor(Math.random()*10000); }
+  function uid(){
+    if(window.crypto && typeof window.crypto.randomUUID === 'function') return 'ext_' + window.crypto.randomUUID();
+    return 'ext_' + Date.now() + '_' + Math.random().toString(36).slice(2, 12);
+  }
   function todayISO(){ return new Date().toISOString().slice(0,10); }
 
   function textoUltimaActualizacion(){
@@ -648,108 +459,34 @@
   let lastSaveVerified = true;
   let lastSaveFailedToCloud = false; // true si el último guardado NO llegó a Firebase (quedó solo local o falló del todo)
 
-  function localStorageTest(){
-    try{
-      const testKey = '__test__' + Date.now();
-      localStorage.setItem(testKey, '1');
-      localStorage.removeItem(testKey);
-      return true;
-    }catch(e){ return false; }
-  }
+  function localStorageTest(){ return window.CRMStorage.test(); }
 
-  function fetchConTimeout(url, options, timeoutMs){
-    // Si la computadora/teléfono estuvo dormido o sin red por un buen rato, una petición
-    // puede quedarse "colgada" esperando una respuesta que nunca llega, en vez de fallar.
-    // Esto le pone un límite de tiempo (15s por defecto) para que falle rápido y el
-    // mecanismo de reintentos (conReintentos) pueda hacer un intento nuevo de verdad.
-    timeoutMs = timeoutMs || 15000;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    return fetch(url, Object.assign({}, options, { signal: controller.signal }))
-      .finally(() => clearTimeout(timer));
-  }
+  function fetchConTimeout(url, options, timeoutMs){ return window.CRMFirebase.fetchConTimeout(url, options, timeoutMs); }
 
   function authHeaders(){
     return authUser && authUser.idToken ? {'Authorization': 'Bearer ' + authUser.idToken} : {};
   }
 
   async function firestoreGet(){
-    // Antes de leer, nos aseguramos de que el token de sesión siga vigente. Si la pestaña
-    // llevaba mucho tiempo abierta sin usarse, el token (dura ~1 hora) puede haber vencido;
-    // sin este refresco, Firestore rechazaría la petición y el guardado fallaría en silencio.
-    await refreshIdTokenIfNeeded();
-    const res = await fetchConTimeout(FIRESTORE_DOC_URL, { headers: authHeaders() });
-    if(res.status === 404) return null; // documento aún no existe (primer uso)
-    if(!res.ok) throw new Error('firestore get failed: ' + res.status);
-    const data = await res.json();
-    const val = data && data.fields && data.fields.data && data.fields.data.stringValue;
-    return val || null;
+    return window.CRMFirebase.get({url:FIRESTORE_DOC_URL,getAuth:()=>authUser,refresh:refreshIdTokenIfNeeded});
   }
 
   async function firestoreSet(json){
-    await refreshIdTokenIfNeeded();
-    const body = { fields: { data: { stringValue: json } } };
-    const url = FIRESTORE_DOC_URL + '&updateMask.fieldPaths=data';
-    const res = await fetchConTimeout(url, {
-      method: 'PATCH',
-      headers: Object.assign({'Content-Type':'application/json'}, authHeaders()),
-      body: JSON.stringify(body)
-    });
-    if(!res.ok) throw new Error('firestore set failed: ' + res.status);
+    return window.CRMFirebase.set({url:FIRESTORE_DOC_URL,json,getAuth:()=>authUser,refresh:refreshIdTokenIfNeeded});
   }
 
   function esperar(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
 
-  async function conReintentos(fn, intentos){
-    // Reintenta una operación async hasta 'intentos' veces, con espera creciente entre cada una
-    // (300ms, luego 900ms). Devuelve el resultado si tiene éxito, o relanza el último error.
-    let ultimoError = null;
-    for(let i = 0; i < intentos; i++){
-      try{
-        return await fn();
-      }catch(e){
-        ultimoError = e;
-        if(i < intentos - 1) await esperar(300 * Math.pow(3, i));
-      }
-    }
-    throw ultimoError;
-  }
+  async function conReintentos(fn, intentos){ return window.CRMFirebase.conReintentos(fn, intentos); }
 
   // ---------- Autenticación ----------
 
-  function saveSession(){
-    try{
-      if(authUser) localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(authUser));
-      else localStorage.removeItem(AUTH_SESSION_KEY);
-    }catch(e){}
-  }
-
-  function loadSession(){
-    try{
-      const raw = localStorage.getItem(AUTH_SESSION_KEY);
-      return raw ? JSON.parse(raw) : null;
-    }catch(e){ return null; }
-  }
-
+  function saveSession(){ return window.CRMAuth.saveSession(authUser); }
+  function loadSession(){ return window.CRMAuth.loadSession(); }
   async function refreshIdTokenIfNeeded(){
-    if(!authUser) return false;
-    if(authUser.expiresAt && Date.now() < authUser.expiresAt - 60000) return true; // aún válido
-    try{
-      const res = await fetchConTimeout(AUTH_REFRESH_URL, {
-        method: 'POST',
-        headers: {'Content-Type':'application/x-www-form-urlencoded'},
-        body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(authUser.refreshToken)
-      });
-      if(!res.ok) return false;
-      const data = await res.json();
-      authUser = Object.assign({}, authUser, {
-        idToken: data.id_token,
-        refreshToken: data.refresh_token,
-        expiresAt: Date.now() + (parseInt(data.expires_in,10) || 3600) * 1000,
-      });
-      saveSession();
-      return true;
-    }catch(e){ return false; }
+    const refreshed = await window.CRMAuth.refreshIdTokenIfNeeded(authUser);
+    if(refreshed) authUser = refreshed;
+    return !!refreshed;
   }
 
   async function fetchUserDoc(uid){
@@ -768,7 +505,9 @@
   async function ensureUserDoc(uid, email){
     let doc = await fetchUserDoc(uid);
     if(doc) return doc;
-    const role = normalizarRolPorCorreo(email, 'pending');
+    // Un perfil nuevo siempre nace como pending. El rol privilegiado se asigna
+    // después desde un admin mediante Security Rules; nunca por correo en el cliente.
+    const role = 'pending';
     const url = `${FIRESTORE_BASE}/users/${uid}?key=${FIREBASE_API_KEY}`;
     const body = { fields: {
       email: { stringValue: email || '' },
@@ -784,6 +523,18 @@
   }
 
   async function setUserRole(uid, role){
+    if(!esAdmin()){
+      showToast('No tienes permisos para modificar roles.');
+      return false;
+    }
+    if(!window.CRMAccess.isValidRole(role)){
+      showToast('Rol no válido.');
+      return false;
+    }
+    if(authUser && uid === authUser.uid){
+      showToast(esSuperAdmin() ? 'La cuenta Super Admin está protegida.' : 'No puedes modificar tu propio rol.');
+      return false;
+    }
     await refreshIdTokenIfNeeded();
     const url = `${FIRESTORE_BASE}/users/${uid}?key=${FIREBASE_API_KEY}&updateMask.fieldPaths=role`;
     await fetchConTimeout(url, {
@@ -791,6 +542,7 @@
       headers: Object.assign({'Content-Type':'application/json'}, authHeaders()),
       body: JSON.stringify({ fields: { role: { stringValue: role } } })
     });
+    return true;
   }
 
   // Elimina el PERFIL del usuario (su documento en users/, con su rol y acceso al sistema).
@@ -799,24 +551,26 @@
   // (Authentication > Users). Si esa persona vuelve a iniciar sesión después de esto, va a
   // reaparecer en la lista como "pendiente", igual que un usuario nuevo.
   async function eliminarUsuarioAdmin(uid, email){
+    if(!esAdmin()){
+      showToast('Solo el administrador puede eliminar perfiles.');
+      return false;
+    }
     if(authUser && uid === authUser.uid){
       showToast('No podés eliminar tu propia cuenta desde aquí.');
-      return;
+      return false;
     }
-    if(!confirm(`¿Eliminar el perfil de ${email || 'este usuario'}?\n\nPierde su rol y su acceso a los datos del sistema de inmediato. Si esa persona vuelve a iniciar sesión, va a aparecer de nuevo como "pendiente" — para bloquearle el correo por completo hay que borrar su cuenta desde la consola de Firebase (Authentication > Users).`)) return;
+    if(!confirm(`¿Eliminar el perfil de ${email || 'este usuario'}?\n\nPierde su rol y su acceso a los datos del sistema de inmediato. Si esa persona vuelve a iniciar sesión, va a aparecer de nuevo como "pendiente" — para bloquearle el correo por completo hay que borrar su cuenta desde la consola de Firebase (Authentication > Users).`)) return false;
     await refreshIdTokenIfNeeded();
     const url = `${FIRESTORE_BASE}/users/${uid}?key=${FIREBASE_API_KEY}`;
     await fetchConTimeout(url, { method: 'DELETE', headers: authHeaders() });
     showToast('Perfil de usuario eliminado.');
+    return true;
   }
 
-  function esSuperAdmin(){ return (authUser?.email || '').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase(); }
-  function esAdmin(){ return userRole === 'admin' && esSuperAdmin(); }
+  function esSuperAdmin(){ return window.CRMAccess.isSuperAdmin(authUser?.email); }
+  function esAdmin(){ return window.CRMAccess.isAdmin(userRole, authUser?.email); }
   function normalizarRolPorCorreo(email, role){
-    const e=(email||'').toLowerCase();
-    if(e===SUPER_ADMIN_EMAIL.toLowerCase()) return 'admin';
-    if(e===ADMIN_CONTACT_EMAIL.toLowerCase()) return 'approved';
-    return role;
+    return window.CRMAccess.normalizeRole(email, role);
   }
 
   async function soloAdmin(accion){
@@ -865,17 +619,7 @@
   async function doSignUp(email, password){
     authBusy = true; authError = ''; renderAuth();
     try{
-      const res = await fetchConTimeout(AUTH_SIGNUP_URL, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ email, password, returnSecureToken: true })
-      });
-      const data = await res.json();
-      if(!res.ok) throw new Error(data.error && data.error.message || 'Error al crear la cuenta');
-      authUser = {
-        uid: data.localId, email: data.email, idToken: data.idToken,
-        refreshToken: data.refreshToken, expiresAt: Date.now() + (parseInt(data.expiresIn,10)||3600)*1000,
-      };
-      saveSession();
+      authUser = await window.CRMAuth.signUp(email, password);
       const profile = await ensureUserDoc(authUser.uid, authUser.email);
       userRole = normalizarRolPorCorreo(authUser.email, profile.role);
       authBusy = false;
@@ -890,19 +634,9 @@
   async function doSignIn(email, password){
     authBusy = true; authError = ''; renderAuth();
     try{
-      const res = await fetchConTimeout(AUTH_SIGNIN_URL, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ email, password, returnSecureToken: true })
-      });
-      const data = await res.json();
-      if(!res.ok) throw new Error(data.error && data.error.message || 'Error al iniciar sesión');
-      authUser = {
-        uid: data.localId, email: data.email, idToken: data.idToken,
-        refreshToken: data.refreshToken, expiresAt: Date.now() + (parseInt(data.expiresIn,10)||3600)*1000,
-      };
-      saveSession();
+      authUser = await window.CRMAuth.signIn(email, password);
       const profile = await ensureUserDoc(authUser.uid, authUser.email);
-      userRole = profile.role;
+      userRole = normalizarRolPorCorreo(authUser.email, profile.role);
       authBusy = false;
       afterAuthReady();
     }catch(e){
@@ -913,9 +647,9 @@
   }
 
   function doSignOut(){
+    window.CRMAuth.signOut();
     authUser = null;
     userRole = null;
-    saveSession();
     authView = 'login';
     renderAuth();
   }
@@ -930,11 +664,7 @@
   }
 
   async function initAuth(){
-    authUser = loadSession();
-    if(authUser){
-      const ok = await refreshIdTokenIfNeeded();
-      if(!ok){ authUser = null; saveSession(); }
-    }
+    authUser = await window.CRMAuth.init();
     if(authUser){
       try{
         const profile = await ensureUserDoc(authUser.uid, authUser.email);
@@ -946,8 +676,13 @@
 
   function afterAuthReady(){
     if(!authUser){ authView = 'login'; authError=''; renderAuth(); return; }
+    userRole = normalizarRolPorCorreo(authUser.email, userRole);
     if(userRole === 'pending'){ renderPendingScreen(); return; }
-    if(userRole === 'rejected'){ renderRejectedScreen(); return; }
+    if(userRole === 'rejected' || !window.CRMAccess.isAccessAllowed(userRole)){
+      userRole = 'rejected';
+      renderRejectedScreen();
+      return;
+    }
     load();
   }
 
@@ -1021,7 +756,7 @@
     document.getElementById('btn-logout-pending').addEventListener('click', doSignOut);
     document.getElementById('btn-recheck-pending').addEventListener('click', async ()=>{
       const profile = await fetchUserDoc(authUser.uid);
-      userRole = profile ? profile.role : 'pending';
+      userRole = normalizarRolPorCorreo(authUser.email, profile ? profile.role : 'pending');
       afterAuthReady();
     });
   }
@@ -1071,9 +806,6 @@
             } else if(item.tipo === 'perfil_cliente'){
               titulo = item.data.cliente || 'Cliente sin nombre';
               sub = `Datos personales · eliminado ${fecha}`;
-            } else if(item.tipo === 'contrato'){
-              titulo = item.data.cliente || 'Cliente sin nombre';
-              sub = `Membresía de mantenimiento · eliminado ${fecha}`;
             } else if(item.tipo === 'producto_inventario'){
               titulo = item.data.nombre || 'Producto sin nombre';
               sub = `Inventario · eliminado ${fecha}`;
@@ -1120,6 +852,10 @@
   }
 
   function openAdminPanel(){
+    if(!esAdmin()){
+      showToast('No tienes permisos para abrir el panel de administración.');
+      return;
+    }
     showAdminPanel = true;
     usersList = [];
     adminSearchQuery = '';
@@ -1206,8 +942,9 @@
       b.addEventListener('click', async ()=>{
         const uid = b.getAttribute('data-uid');
         const role = b.getAttribute('data-role');
-        await setUserRole(uid, role);
-        if(uid === authUser.uid) userRole = role;
+        const changed = await setUserRole(uid, role);
+        if(!changed) return;
+        if(uid === authUser.uid) userRole = normalizarRolPorCorreo(authUser.email, role);
         usersList = await fetchAllUsers();
         renderAdminModal();
       });
@@ -1236,7 +973,7 @@
       adminServiciosExtraTemp = (configuracion.serviciosExtra || []).slice();
     }
     return `
-      <p class="admin-section-desc">Estos datos se usan en las cotizaciones, membresías y boletas impresas, y en el cálculo del IVA. No hace falta tocar el código para cambiarlos.</p>
+      <p class="admin-section-desc">Estos datos se usan en las cotizaciones y boletas impresas, y en el cálculo del IVA. No hace falta tocar el código para cambiarlos.</p>
       <div class="form-row">
         <div>
           <label>Teléfono de contacto</label>
@@ -1308,7 +1045,7 @@
   }
 
   function tamanoDatosKB(){
-    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, referidos, inventario, configuracion });
+    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, referidos, inventario, configuracion });
     try{ return (new Blob([json]).size / 1024).toFixed(1); }
     catch(e){ return (json.length / 1024).toFixed(1); }
   }
@@ -1347,7 +1084,6 @@
         <div class="admin-health-item"><div class="lbl">Ventas de equipo</div><div class="val">${ventas.length}</div></div>
         <div class="admin-health-item"><div class="lbl">Cajas registradas</div><div class="val">${cajas.length}</div></div>
         <div class="admin-health-item"><div class="lbl">Oportunidades</div><div class="val">${oportunidades.length}</div></div>
-        <div class="admin-health-item"><div class="lbl">Membresías</div><div class="val">${contratos.length}</div></div>
         <div class="admin-health-item"><div class="lbl">Productos en inventario</div><div class="val">${inventario.length}</div></div>
       </div>
     `;
@@ -1368,7 +1104,7 @@
         .filter(Boolean)
     ).size;
     const cotizacionesGanadas = oportunidades.filter(o=>o.etapa==='ganado').length;
-    const membresiasActivas = contratos.filter(c=>c.estado==='activo').length;
+
     const porAnio = {};
     cajas.forEach(c=>{
       const anio = (c.fecha||'').slice(0,4);
@@ -1376,7 +1112,7 @@
       const total = (c.movimientos||[]).filter(m=>m.tipo==='entrada').reduce((s,m)=>s+(parseFloat(m.monto)||0),0);
       porAnio[anio] = (porAnio[anio]||0) + total;
     });
-    return { ingresosCaja, ingresosVentas, totalOrdenes: records.length, totalExtintoresVendidos, clientesUnicos, cotizacionesGanadas, membresiasActivas, porAnio };
+    return { ingresosCaja, ingresosVentas, totalOrdenes: records.length, totalExtintoresVendidos, clientesUnicos, cotizacionesGanadas, porAnio };
   }
 
   function renderAdminTabEstadisticas(){
@@ -1392,7 +1128,7 @@
         <div class="admin-stat"><b>${st.totalExtintoresVendidos}</b><small>Extintores vendidos</small></div>
         <div class="admin-stat"><b>${st.clientesUnicos}</b><small>Clientes únicos</small></div>
         <div class="admin-stat"><b>${st.cotizacionesGanadas}</b><small>Cotizaciones ganadas</small></div>
-        <div class="admin-stat"><b>${st.membresiasActivas}</b><small>Membresías activas</small></div>
+
       </div>
       ${anios.length ? `
         <div class="admin-group-title">Ingresos de caja por año</div>
@@ -1462,7 +1198,7 @@
         oportunidades = parsed.oportunidades || [];
         recordatorios = parsed.recordatorios || [];
         clientesPerfil = parsed.clientesPerfil || [];
-        contratos = parsed.contratos || [];
+
         inventario = parsed.inventario || [];
         configuracion = Object.assign({}, DEFAULT_CONFIGURACION, parsed.configuracion || {});
         await persist({ fusionar:false });
@@ -1555,10 +1291,11 @@
     // 3) Último respaldo: el navegador local.
     localBackupOK = localStorageTest();
     if(raw === null && localBackupOK){
-      try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){}
+      raw = window.CRMStorage.get(STORAGE_KEY);
     }
 
     const parsed = raw ? JSON.parse(raw) : null;
+    const legacyModuleData = !!(parsed && typeof parsed === 'object' && !Array.isArray(parsed) && Object.prototype.hasOwnProperty.call(parsed, 'contratos'));
     if(Array.isArray(parsed)){
       // Formato antiguo: el JSON guardado era solo el array de records.
       records = parsed;
@@ -1568,7 +1305,8 @@
       oportunidades = [];
       recordatorios = [];
       clientesPerfil = [];
-      contratos = [];
+
+      referidos = [];
       inventario = [];
     } else if(parsed && typeof parsed === 'object'){
       records = parsed.records || [];
@@ -1578,7 +1316,8 @@
       oportunidades = parsed.oportunidades || [];
       recordatorios = parsed.recordatorios || [];
       clientesPerfil = parsed.clientesPerfil || [];
-      contratos = parsed.contratos || [];
+
+      referidos = parsed.referidos || [];
       inventario = parsed.inventario || [];
       configuracion = Object.assign({}, DEFAULT_CONFIGURACION, parsed.configuracion || {});
     } else {
@@ -1589,7 +1328,8 @@
       oportunidades = [];
       recordatorios = [];
       clientesPerfil = [];
-      contratos = [];
+
+      referidos = [];
       inventario = [];
     }
     migrarServicioCombinado();
@@ -1598,7 +1338,7 @@
     limpiarPapeleraVieja();
     ultimaActualizacion = new Date();
     const nuevasOportunidades = generarOportunidadesRenovacion();
-    if(nuevasOportunidades > 0 || migracionClientes.creados > 0 || migracionClientes.actualizados > 0){
+    if(legacyModuleData || nuevasOportunidades > 0 || migracionClientes.creados > 0 || migracionClientes.actualizados > 0){
       await persist(); // persist() ya llama a render() al final
       if(migracionClientes.creados > 0) showToast(`Se incorporaron ${migracionClientes.creados} cliente(s) a la Ficha 360°.`);
     } else {
@@ -1628,7 +1368,7 @@
     try{ remoto = JSON.parse(remotoJson); }catch(e){ return; }
     if(!remoto || typeof remoto !== 'object' || Array.isArray(remoto)) return;
     ultimaActualizacion = new Date(); // se confirmó contacto con la nube, aunque no haya cambios
-    const actual = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario, configuracion });
+    const actual = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, referidos, inventario, configuracion });
     if(remotoJson === actual){ render(); return; } // nada cambió, pero refrescamos la hora mostrada
 
     records = remoto.records || [];
@@ -1638,7 +1378,8 @@
     oportunidades = remoto.oportunidades || [];
     recordatorios = remoto.recordatorios || [];
     clientesPerfil = remoto.clientesPerfil || [];
-    contratos = remoto.contratos || [];
+
+    referidos = remoto.referidos || [];
     inventario = remoto.inventario || [];
     configuracion = Object.assign({}, DEFAULT_CONFIGURACION, remoto.configuracion || {});
     firebaseOK = true;
@@ -1669,7 +1410,7 @@
   function limpiarTarjetasObsoletas(){
     // Evita que las listas de tarjetas abiertas/cerradas crezcan sin límite con registros ya eliminados.
     const idsVigentes = new Set(
-      records.map(r => 'card-' + r.id).concat(records.map(r => 'item-' + r.id)).concat(ventas.map(v => 'venta-' + v.id)).concat(contratos.map(c => 'contrato-' + c.id)).concat(inventario.map(p => 'producto-' + p.id))
+      records.map(r => 'card-' + r.id).concat(records.map(r => 'item-' + r.id)).concat(ventas.map(v => 'venta-' + v.id)).concat(inventario.map(p => 'producto-' + p.id))
     );
     const ordenesVigentes = new Set(records.filter(r=>r.orden).map(r => 'order-' + ordenKey(r)));
     tarjetasAbiertas = new Set([...tarjetasAbiertas].filter(k => idsVigentes.has(k)));
@@ -1694,7 +1435,7 @@
 
     records.forEach(agregarFuente);
     ventas.forEach(agregarFuente);
-    contratos.forEach(agregarFuente);
+
     oportunidades.forEach(agregarFuente);
     recordatorios.forEach(agregarFuente);
     cajas.forEach(caja => (caja.movimientos || []).forEach(agregarFuente));
@@ -1814,7 +1555,7 @@
     oportunidades = mergeArrayPorId(oportunidades, remoto.oportunidades, idsEnPapeleraPorTipo('oportunidad'));
     recordatorios = mergeArrayPorId(recordatorios, remoto.recordatorios, idsEnPapeleraPorTipo('recordatorio'));
     clientesPerfil = mergeArrayPorId(clientesPerfil, remoto.clientesPerfil, idsEnPapeleraPorTipo('perfil_cliente'));
-    contratos = mergeArrayPorId(contratos, remoto.contratos, idsEnPapeleraPorTipo('contrato'));
+
     referidos = mergeArrayPorId(referidos, remoto.referidos, idsEnPapeleraPorTipo('referido'));
     inventario = mergeArrayConSubcoleccion(inventario, remoto.inventario, 'movimientos', idsEnPapeleraPorTipo('producto_inventario'), new Set());
     cajas = mergeArrayConSubcoleccion(cajas, remoto.cajas, 'movimientos', new Set(), idsEnPapeleraPorTipo('movimiento_caja'));
@@ -1824,7 +1565,7 @@
   async function persist(opts){
     opts = opts || {};
     if(opts.fusionar !== false) await fusionarConNube();
-    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, contratos, inventario, configuracion });
+    const json = JSON.stringify({ records, cajas, papelera, ventas, oportunidades, recordatorios, clientesPerfil, referidos, inventario, configuracion });
 
     // El "pase" de acceso a Firebase (idToken) solo dura ~1 hora. Si el sistema se queda
     // abierto más tiempo sin recargar la página, ese pase vence y Firebase empieza a rechazar
@@ -1861,8 +1602,7 @@
     let localOk = false;
     if(localBackupOK){
       try{
-        localStorage.setItem(STORAGE_KEY, json);
-        localOk = (localStorage.getItem(STORAGE_KEY) === json);
+        localOk = window.CRMStorage.set(STORAGE_KEY, json) && window.CRMStorage.get(STORAGE_KEY) === json;
       }catch(e){ localOk = false; }
     }
 
@@ -2829,49 +2569,11 @@
     });
     const limite=new Date(); limite.setHours(0,0,0,0); limite.setDate(limite.getDate()+30);
     const limiteISO=limite.toISOString().slice(0,10);
-    contratos.filter(c=>c.estado==='activo'&&c.fechaRenovacion&&c.fechaRenovacion<=limiteISO).forEach(c=>agregar(c.cliente,c.telefono,'Renovación de membresía',c.fechaRenovacion,3));
+
     oportunidades.filter(o=>o.etapa!=='perdido'&&o.etapa!=='ganado').forEach(o=>agregar(o.cliente,o.telefono,'Oportunidad abierta','',4));
     const lista=Array.from(mapa.values()).sort((a,b)=>(a.prioridad-b.prioridad)||(a.fecha||'').localeCompare(b.fecha||''));
     return '<div class="clientes-contactar-head"><div><span class="module-kicker">SEGUIMIENTO COMERCIAL</span><h3>Clientes por contactar</h3><p>Clientes que requieren seguimiento según la información registrada.</p></div><span class="clientes-contactar-count">'+lista.length+' clientes</span></div>'+
       '<div class="clientes-contactar-list">'+(lista.length?lista.map(x=>'<div class="cliente-contactar-row"><div class="cliente-contactar-icon">👤</div><div class="cliente-contactar-main"><b>'+esc(x.cliente)+'</b><small>'+esc(x.motivo)+(x.fecha?' · '+esc(x.fecha):'')+'</small></div><button class="btn-ghost" data-contactar-recordatorio="'+esc(x.cliente)+'" data-contactar-telefono="'+esc(x.telefono||'')+'">+ Recordatorio</button><button class="btn-primary" data-contactar-cliente="'+esc(x.cliente)+'" data-contactar-telefono="'+esc(x.telefono||'')+'">WhatsApp</button></div>').join(''):'<div class="dash-empty">No hay clientes pendientes de contacto con la información disponible.</div>')+'</div>';
-  }
-
-  let contratosFiltro = 'todos'; // 'todos' | 'activo' | 'cancelado'
-  function setContratosFiltro(f){ contratosFiltro = f; render(); }
-
-  function renderContratos(){
-    const filtrados = contratos.filter(c => contratosFiltro==='todos' || c.estado===contratosFiltro)
-      .sort((a,b)=> (a.fechaRenovacion||'').localeCompare(b.fechaRenovacion||''));
-    const activos = contratos.filter(c=>c.estado==='activo');
-    const valorTotalAnual = activos.reduce((s,c)=> s + (parseFloat(c.valorAnual)||0), 0);
-    const porVencer = activos.filter(c => vencStatus(c.fechaRenovacion) === 'proximo').length;
-    const vencidos = activos.filter(c => vencStatus(c.fechaRenovacion) === 'vencido').length;
-    return `
-      <div class="kpi-grid" style="margin-bottom:18px;">
-        <div class="kpi-card">
-          <div class="kpi-label">Membresías activas</div>
-          <div class="kpi-value">${activos.length}</div>
-          <div class="kpi-sub">₡${valorTotalAnual.toLocaleString('es-CR',{maximumFractionDigits:0})}/año en total</div>
-        </div>
-        <div class="kpi-card kpi-amber ${porVencer>0?'kpi-critical':''}">
-          <div class="kpi-label">Por vencer (30 días)</div>
-          <div class="kpi-value">${porVencer}</div>
-        </div>
-        <div class="kpi-card kpi-red ${vencidos>0?'kpi-critical':''}">
-          <div class="kpi-label">Vencidos</div>
-          <div class="kpi-value">${vencidos}</div>
-        </div>
-      </div>
-      <div class="clientes-toolbar" style="padding:0 0 16px;">
-        <div class="filters">
-          <button class="chip ${contratosFiltro==='todos'?'active':''}" data-contratos-filtro="todos">Todos</button>
-          <button class="chip ${contratosFiltro==='activo'?'active':''}" data-contratos-filtro="activo">Activos</button>
-          <button class="chip ${contratosFiltro==='cancelado'?'active':''}" data-contratos-filtro="cancelado">Cancelados</button>
-        </div>
-        <button class="btn-primary" id="btn-nuevo-contrato">+ Nueva membresía</button>
-      </div>
-      ${filtrados.length === 0 ? '<div class="dash-empty">No hay contratos que coincidan.</div>' : `<div class="grid">${filtrados.map(contratoCardHTML).join('')}</div>`}
-    `;
   }
 
   function renderOportunidadDetalle(id){
@@ -2935,27 +2637,6 @@
 
   function renderReferidos(){ return window.CRMReferidos.renderReferidos(referidos, esc); }
 
-  /* ---------- Programa Cliente Seguro ---------- */
-  const CLIENTE_SEGURO_PLANES = {
-    cliente_seguro:{nombre:'Cliente Seguro',equipos:'1–5 equipos',precio:15000,beneficios:['Registro de los extintores.','Historial de mantenimiento.','Recordatorio de mantenimiento.','Revisión visual preventiva.','Atención por WhatsApp.','Precio preferencial en determinados servicios.']},
-    cliente_seguro_plus:{nombre:'Cliente Seguro Plus',equipos:'6–15 equipos',precio:25000,beneficios:['Todo lo anterior.','Prioridad de atención.','Coordinación programada.','Beneficio adicional por volumen.','Seguimiento de equipos pendientes.']},
-    cliente_seguro_empresa:{nombre:'Cliente Seguro Empresa',equipos:'16+ equipos',precio:40000,beneficios:['Todo lo anterior.','Control individual de cada equipo.','Reporte de mantenimiento.','Programación anual.','Recolección y entrega según condiciones del servicio.','Cotización especial para empresas con volumen.']}
-  };
-  function planClienteSeguro(tipo){return CLIENTE_SEGURO_PLANES[tipo]||CLIENTE_SEGURO_PLANES.cliente_seguro;}
-  // Puente hacia el módulo de Clientes / Ficha 360°.
-  function clienteKey(rec){ return window.CRMClientes.clienteKey(rec); }
-  function inicialesDe(nombre){ return window.CRMClientes.inicialesDe(nombre); }
-  function telefonosTexto(c){ return window.CRMClientes.telefonosTexto(c); }
-  function perfilDeCliente(key){ return window.CRMClientes.perfilDeCliente(key, clientesPerfil); }
-  function emptyPerfilCliente(){ return window.CRMClientes.emptyPerfilCliente(); }
-
-  function renderClienteSeguro(){
-    if(window.CRMClienteSeguro && typeof window.CRMClienteSeguro.renderClienteSeguro==='function'){
-      return window.CRMClienteSeguro.renderClienteSeguro(contratos, esc);
-    }
-    return '';
-  }
-
   function renderCRM(){
     return `
       <div class="dash-content crm-view">
@@ -2963,16 +2644,15 @@
           <div>
             <span class="module-kicker">Ventas y seguimiento</span>
             <h2>CRM Comercial</h2>
-            <p>Oportunidades, recordatorios y membresías.</p>
+            <p>Oportunidades y seguimiento comercial.</p>
           </div>
         </div>
         <div class="view-toggle" style="margin-bottom:16px;">
           <button data-crm-subvista="pipeline" class="${crmSubvista==='pipeline'?'active':''}">Embudo de ventas</button>
           <button data-crm-subvista="recordatorios" class="${crmSubvista==='recordatorios'?'active':''}">Recordatorios${recordatorios.filter(r=>!r.completado).length ? ' ('+recordatorios.filter(r=>!r.completado).length+')' : ''}</button>
-          <button data-crm-subvista="contratos" class="${crmSubvista==='contratos'?'active':''}">Membresías${contratos.filter(c=>c.estado==='activo').length ? ' ('+contratos.filter(c=>c.estado==='activo').length+')' : ''}</button>
           <button data-crm-subvista="clientes-contactar" class="${crmSubvista==='clientes-contactar'?'active':''}">Clientes por contactar</button>
         </div>
-        ${oportunidadSeleccionada ? renderOportunidadDetalle(oportunidadSeleccionada) : (crmSubvista==='pipeline' ? renderPipeline() : (crmSubvista==='recordatorios' ? renderRecordatorios() : (crmSubvista==='contratos' ? renderContratos() : renderClientesContactar())))}
+        ${oportunidadSeleccionada ? renderOportunidadDetalle(oportunidadSeleccionada) : (crmSubvista==='pipeline' ? renderPipeline() : (crmSubvista==='recordatorios' ? renderRecordatorios() : renderClientesContactar()))}
       </div>
     `;
   }
@@ -2992,7 +2672,7 @@
     } else if(item.tipo === 'perfil_cliente'){
       clientesPerfil = [item.data, ...clientesPerfil];
     } else if(item.tipo === 'contrato'){
-      contratos = [item.data, ...contratos];
+
     } else if(item.tipo === 'producto_inventario'){
       inventario = [item.data, ...inventario];
     } else if(item.tipo === 'movimiento_caja'){
@@ -3569,7 +3249,7 @@
 
     records = records.map(r => coincide(r) ? { ...r, cliente: nuevoNombre } : r);
     ventas = ventas.map(v => coincide(v) ? { ...v, cliente: nuevoNombre } : v);
-    contratos = contratos.map(c => coincide(c) ? { ...c, cliente: nuevoNombre } : c);
+
     oportunidades = oportunidades.map(o => coincide(o) ? { ...o, cliente: nuevoNombre } : o);
     recordatorios = recordatorios.map(r => coincide(r) ? { ...r, cliente: nuevoNombre } : r);
     clientesPerfil = clientesPerfil.map(p => coincide(p) ? { ...p, cliente: nuevoNombre } : p);
@@ -3864,239 +3544,6 @@
     await persist();
     showToast('Datos del cliente movidos a la papelera.');
     volverClientes();
-  }
-
-  /* ---------- Contratos de mantenimiento recurrente ---------- */
-
-  function emptyContrato(){
-    return { id:null, cliente:'', telefono:'', cedulaCliente:'', encargado:'', correo:'', direccion:'', tipoMembresia:'cliente_seguro', cantidadExtintores:'', fechaInicio: todayISO(), fechaRenovacion:'', valorAnual:'', estado:'activo', notas:'', referidoPor:'', creditoReferido:'' };
-  }
-  let contratoForm = emptyContrato();
-  let editingContratoId = null;
-
-  function openNuevoContrato(clientePrellenado, telefonoPrellenado){
-    contratoForm = emptyContrato();
-    if(clientePrellenado) contratoForm.cliente = clientePrellenado;
-    if(telefonoPrellenado) contratoForm.telefono = telefonoPrellenado;
-    editingContratoId = null;
-    renderContratoModal(true);
-  }
-
-  function openEditarContrato(id){
-    const c = contratos.find(x => x.id === id);
-    if(!c) return;
-    contratoForm = Object.assign({}, emptyContrato(), c);
-    editingContratoId = id;
-    renderContratoModal(true);
-  }
-
-  function closeContratoModal(){ renderContratoModal(false); }
-
-  async function saveContrato(){
-    const cliente = document.getElementById('ct-cliente').value.trim();
-    const fechaRenovacion = document.getElementById('ct-fechaRenovacion').value;
-    if(!cliente){
-      showToast('El cliente es obligatorio.');
-      return;
-    }
-    if(!fechaRenovacion){
-      showToast('La fecha de renovación es obligatoria.');
-      return;
-    }
-    const nuevo = {
-      id: editingContratoId || uid(),
-      cliente,
-      telefono: document.getElementById('ct-telefono').value.trim(),
-      cedulaCliente: document.getElementById('ct-cedulaCliente').value.trim(),
-      encargado: document.getElementById('ct-encargado').value.trim(),
-      correo: document.getElementById('ct-correo').value.trim(),
-      direccion: document.getElementById('ct-direccion').value.trim(),
-      tipoMembresia: document.getElementById('ct-tipoMembresia').value,
-      cantidadExtintores: document.getElementById('ct-cantidad').value.trim(),
-      fechaInicio: document.getElementById('ct-fechaInicio').value,
-      fechaRenovacion,
-      valorAnual: document.getElementById('ct-valorAnual').value.trim(),
-      estado: document.getElementById('ct-estado').value,
-      notas: document.getElementById('ct-notas').value.trim(),
-    };
-    if(editingContratoId){
-      contratos = contratos.map(c => c.id === editingContratoId ? nuevo : c);
-    } else {
-      contratos = [nuevo, ...contratos];
-    }
-    const saveBtn = document.getElementById('contrato-modal-save');
-    if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
-    const ok = await persist();
-    if(!ok){
-      if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = editingContratoId ? 'Guardar cambios' : 'Registrar membresía'; }
-      return;
-    }
-    showToast(editingContratoId ? 'Membresía actualizada.' : 'Membresía registrada.');
-    closeContratoModal();
-    render();
-  }
-
-  async function removeContrato(id){
-    const c = contratos.find(x => x.id === id);
-    if(!c) return;
-    if(!confirm(`¿Eliminar la membresía de ${c.cliente || 'este cliente'}? Podrás recuperarla desde la Papelera durante 30 días.`)) return;
-    contratos = contratos.filter(x => x.id !== id);
-    papelera.push({ id: uid(), tipo: 'contrato', fechaEliminado: Date.now(), data: c });
-    await persist();
-    showToast('Membresía movida a la papelera.');
-    render();
-  }
-
-  function renderContratoModal(open){
-    let overlay = document.querySelector('.contrato-overlay');
-    if(!open){
-      if(overlay) overlay.remove();
-      return;
-    }
-    if(overlay) overlay.remove();
-    overlay = document.createElement('div');
-    overlay.className = 'overlay contrato-overlay';
-    overlay.innerHTML = `
-      <div class="modal">
-        <div class="modal-head">
-          <h2>${editingContratoId ? 'Editar Cliente Seguro' : 'Registrar Cliente Seguro'}</h2>
-          <button id="contrato-modal-close">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="form-row">
-            <div><label>Cliente *</label><input id="ct-cliente" value="${esc(contratoForm.cliente)}" placeholder="Nombre o empresa"/></div>
-            <div><label>Teléfono / WhatsApp</label><input type="tel" id="ct-telefono" value="${esc(contratoForm.telefono)}" placeholder="8888-8888"/></div>
-          </div>
-          <div class="form-row">
-            <div><label>Cédula jurídica / identificación</label><input id="ct-cedulaCliente" value="${esc(contratoForm.cedulaCliente)}" placeholder="3-101-XXXXXX"/></div>
-            <div><label>Nombre del encargado</label><input id="ct-encargado" value="${esc(contratoForm.encargado)}" placeholder="Persona de contacto"/></div>
-          </div>
-          <div class="form-row">
-            <div><label>Correo electrónico</label><input type="email" id="ct-correo" value="${esc(contratoForm.correo)}" placeholder="correo@empresa.com"/></div>
-            <div><label>Dirección</label><input id="ct-direccion" value="${esc(contratoForm.direccion)}" placeholder="Dirección exacta"/></div>
-          </div>
-          <div class="form-row">
-            <div><label>Tipo de membresía <span style="color:#6B7280;font-size:9px;">(selección automática)</span></label>
-              <select id="ct-tipoMembresia" ${['cliente_seguro','cliente_seguro_plus','cliente_seguro_empresa'].includes(contratoForm.tipoMembresia) ? 'disabled' : ''}>
-                <option value="cliente_seguro" ${contratoForm.tipoMembresia==='cliente_seguro'?'selected':''}>Cliente Seguro · 1–5 · ₡15.000/año</option>
-                <option value="cliente_seguro_plus" ${contratoForm.tipoMembresia==='cliente_seguro_plus'?'selected':''}>Cliente Seguro Plus · 6–15 · ₡25.000/año</option>
-                <option value="cliente_seguro_empresa" ${contratoForm.tipoMembresia==='cliente_seguro_empresa'?'selected':''}>Cliente Seguro Empresa · 16+ · ₡40.000/año</option>
-                <option value="seguridad" ${contratoForm.tipoMembresia==='seguridad'?'selected':''}>Seguridad (legacy)</option>
-                <option value="seguridad_pro" ${contratoForm.tipoMembresia==='seguridad_pro'?'selected':''}>Seguridad Pro (legacy)</option>
-                <option value="seguridad_corporativa" ${contratoForm.tipoMembresia==='seguridad_corporativa'?'selected':''}>Seguridad Corporativa (legacy)</option>
-              </select>
-              <small class="field-hint">El plan se determina automáticamente según la cantidad de extintores.</small>
-            </div>
-            <div><label>Estado</label>
-              <select id="ct-estado">
-                <option value="activo" ${contratoForm.estado==='activo'?'selected':''}>Activo</option>
-                <option value="cancelado" ${contratoForm.estado==='cancelado'?'selected':''}>Cancelado</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div><label>Cantidad de extintores cubiertos *</label><input type="number" id="ct-cantidad" min="1" step="1" value="${esc(contratoForm.cantidadExtintores)}" placeholder="ej. 5"/><small class="field-hint">1–5 = ₡15.000 · 6–15 = ₡25.000 · 16+ = ₡40.000</small></div>
-            <div><label>Valor anual de la membresía</label><input type="number" id="ct-valorAnual" min="0" step="5000" value="${esc(contratoForm.valorAnual)}" placeholder="₡15.000" readonly style="background:var(--paper);font-weight:700;"/></div>
-          </div>
-          <div class="form-row">
-            <div><label>Fecha de inicio</label><input type="date" id="ct-fechaInicio" value="${esc(contratoForm.fechaInicio)}"/></div>
-            <div><label>Próxima renovación *</label><input type="date" id="ct-fechaRenovacion" value="${esc(contratoForm.fechaRenovacion)}"/></div>
-          </div>
-          <div class="form-row full">
-            <div><label>Notas</label><textarea id="ct-notas" placeholder="Alcance del contrato, condiciones especiales...">${esc(contratoForm.notas)}</textarea></div>
-          </div>
-          <div class="form-row">
-            <div class="cs-note" style="margin-top:4px;"><b>Referidos:</b> se administran desde el módulo independiente <b>🔥 Referidos</b>.</div>
-          </div>
-        </div>
-        <div class="modal-foot">
-          <button class="btn-ghost" id="contrato-modal-cancel">Cancelar</button>
-          <button class="btn-primary" id="contrato-modal-save">${editingContratoId ? 'Guardar cambios' : 'Registrar membresía'}</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeContratoModal(); });
-    document.getElementById('contrato-modal-close').addEventListener('click', closeContratoModal);
-    document.getElementById('contrato-modal-cancel').addEventListener('click', closeContratoModal);
-    document.getElementById('contrato-modal-save').addEventListener('click', saveContrato);
-
-    // Cliente Seguro: el plan y el precio se calculan automáticamente por cantidad.
-    const cantidadInput = document.getElementById('ct-cantidad');
-    const planInput = document.getElementById('ct-tipoMembresia');
-    const valorInput = document.getElementById('ct-valorAnual');
-    const actualizarPlanClienteSeguro = () => {
-      if(!cantidadInput || !planInput || !valorInput) return;
-      const cantidad = parseInt(cantidadInput.value, 10) || 0;
-      if(cantidad <= 0) {
-        valorInput.value = '';
-        return;
-      }
-      let plan = 'cliente_seguro';
-      let precio = 15000;
-      if(cantidad >= 16){ plan = 'cliente_seguro_empresa'; precio = 40000; }
-      else if(cantidad >= 6){ plan = 'cliente_seguro_plus'; precio = 25000; }
-      planInput.value = plan;
-      planInput.disabled = true;
-      valorInput.value = precio;
-      contratoForm.tipoMembresia = plan;
-      contratoForm.valorAnual = String(precio);
-      contratoForm.cantidadExtintores = String(cantidad);
-    };
-    const inicioInput = document.getElementById('ct-fechaInicio');
-    const renovacionInput = document.getElementById('ct-fechaRenovacion');
-    const actualizarRenovacion = () => {
-      if(!inicioInput || !renovacionInput) return;
-      if(inicioInput.value && (!renovacionInput.value || renovacionInput.dataset.auto==='true')){
-        renovacionInput.value = addMonths(inicioInput.value, 12);
-        renovacionInput.dataset.auto = 'true';
-      }
-    };
-    if(renovacionInput) {
-      renovacionInput.addEventListener('input', ()=>{ renovacionInput.dataset.auto='false'; });
-      renovacionInput.addEventListener('change', ()=>{ renovacionInput.dataset.auto='false'; });
-    }
-    if(inicioInput) inicioInput.addEventListener('change', actualizarRenovacion);
-    if(cantidadInput) {
-      cantidadInput.addEventListener('input', actualizarPlanClienteSeguro);
-      cantidadInput.addEventListener('change', actualizarPlanClienteSeguro);
-      actualizarPlanClienteSeguro();
-    }
-    actualizarRenovacion();
-  }
-
-  function contratoCardHTML(c){
-    const vs = c.estado === 'activo' ? vencStatus(c.fechaRenovacion) : null;
-    const vsCls = vs === 'vencido' ? 'venc-vencido' : (vs === 'proximo' ? 'venc-proximo' : '');
-    const vsLabel = vs === 'vencido' ? 'Vencido' : (vs === 'proximo' ? 'Por vencer' : '');
-    const cardKey = 'contrato-' + c.id;
-    const isOpen = tarjetasAbiertas.has(cardKey);
-    return `
-      <details class="card-collapse" data-card-key="${cardKey}" ${isOpen ? 'open' : ''}>
-        <summary>
-          <div class="summary-main">
-            <h3>${esc(c.cliente)}</h3>
-            <div class="sub-line">${c.cantidadExtintores ? c.cantidadExtintores+' extintores · ' : ''}${esc((planClienteSeguro(c.tipoMembresia)||{}).nombre || 'Membresía')} · Renueva ${esc(c.fechaRenovacion)}</div>
-          </div>
-          <div class="summary-side">
-            <span class="badge" style="background:${c.estado==='activo'?'var(--green)':'#6B7280'};">${c.estado==='activo'?'Activo':'Cancelado'}</span>
-            ${c.valorAnual ? `<span class="summary-price">₡${parseFloat(c.valorAnual).toLocaleString('es-CR',{maximumFractionDigits:0})}/año</span>` : ''}
-          </div>
-        </summary>
-        <div class="card-inner-body">
-          <div class="card-body">
-            ${c.telefono ? `<div class="sub">${esc(c.telefono)}</div>` : ''}
-            <div class="meta-row"><span class="k">Inicio</span><span class="v mono">${esc(c.fechaInicio) || '—'}</span></div>
-            <div class="meta-row"><span class="k">Renovación</span><span class="v mono ${vsCls}">${esc(c.fechaRenovacion)}${vsLabel ? ' · '+vsLabel : ''}</span></div>
-            ${c.notas ? `<div class="meta-row"><span class="k">Notas</span><span class="v">${esc(c.notas)}</span></div>` : ''}
-          </div>
-          <div class="card-actions">
-            <button data-action="generar-membresia" data-id="${c.id}">📄 Membresía (PDF)</button>
-            <button data-action="editar-contrato" data-id="${c.id}">Editar</button>
-            <button class="danger" data-action="eliminar-contrato" data-id="${c.id}">Eliminar</button>
-          </div>
-        </div>
-      </details>`;
   }
 
   /* ---------- Inventario ---------- */
@@ -4415,16 +3862,15 @@
   }
 
   function crmDelCliente(key){
-    // Reúne las oportunidades, recordatorios y contratos cuyo nombre+teléfono coincide con el cliente
+    // Reúne las oportunidades y recordatorios cuyo nombre+teléfono coincide con el cliente
     // actual, para mostrarlos directo en su ficha (vista 360) en vez de solo verlos desde el tab de CRM.
     const opsCliente = oportunidades.filter(o => clienteKey(o) === key);
     const recsCliente = recordatorios.filter(r => clienteKey(r) === key && !r.completado)
       .sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
-    const contratosCliente = contratos.filter(c => clienteKey(c) === key);
-    return { opsCliente, recsCliente, contratosCliente };
+    return { opsCliente, recsCliente };
   }
 
-  function crmClienteSeguimientoHTML(key,c,perfil,contratoActivo,proximoMantenimiento){
+  function crmClienteSeguimientoHTML(key,c,perfil,proximoMantenimiento){
     const hoy=todayISO();
     const ult=c.registros && c.registros.length ? c.registros.slice().sort((a,b)=>(b.fechaIngreso||'').localeCompare(a.fechaIngreso||''))[0] : null;
     const fechaUlt=ult ? ult.fechaIngreso : '—';
@@ -4433,12 +3879,10 @@
     if(prox!=='—' && prox<hoy){estado='Mantenimiento vencido';clase='red';accion='Contactar para programar servicio';}
     else if(prox===hoy){estado='Mantenimiento hoy';clase='amber';accion='Confirmar servicio';}
     else if(prox!=='—'){const d=Math.ceil((new Date(prox+'T00:00:00')-new Date(hoy+'T00:00:00'))/86400000);if(d<=30){estado='Próximo mantenimiento';clase='amber';accion='Contactar y agendar';}}
-    if(contratoActivo && contratoActivo.fechaRenovacion && contratoActivo.fechaRenovacion<=hoy){estado='Renovación pendiente';clase='red';accion='Contactar para renovar Cliente Seguro';}
-    return '<div class="ficha360-followup"><div class="ficha360-followup-head"><div><span class="ficha360-kicker">SEGUIMIENTO</span><h3>Próxima acción</h3></div><span class="ficha360-followup-status '+clase+'">'+esc(estado)+'</span></div><div class="ficha360-followup-grid"><div><span>Último servicio</span><b>'+esc(fechaUlt)+'</b></div><div><span>Próximo mantenimiento</span><b>'+esc(prox)+'</b></div><div><span>Cliente Seguro</span><b>'+esc(contratoActivo?'Activo':'Sin membresía')+'</b></div><div><span>Acción sugerida</span><b>'+esc(accion)+'</b></div></div><div class="ficha360-followup-actions"><button class="btn-primary" data-seguimiento-whatsapp="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">WhatsApp</button><button class="btn-ghost" data-seguimiento-recordatorio="'+esc(c.nombre)+'" data-seguimiento-telefono="'+esc(c.telefono||'')+'">+ Recordatorio</button></div></div>';
   }
 
   function crmClienteResumenHTML(key){
-    const { opsCliente, recsCliente, contratosCliente } = crmDelCliente(key);
+    const { opsCliente, recsCliente } = crmDelCliente(key);
     const ventasCliente = ventas.filter(v => clienteKey(v) === key)
       .sort((a,b)=>(b.fechaCompra||'').localeCompare(a.fechaCompra||''));
     const referidosCliente = referidos.filter(r => {
@@ -4446,20 +3890,10 @@
       const referidoKey = r.referido ? clienteKey({cliente:r.referido, telefono:r.telefonoReferido}) : '';
       return referidorKey === key || referidoKey === key;
     }).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
-    if(!opsCliente.length && !recsCliente.length && !contratosCliente.length && !ventasCliente.length && !referidosCliente.length) return '';
+    if(!opsCliente.length && !recsCliente.length && !ventasCliente.length && !referidosCliente.length) return '';
     const hoy = todayISO();
     return `
       <div class="dash-panel" style="margin-bottom:16px;">
-        ${contratosCliente.length ? `
-        <h3 style="margin-bottom:8px;">Membresías Cliente Seguro <span>${contratosCliente.length}</span></h3>
-        <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length||ventasCliente.length||referidosCliente.length)?'14px':'0'};">
-          ${contratosCliente.map(c=>`
-            <div class="vence-item">
-              <div><div class="v-name">${c.cantidadExtintores ? c.cantidadExtintores+' extintores' : 'Membresía'}${c.valorAnual ? ' · ₡'+parseFloat(c.valorAnual).toLocaleString('es-CR',{maximumFractionDigits:0})+'/año' : ''}</div>
-              <div class="v-order">${c.estado==='activo' ? 'Activo' : 'Cancelado'}${c.tipoMembresia ? ' · '+esc(c.tipoMembresia) : ''}</div></div>
-              <div class="v-date">${esc(c.fechaRenovacion||'—')}</div>
-            </div>`).join('')}
-        </div>` : ''}
         ${ventasCliente.length ? `
         <h3 style="margin-bottom:8px;">Ventas de equipos <span>${ventasCliente.length}</span></h3>
         <div class="vence-list" style="margin-bottom:${(opsCliente.length||recsCliente.length||referidosCliente.length)?'14px':'0'};">
@@ -4479,7 +3913,7 @@
             <div class="vence-item">
               <div><div class="v-name">${esReferidor?'Refirió a: ':'Fue referido por: '}${esc(esReferidor?(r.referido||''):(r.referidor||''))}</div>
               <div class="v-order">${esc(r.fecha||'Sin fecha')} · ${esc(r.servicio||'Sin servicio')} · Crédito ₡${(parseFloat(r.credito)||0).toLocaleString('es-CR')}</div></div>
-              <span class="cs-status">${esc(r.estado||'pendiente')}</span>
+              <span class="ref-status">${esc(r.estado||'pendiente')}</span>
             </div>`; }).join('')}
         </div>` : ''}
         ${opsCliente.length ? `
@@ -4557,7 +3991,6 @@
         totalPendiente: totalPendienteRegistros,
         ultimaFecha,
         etiquetas: (perfil && perfil.etiquetas) || [],
-        membresiaActiva: contratos.some(ct => clienteKey(ct) === c.key && ct.estado === 'activo'),
       };
     }).sort((a,b)=> a.nombre.localeCompare(b.nombre));
   }
@@ -4586,7 +4019,6 @@
         totalEquiposComprados: c.compras.reduce((s,v)=>s+(v.cantidad||1),0),
         totalPagado, totalPendiente, ultimaFecha,
         etiquetas: (perfil && perfil.etiquetas) || [],
-        membresiaActiva: contratos.some(ct => clienteKey(ct) === c.key && ct.estado === 'activo'),
       };
     }).sort((a,b)=> a.nombre.localeCompare(b.nombre));
   }
@@ -4632,7 +4064,7 @@
             <div class="contact-row" data-cliente-key="${esc(c.key)}" data-cliente-tipo="${esCompras?'compras':'mantenimiento'}">
               <div class="contact-avatar-col"><div class="contact-avatar">${esc(inicialesDe(c.nombre))}</div></div>
               <div class="contact-main">
-                <div class="contact-name">${esc(c.nombre)}${c.membresiaActiva ? '<span class="etiqueta-badge etiqueta-membresia">Membresía</span>' : ''}${c.etiquetas && c.etiquetas.length ? etiquetasHTML(c.etiquetas) : ''}</div>
+                <div class="contact-name">${esc(c.nombre)}${c.etiquetas && c.etiquetas.length ? etiquetasHTML(c.etiquetas) : ''}</div>
                 <div class="contact-sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono'}${c.ultimaFecha ? ` · Última actividad ${esc(c.ultimaFecha)}` : ''}</div>
               </div>
               <div class="contact-metrics">
@@ -4875,7 +4307,7 @@
           <button class="back-link" id="btn-volver-clientes">← Volver a clientes</button>
           <div class="cliente-detail-head">
             <div>
-              <h2>${esc(c.nombre)}${c.membresiaActiva ? ' <span class="etiqueta-badge etiqueta-membresia">Membresía activa</span>' : ''}</h2>
+              <h2>${esc(c.nombre)}</h2>
               <div class="sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono registrado'}${c.telefonos && c.telefonos.length>1 ? ` <button class="link-btn" data-separar-cliente="${esc(key)}">¿Son dos personas distintas? Separar</button>` : ''}</div>
             </div>
             <div class="cliente-kpis">
@@ -4891,7 +4323,6 @@
             <button class="btn-primary" id="btn-nueva-orden-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}" data-cliente-key="${esc(key)}">+ Nueva orden de servicio</button>
           <button class="btn-ghost" id="btn-agregar-extintor-cliente" data-cliente-key="${esc(key)}">+ Agregar extintor</button>
           <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
-            <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
             <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
           </div>
           ${crmClienteResumenHTML(key)}
@@ -4909,7 +4340,6 @@
     const registrosOrdenados = [...c.registros].sort((a,b)=> (b.fechaIngreso||'').localeCompare(a.fechaIngreso||''));
     const informalesOrdenados = [...c.movimientosInformales].sort((a,b)=> (b.fechaCaja||'').localeCompare(a.fechaCaja||''));
     const ventas360 = ventas.filter(v=>clienteKey(v)===key);
-    const contratos360 = contratos.filter(x=>clienteKey(x)===key);
     const pendientes360 = [
       ...registrosOrdenados.filter(r=>(saldoOf(r).saldo||0)>0).map(r=>({fecha:r.fechaIngreso||'',monto:saldoOf(r).saldo||0})),
       ...ventas360.filter(v=>(saldoOf(v).saldo||0)>0).map(v=>({fecha:v.fechaCompra||'',monto:saldoOf(v).saldo||0}))
@@ -4919,13 +4349,12 @@
     const perfil360 = perfilDeCliente(key);
     const extintores360 = (perfil360?.extintores||[]).length;
     const proximoMantenimiento360 = (perfil360?.extintores||[]).map(e=>e.proximoMantenimiento).filter(Boolean).sort()[0] || registrosOrdenados.map(r=>r.fechaVencimiento).filter(Boolean).sort()[0] || '—';
-    const contratoActivo360 = contratos360.find(x=>x.estado==='activo');
     return `
       <div class="clientes-content">
         <button class="back-link" id="btn-volver-clientes">← Volver a clientes</button>
         <div class="cliente-detail-head">
           <div>
-            <h2>${esc(c.nombre)}${c.membresiaActiva ? ' <span class="etiqueta-badge etiqueta-membresia">Membresía activa</span>' : ''}</h2>
+            <h2>${esc(c.nombre)}</h2>
             <div class="sub">${telefonosTexto(c) ? esc(telefonosTexto(c)) : 'Sin teléfono registrado'}${c.telefonos && c.telefonos.length>1 ? ` <button class="link-btn" data-separar-cliente="${esc(key)}">¿Son dos personas distintas? Separar</button>` : ''}</div>
           </div>
           <div class="cliente-kpis">
@@ -4938,7 +4367,6 @@
         <div class="cliente-kpis" style="margin-bottom:16px;">
           <div class="cliente-kpi"><b>${c.registros.length}</b><small>Órdenes / servicios</small></div>
           <div class="cliente-kpi"><b>${extintores360}</b><small>Extintores en ficha</small></div>
-          <div class="cliente-kpi"><b>${contratoActivo360 ? "Activo" : "No"}</b><small>Cliente Seguro</small></div>
           <div class="cliente-kpi"><b style="color:${totalPendiente360>0?"#DC2626":"inherit"}">₡${totalPendiente360.toLocaleString("es-CR",{maximumFractionDigits:0})}</b><small>Saldo pendiente</small></div>
         </div>
         <div class="ficha360-summary">
@@ -4956,13 +4384,11 @@
           <div class="ficha360-stats">
             <div><b>${c.registros.length}</b><span>Órdenes</span></div>
             <div><b>${extintores360}</b><span>Extintores</span></div>
-            <div><b>${contratoActivo360 ? 'Activo' : 'No'}</b><span>Cliente Seguro</span></div>
             <div><b class="${totalPendiente360>0?'danger-text':''}">₡${totalPendiente360.toLocaleString('es-CR',{maximumFractionDigits:0})}</b><span>Saldo pendiente</span></div>
           </div>
           <div class="ficha360-dates">
             <div><span>Última actividad</span><b>${esc(ultimoMovimiento)}</b></div>
             <div><span>Próximo mantenimiento</span><b>${esc(proximoMantenimiento360)}</b></div>
-            <div><span>Membresía</span><b>${contratoActivo360 ? 'Activa' : 'Sin membresía activa'}</b></div>
           </div>
         </div>
         ${perfilClienteHTML(key, c.nombre, c.telefono)}
@@ -4971,7 +4397,6 @@
           <button class="btn-ghost" id="btn-agregar-extintor-cliente" data-cliente-key="${esc(key)}">+ Agregar extintor</button>
           <button class="btn-ghost" id="btn-nueva-venta-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva venta</button>
           <button class="btn-ghost" id="btn-nueva-oportunidad-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva oportunidad</button>
-          <button class="btn-ghost" id="btn-nuevo-contrato-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Nueva membresía</button>
           <button class="btn-ghost" id="btn-recordatorio-cliente" data-cliente="${esc(c.nombre)}" data-telefono="${esc(c.telefono)}">+ Recordatorio</button>
         </div>
 ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoMantenimiento360)}
@@ -5088,7 +4513,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
   }
 
   function renderDashboard(){
-    const deps = {ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,contratos,proximosVencimientos,esc,records,ventas,oportunidades,recordatorios,clientesPerfil,clientesEnRiesgo,tasaRenovacionAnual,todayISO,saldoOf,DIAS_RIESGO_CLIENTE,productosStockBajo,ETAPAS_EMBUDO,cajaDeHoy,calcularEsperado,resumenMes,resumenAnio,METODOS_PAGO,planClienteSeguro};
+    const deps = {ingresosPorMes,ventasPorMes,resumenVentasAnio,agruparPor,conteoPorEstado,referidos,proximosVencimientos,esc,records,ventas,oportunidades,recordatorios,clientesPerfil,clientesEnRiesgo,tasaRenovacionAnual,todayISO,saldoOf,DIAS_RIESGO_CLIENTE,productosStockBajo,ETAPAS_EMBUDO,cajaDeHoy,calcularEsperado,resumenMes,resumenAnio,METODOS_PAGO};
     if(window.CRMDashboard && typeof window.CRMDashboard.renderDashboard==='function'){
       try{
         return window.CRMDashboard.renderDashboard(deps);
@@ -5108,7 +4533,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
     const payload = {
       version:'CRM Industrial Extintores Seguridad 3.0',
       exportedAt:new Date().toISOString(),
-      records,cajas,papelera,ventas,oportunidades,recordatorios,clientesPerfil,contratos,inventario,configuracion
+      records,cajas,papelera,ventas,oportunidades,recordatorios,clientesPerfil,inventario,configuracion
     };
     const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
     const url = URL.createObjectURL(blob);
@@ -5146,7 +4571,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
     ]);
     const porCobrar = records.reduce((s,r)=>s+(saldoOf(r).saldo||0),0);
     const stockBajo = typeof productosStockBajo==='function' ? productosStockBajo() : [];
-    const contratosActivos = contratos.filter(c=>c.estado==='activo');
+
     const opsAbiertas = oportunidades.filter(o=>o.etapa!=='perdido' && o.etapa!=='ganado');
     const recPend = recordatorios.filter(r=>!r.completado).sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
     const proximos = [...en30].sort((a,b)=>(a.fechaVencimiento||'').localeCompare(b.fechaVencimiento||'')).slice(0,6);
@@ -5160,7 +4585,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
           <div>
             <div class="crm-pill green"><span class="crm-nav-dot"></span>Operación conectada</div>
             <h2>CRM Industrial</h2>
-            <p>Centro de control para clientes, activos, mantenimiento, ventas, membresías, inventario y cobranza.</p>
+            <p>Centro de control para clientes, activos, mantenimiento, ventas, inventario y cobranza.</p>
           </div>
           <div class="crm-hero-actions">
             <button class="btn-primary" id="ind-nuevo">+ Nueva orden</button>
@@ -5176,7 +4601,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
           <div class="crm-kpi" data-ind-view="clientes"><div class="icon">🏢</div><div class="value">${clientes.size}</div><div class="label">Clientes</div><div class="hint">${riesgo.length} en riesgo detectado</div></div>
           <div class="crm-kpi" data-ind-view="crm"><div class="icon">📈</div><div class="value">${opsAbiertas.length}</div><div class="label">Oportunidades abiertas</div><div class="hint">${oportunidades.length} en total</div></div>
           <div class="crm-kpi" data-ind-view="inventario"><div class="icon">📦</div><div class="value">${stockBajo.length}</div><div class="label">Stock bajo</div><div class="hint">${inventario.length} productos controlados</div></div>
-          <div class="crm-kpi" data-ind-view="caja"><div class="icon">₡</div><div class="value">₡${porCobrar.toLocaleString('es-CR',{maximumFractionDigits:0})}</div><div class="label">Por cobrar</div><div class="hint">${contratosActivos.length} membresías activas</div></div>
+          <div class="crm-kpi" data-ind-view="caja"><div class="icon">₡</div><div class="value">₡${porCobrar.toLocaleString('es-CR',{maximumFractionDigits:0})}</div><div class="label">Por cobrar</div><div class="hint">Servicios registrados</div></div>
         </div>
 
         <div class="crm-section-title"><h3>Centro de alertas y agenda</h3><span>Lo que requiere atención hoy y en los próximos días</span></div>
@@ -5307,7 +4732,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
             <div class="crm-mini-grid">
               <div class="crm-mini"><b>${listos.length}</b><span>Listos para entrega</span></div>
               <div class="crm-mini"><b>${ventas.length}</b><span>Ventas registradas</span></div>
-              <div class="crm-mini"><b>${contratosActivos.length}</b><span>Membresías activas</span></div>
+              
               <div class="crm-mini"><b>₡${oportunidades.reduce((s,o)=>s+(parseFloat(o.montoEstimado)||0),0).toLocaleString('es-CR',{maximumFractionDigits:0})}</b><span>Pipeline estimado</span></div>
             </div>
           </div>
@@ -5385,7 +4810,6 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
           <div class="nav-section">
             <button data-view="listado" class="${view==='listado'?'active':''}"><span class="snav-ico">▤</span>Órdenes de trabajo</button>
             <button data-view="clientes" class="${view==='clientes'?'active':''}"><span class="snav-ico">◔</span>Clientes · Ficha 360°</button>
-            <button data-view="cliente-seguro" class="${view==='cliente-seguro'?'active':''}"><span class="snav-ico">🛡</span>Cliente Seguro</button>
             <button data-view="referidos" class="${view==='referidos'?'active':''}"><span class="snav-ico">🔥</span>Referidos</button>
           </div>
           <div class="nav-section-label">Ventas / CRM</div>
@@ -5464,7 +4888,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
         }
       </div>
       </div>
-      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : (view === 'cliente-seguro' ? renderClienteSeguro() : (view === 'referidos' ? renderReferidos() : renderIndustrial()))))))))}
+      ` : (view === 'panel' ? renderDashboard() : (view === 'caja' ? renderCaja() : (view === 'crm' ? renderCRM() : (view === 'inventario' ? renderInventario() : (view === 'clientes' ? (clienteSeleccionado ? renderClienteDetalle(clienteSeleccionado) : renderClientesLista()) : (view === 'referidos' ? renderReferidos() : renderIndustrial())))))))}
       </div>
       </div>
       </div>
@@ -5532,9 +4956,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
         if(action==='vencidos'){ view='listado'; venceFilter='vencidos'; query=''; animateViewChange=true; render(); return; }
         if(action==='proximos'){ view='listado'; venceFilter='proximo'; query=''; animateViewChange=true; render(); return; }
         if(action==='seguimientos'){ view='crm'; crmSubvista='recordatorios'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }
-        if(action==='cotizaciones'){ view='crm'; crmSubvista='pipeline'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }
-        if(action==='membresias'){ view='crm'; crmSubvista='contratos'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }
-        if(action==='clientes'){ view='clientes'; clienteSeleccionado=null; animateViewChange=true; render(); return; }
+        if(action==='cotizaciones'){ view='crm'; crmSubvista='pipeline'; oportunidadSeleccionada=null; animateViewChange=true; render(); return; }        if(action==='clientes'){ view='clientes'; clienteSeleccionado=null; animateViewChange=true; render(); return; }
       });
     });
     document.querySelectorAll('[data-vencimiento-whatsapp]').forEach(b=>{
@@ -5592,13 +5014,6 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
     }
 
     if(view === 'referidos'){ const b=document.getElementById('ref-nuevo'); if(b) b.addEventListener('click',()=>window.CRMReferidos.abrirNuevoReferido({referidos,setReferidos:(v)=>{referidos=v;},persist,todayISO,showToast})); }
-    if(view === 'cliente-seguro'){
-      const btnNueva = document.getElementById('cs-nueva-membresia');
-      if(btnNueva) btnNueva.addEventListener('click', ()=> openNuevoContrato());
-      const btnVer = document.getElementById('cs-ver-membresias');
-      if(btnVer) btnVer.addEventListener('click', ()=>{ view='crm'; crmSubvista='contratos'; animateViewChange=true; render(); });
-    }
-
     if(view === 'inventario'){
       const btnNuevoProducto = document.getElementById('btn-nuevo-producto');
       if(btnNuevoProducto) btnNuevoProducto.addEventListener('click', openNuevoProducto);
@@ -5679,24 +5094,6 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
         document.querySelectorAll('[data-contactar-recordatorio]').forEach(b=>{
           b.addEventListener('click', ()=> crearRecordatorioRapido(b.getAttribute('data-contactar-recordatorio'), b.getAttribute('data-contactar-telefono')||''));
         });
-      } else if(crmSubvista === 'contratos'){
-        document.querySelectorAll('[data-contratos-filtro]').forEach(b=>{
-          b.addEventListener('click', ()=> setContratosFiltro(b.getAttribute('data-contratos-filtro')));
-        });
-        const btnNuevoContrato = document.getElementById('btn-nuevo-contrato');
-        if(btnNuevoContrato) btnNuevoContrato.addEventListener('click', ()=> openNuevoContrato());
-        document.querySelectorAll('[data-action="generar-membresia"]').forEach(b=>{
-          b.addEventListener('click', ()=> printMembresia(b.getAttribute('data-id')));
-        });
-        document.querySelectorAll('[data-action="editar-contrato"]').forEach(b=>{
-          b.addEventListener('click', ()=> openEditarContrato(b.getAttribute('data-id')));
-        });
-        document.querySelectorAll('[data-action="eliminar-contrato"]').forEach(b=>{
-          b.addEventListener('click', async ()=>{
-            const id = b.getAttribute('data-id');
-            await removeContrato(id);
-          });
-        });
       }
       document.querySelectorAll('[data-whatsapp-rec]').forEach(b=>{
         b.addEventListener('click', ()=>{
@@ -5734,7 +5131,7 @@ ${crmClienteSeguimientoHTML(key, c, perfil360, contratoActivo360, proximoManteni
         if(btnAgregarExtintorCliente) btnAgregarExtintorCliente.addEventListener('click', ()=> openEditarPerfilCliente(btnAgregarExtintorCliente.getAttribute('data-cliente-key')));
         const btnNuevaOpCliente = document.getElementById('btn-nueva-oportunidad-cliente');
         if(btnNuevaOpCliente) btnNuevaOpCliente.addEventListener('click', ()=> openNuevaOportunidad(btnNuevaOpCliente.getAttribute('data-cliente'), btnNuevaOpCliente.getAttribute('data-telefono')));
-        const btnNuevoContratoCliente = document.getElementById('btn-nuevo-contrato-cliente');
+
         if(btnNuevoContratoCliente) btnNuevoContratoCliente.addEventListener('click', ()=> openNuevoContrato(btnNuevoContratoCliente.getAttribute('data-cliente'), btnNuevoContratoCliente.getAttribute('data-telefono')));
         const btnRecCliente = document.getElementById('btn-recordatorio-cliente');
         if(btnRecCliente) btnRecCliente.addEventListener('click', ()=> abrirRecordatorioRapidoModal(btnRecCliente.getAttribute('data-cliente'), btnRecCliente.getAttribute('data-telefono')));
