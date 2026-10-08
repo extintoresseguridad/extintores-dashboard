@@ -79,7 +79,7 @@ try {
 
   // 2. pending: no acceso al CRM.
   await run('02 pending cannot read backups/main', async () => {
-    await assertFails(getDoc(doc(ctx('pending-1', 'pending@example.com'), 'backups/main')));
+    await assertFails(ctx('pending-1', 'pending@example.com').firestore().doc('backups/main').get());
   });
 
   // 3. approved: lectura/escritura.
